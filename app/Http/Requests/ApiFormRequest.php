@@ -24,4 +24,9 @@ abstract class ApiFormRequest extends FormRequest
             'errors' => $validator->errors()
         ]));
     }
+
+    public function messages()
+    {
+        return ['required' => ':attribute tidak boleh kosong'];
+    }
 }
