@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AlumniController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\JurusanController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -12,3 +13,5 @@ use Illuminate\Support\Facades\Route;
 Route::post('/login', [AuthController::class, 'login']);
 Route::get('/alumnis', [AlumniController::class, 'getAll']);
 Route::get('/alumnis/{alumni}', [AlumniController::class, 'getDetail']);
+
+Route::get('/jurusans', [JurusanController::class, 'getAllJurusans']);
