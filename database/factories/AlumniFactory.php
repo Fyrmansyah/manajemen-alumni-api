@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Jurusan;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -9,6 +10,7 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class AlumniFactory extends Factory
 {
+    static $jurusanIds = [];
     /**
      * Define the model's default state.
      *
@@ -16,6 +18,10 @@ class AlumniFactory extends Factory
      */
     public function definition(): array
     {
+        if (!self::$jurusanIds) {
+            self::$jurusanIds = Jurusan::query()->pluck('id')->toArray();
+        }
+
         return [
             'nama' => $this->faker->name(),
             'tgl_lahir' => $this->faker->date(),
@@ -24,7 +30,6 @@ class AlumniFactory extends Factory
             'no_tlp' => $this->faker->phoneNumber(),
             'email' => $this->faker->unique()->safeEmail(),
             'alamat' => $this->faker->address(),
-            'jurusan' => $this->faker->randomElement(['Rekayasa Perangkat Lunak', 'Desain Komunikasi Visual', 'Bisnis Daring & Digital', 'Akuntansi', 'Perhotelan']),
             'tempat_kerja' => $this->faker->optional()->company(),
             'jabatan_kerja' => $this->faker->optional()->jobTitle(),
             'tempat_kuliah' => $this->faker->randomElement(['Institut Sepuluh Nopember', 'Universitas Negeri Surabaya', 'Politeknik Elektronika Surabaya', 'Universitas Indonesia', 'Institut Teknologi Bandung', 'Harvard']), // or use ->university() if using faker extension
@@ -32,6 +37,7 @@ class AlumniFactory extends Factory
             'kesesuaian_kerja' => $this->faker->optional()->boolean(),
             'kesesuaian_kuliah' => $this->faker->optional()->boolean(),
             'photo' => $this->faker->optional()->imageUrl(300, 300),
+            'jurusan_id' => $this->faker->randomElement(self::$jurusanIds)
         ];
     }
 }

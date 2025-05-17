@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Jurusan;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -20,7 +21,6 @@ return new class extends Migration
             $table->string('no_tlp');
             $table->string('email');
             $table->string('alamat');
-            $table->string('jurusan');
             $table->string('tempat_kerja')->nullable();
             $table->string('jabatan_kerja')->nullable();
             $table->string('tempat_kuliah')->nullable();
@@ -28,6 +28,7 @@ return new class extends Migration
             $table->boolean('kesesuaian_kerja')->nullable();
             $table->boolean('kesesuaian_kuliah')->nullable();
             $table->string('photo')->nullable();
+            $table->foreignIdFor(Jurusan::class)->constrained();
 
             $table->timestamps();
         });
