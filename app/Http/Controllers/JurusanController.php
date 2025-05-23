@@ -14,7 +14,7 @@ class JurusanController extends Controller
     {
         $data = Jurusan::query()
             ->where('nama', 'like', "%{$request->query('search')}%")
-            ->paginate(10);
+            ->cursorPaginate(10);
 
         return JurusanResource::collection($data);
     }
@@ -24,7 +24,7 @@ class JurusanController extends Controller
         Jurusan::create($request->validated());
     }
 
-    public function update(UpdateJurusanRequest $request, Jurusan $jurusan)
+    public function updateJurusan(UpdateJurusanRequest $request, Jurusan $jurusan)
     {
         $jurusan->update($request->validated());
     }

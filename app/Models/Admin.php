@@ -2,14 +2,12 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Laravel\Sanctum\HasApiTokens;
 
-class Alumni extends Authenticatable
+class Admin extends Authenticatable
 {
-    use HasFactory, HasApiTokens;
+    use HasApiTokens;
 
     protected $guarded = ['id'];
     protected $hidden = ['password'];
@@ -34,8 +32,4 @@ class Alumni extends Authenticatable
     // -------------------------------------
     //          RELATION METHODS
     // -------------------------------------
-    public function jurusan(): BelongsTo
-    {
-        return $this->belongsTo(Jurusan::class);
-    }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use Carbon\Carbon;
 use Illuminate\Foundation\Http\FormRequest;
 
 class CreateAlumniRequest extends ApiFormRequest
@@ -22,7 +23,14 @@ class CreateAlumniRequest extends ApiFormRequest
     public function rules(): array
     {
         return [
-            //
+            'nama' => 'required',
+            'tgl_lahir' => 'required',
+            'tahun_mulai' => 'required',
+            'tahun_lulus' => 'required',
+            'no_tlp' => 'required',
+            'email' => 'required',
+            'alamat' => 'required',
+            'jurusan' => 'required',
         ];
     }
 }

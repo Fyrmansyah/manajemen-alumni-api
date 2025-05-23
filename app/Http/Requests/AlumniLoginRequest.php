@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests;
 
-class LoginRequest extends ApiFormRequest
+class AlumniLoginRequest extends ApiFormRequest
 {
     /**
      * Get the validation rules that apply to the request.
@@ -12,13 +12,8 @@ class LoginRequest extends ApiFormRequest
     public function rules(): array
     {
         return [
-            'username' => 'required',
+            'email' => 'required',
             'password' => 'required'
         ];
-    }
-
-    public function messages()
-    {
-        return ['required' => ':attribute tidak boleh kosong'];
     }
 }

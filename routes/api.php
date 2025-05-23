@@ -14,4 +14,9 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::get('/alumnis', [AlumniController::class, 'getAll']);
 Route::get('/alumnis/{alumni}', [AlumniController::class, 'getDetail']);
 
-Route::get('/jurusans', [JurusanController::class, 'getAllJurusans']);
+Route::controller(JurusanController::class)->prefix('jurusans')->group(function () {
+    Route::get('/', 'getAllJurusans');
+    Route::post('/', 'createJurusan');
+    Route::put('/{jurusan}', 'updateJurusan');
+    Route::put('/{jurusan}', 'deleteJurusan');
+});
