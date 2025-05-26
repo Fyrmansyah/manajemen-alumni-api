@@ -11,8 +11,13 @@ use Illuminate\Support\Facades\Route;
 // })->middleware('auth:sanctum');
 
 Route::post('/login', [AuthController::class, 'login']);
-Route::get('/alumnis', [AlumniController::class, 'getAll']);
-Route::get('/alumnis/{alumni}', [AlumniController::class, 'getDetail']);
+
+Route::controller(AlumniController::class)->group(function () {
+    Route::get('/alumnis', 'getAll');
+    Route::get('/alumnis/{alumni}', 'getDetail');
+    Route::post('/check-email-exist', 'checkEmailExist');
+    Route::post('/alumnis', 'create');
+});
 
 Route::controller(JurusanController::class)->prefix('jurusans')->group(function () {
     Route::get('/', 'getAllJurusans');

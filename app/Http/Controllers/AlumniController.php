@@ -7,6 +7,7 @@ use App\Http\Resources\AlumniResource;
 use App\Models\Alumni;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 
 class AlumniController extends Controller
 {
@@ -46,5 +47,17 @@ class AlumniController extends Controller
         return AlumniResource::make($alumni);
     }
 
-    public function create(CreateAlumniRequest $request) {}
+    public function checkEmailExist(Request $request)
+    {
+        $emailExist = Alumni::query()->where('email', $request->input('email'))->first();
+        if ($emailExist) {
+            return response()->json(true);
+        }
+        return response()->json(false);
+    }
+
+    public function create(CreateAlumniRequest $request)
+    {
+        return response()->json($request->all());
+    }
 }
