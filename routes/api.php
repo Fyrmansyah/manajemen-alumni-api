@@ -11,7 +11,8 @@ use Illuminate\Support\Facades\Route;
 //     return $request->user();
 // })->middleware('auth:sanctum');
 
-Route::post('/login', [AuthController::class, 'login']); //1
+Route::post('/admin/login', [AuthController::class, 'loginAdmin']); //1
+Route::post('/alumni/login', [AuthController::class, 'loginAlumni']); //1
 
 Route::apiResource('admins', AdminController::class); // 5
 

@@ -1,17 +1,17 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Helpers;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 
 class ResponseBuilder
 {
-    protected string $status;
-    protected string $message;
-    protected mixed $data;
-    protected mixed $errors;
-    protected int $httpCode;
+    protected ?string $status = null;
+    protected ?string $message = null;
+    protected mixed $data = null;
+    protected mixed $errors = null;
+    protected ?int $httpCode = null;
 
     public static function success(): self
     {
@@ -29,12 +29,25 @@ class ResponseBuilder
 
     public function build(): JsonResponse
     {
-        return response()->json([
-            'status' => $this->status,
-            'message' => $this->message,
-            'data' => $this->data,
-            'erros' => $this->errors,
-        ], $this->httpCode);
+        $response = [];
+
+        if (!is_null($this->status)) {
+            $response['status'] = $this->status;
+        }
+
+        if (!is_null($this->message)) {
+            $response['message'] = $this->message;
+        }
+
+        if (!is_null($this->data)) {
+            $response['data'] = $this->data;
+        }
+
+        if (!is_null($this->errors)) {
+            $response['errors'] = $this->errors;
+        }
+
+        return response()->json($response, $this->httpCode);
     }
 
     public function status(string $status)

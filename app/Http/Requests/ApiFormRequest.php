@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Helpers\ResponseBuilder;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
@@ -18,15 +19,19 @@ abstract class ApiFormRequest extends FormRequest
 
     protected function failedValidation(Validator $validator)
     {
-
-        throw new HttpResponseException(response()->json([
-            'messaege' => 'data tidak valid',
-            'errors' => $validator->errors()
-        ]));
+        throw new HttpResponseException(
+            ResponseBuilder::fail()
+                ->errors($validator->errors())
+                ->message('data tidak valid')
+                ->build()
+        );
     }
 
     public function messages()
     {
-        return ['required' => ':attribute tidak boleh kosong'];
+        return [
+            'required' => ':attribute tidak boleh kosong',
+            'unique' => ":attribute ':input' telah digunakan",
+        ];
     }
 }
