@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AlumniController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\JurusanController;
@@ -11,6 +12,8 @@ use Illuminate\Support\Facades\Route;
 // })->middleware('auth:sanctum');
 
 Route::post('/login', [AuthController::class, 'login']);
+
+Route::apiResource('admins', AdminController::class);
 
 Route::controller(AlumniController::class)->group(function () {
     Route::get('/alumnis', 'getAll');
