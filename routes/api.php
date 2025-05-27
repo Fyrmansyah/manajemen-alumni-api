@@ -11,9 +11,9 @@ use Illuminate\Support\Facades\Route;
 //     return $request->user();
 // })->middleware('auth:sanctum');
 
-Route::post('/login', [AuthController::class, 'login']);
+Route::post('/login', [AuthController::class, 'login']); //1
 
-Route::apiResource('admins', AdminController::class);
+Route::apiResource('admins', AdminController::class); // 5
 
 Route::controller(AlumniController::class)->group(function () {
     Route::get('/alumnis', 'getAll');
@@ -26,5 +26,5 @@ Route::controller(JurusanController::class)->prefix('jurusans')->group(function 
     Route::get('/', 'getAllJurusans');
     Route::post('/', 'createJurusan');
     Route::put('/{jurusan}', 'updateJurusan');
-    Route::put('/{jurusan}', 'deleteJurusan');
+    Route::delete('/{jurusan}', 'deleteJurusan');
 });
