@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Helpers\ResponseBuilder;
 use App\Http\Requests\CreateAlumniRequest;
+use App\Http\Requests\UpdateAlumniRequest;
 use App\Http\Resources\AlumniResource;
 use App\Models\Alumni;
 use Illuminate\Database\Eloquent\Builder;
@@ -77,6 +78,39 @@ class AlumniController extends Controller
         return ResponseBuilder::success()
             ->data($alumni)
             ->message('Sukses menambah data alumni baru')
+            ->build();
+    }
+
+    public function update(Request $request, string $alumniId): JsonResponse
+    {
+        $alumni = Alumni::find($alumniId);
+        if (!$alumni) {
+            return ResponseBuilder::fail()
+                ->message('data alumni tidak ditemukan')
+                ->build();
+        }
+
+        $alumni->update($request->all());
+
+        return ResponseBuilder::success()
+            ->message('sukses memperbarui data alumni')
+            ->data($alumni)
+            ->build();
+    }
+
+    public function destroy(Request $request): JsonResponse
+    {
+        $alumni = Alumni::find($request->alumni_id);
+        if (!$alumni) {
+            return ResponseBuilder::fail()
+                ->message('data alumni tidak ditemukan')
+                ->build();
+        }
+
+        $alumni->delete();
+
+        return ResponseBuilder::success()
+            ->message('data alumni berhasil dihapus')
             ->build();
     }
 }
