@@ -12,6 +12,7 @@ class ResponseBuilder
     protected mixed $data = null;
     protected mixed $errors = null;
     protected ?int $httpCode = null;
+    protected mixed $pagination = null;
 
     public static function success(): self
     {
@@ -47,6 +48,10 @@ class ResponseBuilder
             $response['errors'] = $this->errors;
         }
 
+        if (!is_null($this->pagination)) {
+            $response['pagination'] = $this->pagination;
+        }
+
         return response()->json($response, $this->httpCode);
     }
 
@@ -77,6 +82,15 @@ class ResponseBuilder
     public function httpCode(int $httpCode): self
     {
         $this->httpCode = $httpCode;
+        return $this;
+    }
+
+    public function pagination(?string $nextPageUrl, ?string $previousPageUrl): self
+    {
+        $this->pagination = [
+            'next_page_url' => $nextPageUrl,
+            'previous_page_url' => $previousPageUrl,
+        ];
         return $this;
     }
 }

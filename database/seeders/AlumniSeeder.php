@@ -22,6 +22,7 @@ class AlumniSeeder extends Seeder
             'tahun_lulus' => 2024,
             'no_tlp' => '08813573779',
             'email' => 'david@gmail.com',
+            'password' => 'test123',
             'alamat' => 'Jl. Rumah Tentram Gembira No. 9',
             'tempat_kerja' => null,
             'jabatan_kerja' => null,

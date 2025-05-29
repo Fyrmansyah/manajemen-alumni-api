@@ -2,16 +2,18 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\ResponseBuilder;
 use App\Http\Requests\CreateAlumniRequest;
 use App\Http\Resources\AlumniResource;
 use App\Models\Alumni;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
 class AlumniController extends Controller
 {
-    public function getAll(Request $request)
+    public function getAll(Request $request): JsonResponse
     {
         $selected_fields = [
             'id',
@@ -37,17 +39,29 @@ class AlumniController extends Controller
             ->when($request->query('tahun_lulus'), function (Builder $query, $tahun_lulus) {
                 $query->where('tahun_lulus', $tahun_lulus);
             })
-            ->cursorPaginate(10);
+            ->paginate(10, $selected_fields);
 
-        return AlumniResource::collection($data);
+        return ResponseBuilder::success()
+            ->data(AlumniResource::collection($data))
+            ->pagination($data->nextPageUrl(), $data->previousPageUrl())
+            ->build();
     }
 
-    public function getDetail(Alumni $alumni)
+    public function getDetail(Request $request): JsonResponse
     {
-        return AlumniResource::make($alumni);
+        $alumni = Alumni::find($request->alumni_id);
+        if (!$alumni) {
+            return ResponseBuilder::fail()
+                ->message('Alumni dengan id: ' . $request->alumni_id . ' tidak ada')
+                ->build();
+        }
+
+        return ResponseBuilder::success()
+            ->data(AlumniResource::make($alumni))
+            ->build();
     }
 
-    public function checkEmailExist(Request $request)
+    public function checkEmailExist(Request $request): JsonResponse
     {
         $emailExist = Alumni::query()->where('email', $request->input('email'))->first();
         if ($emailExist) {
@@ -56,8 +70,13 @@ class AlumniController extends Controller
         return response()->json(false);
     }
 
-    public function create(CreateAlumniRequest $request)
+    public function create(CreateAlumniRequest $request): JsonResponse
     {
-        return response()->json($request->all());
+        $alumni = Alumni::create($request->validated());
+
+        return ResponseBuilder::success()
+            ->data($alumni)
+            ->message('Sukses menambah data alumni baru')
+            ->build();
     }
 }

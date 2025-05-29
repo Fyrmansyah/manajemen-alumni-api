@@ -18,7 +18,7 @@ Route::apiResource('admins', AdminController::class); // 5
 
 Route::controller(AlumniController::class)->group(function () {
     Route::get('/alumnis', 'getAll');
-    Route::get('/alumnis/{alumni}', 'getDetail');
+    Route::get('/alumnis/{alumni_id}', 'getDetail');
     Route::post('/check-email-exist', 'checkEmailExist');
     Route::post('/alumnis', 'create');
 });

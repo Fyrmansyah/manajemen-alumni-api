@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\ResponseBuilder;
 use App\Http\Requests\AdminLoginRequest;
 use App\Http\Requests\AlumniLoginRequest;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
@@ -11,36 +13,50 @@ use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
 {
-    function loginAdmin(AdminLoginRequest $request)
+    function loginAdmin(AdminLoginRequest $request): JsonResponse
     {
 
-        if (!Auth::guard('admin')->attempt($request->validated())) {
-            return response()->json([
-                'message' => 'gagal login, pastikan data user valid'
-            ], Response::HTTP_FORBIDDEN);
-        }
+        $isSuccessLogin = Auth::guard('admin')->attempt($request->validated());
 
-        $user = $request->user();
+        if (!$isSuccessLogin) {
+            return ResponseBuilder::fail()
+                ->message('gagal login, pastikan data user valid')
+                ->build();
+        }
+        $user = $request->user('admin');
         $user->tokens()->delete();
 
-        return response()->json([
-            'token' => $user->createToken("auth_token")->plainTextToken
-        ]);
+        $data = [
+            'token' => $user->createToken("auth_token")->plainTextToken,
+            'user' => $user
+        ];
+
+        return ResponseBuilder::success()
+            ->data($data)
+            ->message('Sukses login')
+            ->build();
     }
     function loginAlumni(AlumniLoginRequest $request)
     {
+        $isSuccessLogin = Auth::guard('alumni')->attempt($request->validated());
 
-        if (!Auth::guard('alumni')->attempt($request->validated())) {
-            return response()->json([
-                'message' => 'gagal login, pastikan data user valid'
-            ], Response::HTTP_FORBIDDEN);
+        if (!$isSuccessLogin) {
+            return ResponseBuilder::fail()
+                ->message('gagal login, pastikan data user valid')
+                ->build();
         }
 
-        $user = $request->user();
+        $user = $request->user('alumni');
         $user->tokens()->delete();
 
-        return response()->json([
-            'token' => $user->createToken("auth_token")->plainTextToken
-        ]);
+        $data = [
+            'token' => $user->createToken("auth_token")->plainTextToken,
+            'user' => $user
+        ];
+
+        return ResponseBuilder::success()
+            ->data($data)
+            ->message('Sukses login')
+            ->build();
     }
 }

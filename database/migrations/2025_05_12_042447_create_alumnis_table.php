@@ -20,6 +20,7 @@ return new class extends Migration
             $table->year('tahun_lulus');
             $table->string('no_tlp');
             $table->string('email');
+            $table->string('password');
             $table->string('alamat');
             $table->string('tempat_kerja')->nullable();
             $table->string('jabatan_kerja')->nullable();

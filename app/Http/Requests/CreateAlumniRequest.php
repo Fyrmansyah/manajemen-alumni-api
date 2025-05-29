@@ -30,7 +30,7 @@ class CreateAlumniRequest extends ApiFormRequest
             'no_tlp' => 'required',
             'email' => 'required',
             'alamat' => 'required',
-            'jurusan' => 'required',
+            'jurusan_id' => 'required',
         ];
     }
 }

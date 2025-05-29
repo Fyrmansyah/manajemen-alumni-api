@@ -29,6 +29,7 @@ class AlumniFactory extends Factory
             'tahun_lulus' => $this->faker->randomElement([2020, 2021, 2022, 2023, 2024, 2025]),
             'no_tlp' => $this->faker->phoneNumber(),
             'email' => $this->faker->unique()->safeEmail(),
+            'password' => 'password',
             'alamat' => $this->faker->address(),
             'tempat_kerja' => $this->faker->optional()->company(),
             'jabatan_kerja' => $this->faker->optional()->jobTitle(),
