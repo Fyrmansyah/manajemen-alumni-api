@@ -28,6 +28,6 @@ Route::controller(AlumniController::class)->group(function () {
 Route::controller(JurusanController::class)->prefix('jurusans')->group(function () {
     Route::get('/', 'getAllJurusans');
     Route::post('/', 'createJurusan');
-    Route::put('/{jurusan}', 'updateJurusan');
-    Route::delete('/{jurusan}', 'deleteJurusan');
+    Route::put('/{jurusan_id}', 'updateJurusan');
+    Route::delete('/{jurusan_id}', 'deleteJurusan');
 });

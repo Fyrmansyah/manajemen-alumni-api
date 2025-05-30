@@ -63,10 +63,9 @@ class AdminController extends Controller
                 ->build();
         }
 
-        $admin = $admin->update($request->validated());
+        $admin->update($request->validated());
 
         return ResponseBuilder::success()
-            ->data($admin)
             ->message('sukses memperbarui data admin')
             ->build();
     }

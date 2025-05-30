@@ -29,7 +29,7 @@ return new class extends Migration
             $table->boolean('kesesuaian_kerja')->nullable();
             $table->boolean('kesesuaian_kuliah')->nullable();
             $table->string('photo')->nullable();
-            $table->foreignIdFor(Jurusan::class)->constrained();
+            $table->foreignIdFor(Jurusan::class);
 
             $table->timestamps();
         });
