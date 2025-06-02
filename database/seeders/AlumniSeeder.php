@@ -30,7 +30,6 @@ class AlumniSeeder extends Seeder
             'prodi_kuliah' => 'Teknik Informatika',
             'kesesuaian_kerja' => null,
             'kesesuaian_kuliah' => true,
-            'photo' => null,
             'jurusan_id' => $jurusan->id
         ]);
 

@@ -37,7 +37,6 @@ class AlumniFactory extends Factory
             'prodi_kuliah' => $this->faker->randomElement(['Teknik Informatika', 'Sistem Informasi', 'Psikologi', 'Hukum', 'Elektro', 'Akuntansi', 'Pariwisata']),
             'kesesuaian_kerja' => $this->faker->optional()->boolean(),
             'kesesuaian_kuliah' => $this->faker->optional()->boolean(),
-            'photo' => $this->faker->optional()->imageUrl(300, 300),
             'jurusan_id' => $this->faker->randomElement(self::$jurusanIds)
         ];
     }

@@ -6,11 +6,13 @@ use App\Helpers\ResponseBuilder;
 use App\Http\Requests\CreateAlumniRequest;
 use App\Http\Requests\UpdateAlumniRequest;
 use App\Http\Resources\AlumniResource;
+use App\Imports\AlumnisImport;
 use App\Models\Alumni;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Maatwebsite\Excel\Facades\Excel;
 
 class AlumniController extends Controller
 {
@@ -23,7 +25,8 @@ class AlumniController extends Controller
             'jabatan_kerja',
             'tempat_kuliah',
             'prodi_kuliah',
-            'photo'
+            'tahun_mulai',
+            'tahun_lulus'
         ];
 
         $data = Alumni::query()
@@ -40,7 +43,7 @@ class AlumniController extends Controller
             ->when($request->query('tahun_lulus'), function (Builder $query, $tahun_lulus) {
                 $query->where('tahun_lulus', $tahun_lulus);
             })
-            ->paginate(10, $selected_fields);
+            ->cursorPaginate(10, $selected_fields);
 
         return ResponseBuilder::success()
             ->data(AlumniResource::collection($data))
@@ -50,7 +53,7 @@ class AlumniController extends Controller
 
     public function getDetail(Request $request): JsonResponse
     {
-        $alumni = Alumni::find($request->alumni_id);
+        $alumni = Alumni::with('jurusan')->find($request->alumni_id);
         if (!$alumni) {
             return ResponseBuilder::fail()
                 ->message('Alumni dengan id: ' . $request->alumni_id . ' tidak ada')
@@ -71,9 +74,9 @@ class AlumniController extends Controller
         return response()->json(false);
     }
 
-    public function create(CreateAlumniRequest $request): JsonResponse
+    public function create(Request $request): JsonResponse
     {
-        $alumni = Alumni::create($request->validated());
+        $alumni = Alumni::create($request->all());
 
         return ResponseBuilder::success()
             ->data($alumni)
@@ -111,6 +114,68 @@ class AlumniController extends Controller
 
         return ResponseBuilder::success()
             ->message('data alumni berhasil dihapus')
+            ->build();
+    }
+
+    public function importExcel()
+    {
+        try {
+            Excel::import(new AlumnisImport, request()->file('alumni_excel'));
+
+            return ResponseBuilder::success()
+                ->message('Sukses import excel')
+                ->build();
+        } catch (\Throwable $th) {
+            return ResponseBuilder::fail()
+                ->message($th->getMessage())
+                ->build();
+        }
+    }
+
+    public function getChart(): JsonResponse
+    {
+        $total_pengangguran = Alumni::query()
+            ->whereNull('tempat_kerja')
+            ->whereNull('tempat_kuliah')
+            ->count();
+
+        $total_kuliah = Alumni::query()
+            ->whereNotNull('tempat_kuliah')
+            ->whereNull('tempat_kerja')
+            ->count();
+
+        $total_kerja = Alumni::query()
+            ->whereNotNull('tempat_kerja')
+            ->whereNull('tempat_kuliah')
+            ->count();
+
+        $total_kuliah_dan_kerja =  Alumni::query()
+            ->whereNotNull('tempat_kerja')
+            ->whereNotNull('tempat_kuliah')
+            ->count();
+
+        $bar_data = compact('total_pengangguran', 'total_kuliah', 'total_kerja', 'total_kuliah_dan_kerja');
+
+        $pct_tidak_sesuai = Alumni::query()
+            ->where('kesesuaian_kerja', false)
+            ->where('kesesuaian_kuliah', false)
+            ->count();
+        $pct_kuliah_sesuai = Alumni::query()
+            ->where('kesesuaian_kuliah', true)
+            ->count();
+        $pct_kerja_sesuai = Alumni::query()
+            ->where('kesesuaian_kerja', true)
+            ->count();
+
+        $total_pct = ($pct_tidak_sesuai + $pct_kuliah_sesuai + $pct_kerja_sesuai);
+        $pct_tidak_sesuai = round($pct_tidak_sesuai / $total_pct * 100);
+        $pct_kuliah_sesuai = round($pct_kuliah_sesuai / $total_pct * 100);
+        $pct_kerja_sesuai = round($pct_kerja_sesuai / $total_pct * 100);
+
+        $pie_data = compact('pct_tidak_sesuai', 'pct_kuliah_sesuai', 'pct_kerja_sesuai');
+
+        return ResponseBuilder::success()
+            ->data(compact('bar_data', 'pie_data'))
             ->build();
     }
 }

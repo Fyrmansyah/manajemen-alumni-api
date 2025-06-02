@@ -20,7 +20,7 @@ class AuthController extends Controller
 
         if (!$isSuccessLogin) {
             return ResponseBuilder::fail()
-                ->message('gagal login, pastikan data user valid')
+                ->message('Gagal login, pastikan data user valid')
                 ->build();
         }
         $user = $request->user('admin');
