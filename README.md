@@ -10,5 +10,9 @@ composer i
 ```
 4. copy & run
 ```
+php artisan migrate --seed
+```
+4. copy & run
+```
 php artisan serve
 ```
