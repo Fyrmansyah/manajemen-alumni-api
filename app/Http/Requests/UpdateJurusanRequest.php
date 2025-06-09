@@ -22,7 +22,8 @@ class UpdateJurusanRequest extends ApiFormRequest
     public function rules(): array
     {
         return [
-            'nama' => 'required'
+            'nama' => 'required',
+            'tgl_berdiri' => 'required'
         ];
     }
 }

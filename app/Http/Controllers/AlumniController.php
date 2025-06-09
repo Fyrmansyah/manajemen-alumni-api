@@ -158,7 +158,7 @@ class AlumniController extends Controller
 
         $pct_tidak_sesuai = Alumni::query()
             ->where('kesesuaian_kerja', false)
-            ->where('kesesuaian_kuliah', false)
+            ->orWhere('kesesuaian_kuliah', false)
             ->count();
         $pct_kuliah_sesuai = Alumni::query()
             ->where('kesesuaian_kuliah', true)

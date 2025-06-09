@@ -18,15 +18,15 @@ class AdminSeeder extends Seeder
             'nama' => 'Firman firmansyah',
             'password' => 'firman123',
         ]);
-        Admin::create([
-            'username' => 'budi123',
-            'nama' => 'Budi Budiansyah',
-            'password' => 'pw456',
-        ]);
-        Admin::create([
-            'username' => 'eko111',
-            'nama' => 'Eko Patrio',
-            'password' => 'eko123',
-        ]);
+        // Admin::create([
+        //     'username' => 'budi123',
+        //     'nama' => 'Budi Budiansyah',
+        //     'password' => 'pw456',
+        // ]);
+        // Admin::create([
+        //     'username' => 'eko111',
+        //     'nama' => 'Eko Patrio',
+        //     'password' => 'eko123',
+        // ]);
     }
 }
