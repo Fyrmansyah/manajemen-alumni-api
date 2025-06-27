@@ -15,18 +15,9 @@ class AdminSeeder extends Seeder
     {
         Admin::create([
             'username' => 'firman',
-            'nama' => 'Firman firmansyah',
+            'nama' => 'Rahmad Rizki Firmansyah',
             'password' => 'firman123',
         ]);
-        Admin::create([
-            'username' => 'budi123',
-            'nama' => 'Budi Budiansyah',
-            'password' => 'pw456',
-        ]);
-        Admin::create([
-            'username' => 'eko111',
-            'nama' => 'Eko Patrio',
-            'password' => 'eko123',
-        ]);
+        
     }
 }
