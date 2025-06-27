@@ -28,7 +28,7 @@ return new class extends Migration
             $table->string('prodi_kuliah')->nullable();
             $table->boolean('kesesuaian_kerja')->nullable();
             $table->boolean('kesesuaian_kuliah')->nullable();
-            $table->foreignIdFor(Jurusan::class);
+            $table->foreignIdFor(Jurusan::class)->nullable()->constrained()->nullOnDelete();
 
             $table->timestamps();
         });

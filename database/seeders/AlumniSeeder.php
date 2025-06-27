@@ -16,12 +16,12 @@ class AlumniSeeder extends Seeder
     {
         $jurusan = Jurusan::first();
         Alumni::create([
-            'nama' => 'David Bontha',
+            'nama' => 'Budi Pekerti',
             'tgl_lahir' => '1996-08-19',
             'tahun_mulai' => 2021,
             'tahun_lulus' => 2024,
             'no_tlp' => '08813573779',
-            'email' => 'david@gmail.com',
+            'email' => 'budi@gmail.com',
             'password' => 'test123',
             'alamat' => 'Jl. Rumah Tentram Gembira No. 9',
             'tempat_kerja' => null,
@@ -33,6 +33,6 @@ class AlumniSeeder extends Seeder
             'jurusan_id' => $jurusan->id
         ]);
 
-        Alumni::factory()->count(50)->create();
+        // Alumni::factory()->count(50)->create();
     }
 }
