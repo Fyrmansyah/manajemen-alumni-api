@@ -25,6 +25,7 @@ class DatabaseSeeder extends Seeder
             AlumniSeeder::class,
             CompanySeeder::class,
             JobPostingSeeder::class,
+            NewsSeeder::class,
         ]);
     }
 }

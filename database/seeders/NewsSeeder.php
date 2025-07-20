@@ -3,7 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\News;
-use App\Models\User;
+use App\Models\Admin;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
@@ -16,7 +16,7 @@ class NewsSeeder extends Seeder
     public function run(): void
     {
         // Get admin user for author_id
-        $admin = User::where('role', 'admin')->first();
+        $admin = Admin::where('username', 'admin')->first();
         
         if (!$admin) {
             $this->command->info('No admin user found. Please run AdminSeeder first.');
@@ -139,6 +139,272 @@ class NewsSeeder extends Seeder
                 'author_id' => $admin->id,
                 'published_at' => now()->subWeeks(2),
                 'views' => 156,
+            ],
+            [
+                'title' => 'Job Fair Virtual SMKN 1 Surabaya 2025',
+                'content' => '<p>Dalam rangka memfasilitasi para alumni untuk mendapatkan pekerjaan yang sesuai, BKK SMKN 1 Surabaya akan mengadakan Job Fair Virtual pada:</p>
+
+<h3>Detail Acara:</h3>
+<p><strong>Tanggal:</strong> 15-17 Agustus 2025<br>
+<strong>Waktu:</strong> 09.00 - 15.00 WIB<br>
+<strong>Platform:</strong> Zoom Meeting & Website BKK</p>
+
+<h3>Perusahaan Peserta:</h3>
+<ul>
+<li>PT. Astra International</li>
+<li>PT. Telkom Indonesia</li>
+<li>PT. Bank Central Asia</li>
+<li>PT. Shopee Indonesia</li>
+<li>PT. Gojek Indonesia</li>
+<li>Dan 20+ perusahaan lainnya</li>
+</ul>
+
+<p>Registrasi dibuka mulai 1 Agustus 2025 melalui website BKK. Jangan lewatkan kesempatan emas ini!</p>',
+                'slug' => 'job-fair-virtual-smkn-1-surabaya-2025',
+                'status' => 'published',
+                'is_featured' => true,
+                'category' => 'Pengumuman',
+                'author_id' => $admin->id,
+                'published_at' => now()->subDays(1),
+                'views' => 345,
+            ],
+            [
+                'title' => 'Workshop Persiapan Sertifikasi Profesional',
+                'content' => '<p>BKK SMKN 1 Surabaya mengadakan workshop persiapan sertifikasi profesional untuk membantu alumni meningkatkan kompetensi dan daya saing di dunia kerja.</p>
+
+<h3>Sertifikasi yang Tersedia:</h3>
+<ul>
+<li><strong>IT:</strong> CCNA, CompTIA, Microsoft Azure</li>
+<li><strong>Akuntansi:</strong> Brevet A&B, MYOB</li>
+<li><strong>Marketing:</strong> Google Ads, Facebook Blueprint</li>
+<li><strong>Multimedia:</strong> Adobe Certified Expert</li>
+</ul>
+
+<h3>Fasilitas:</h3>
+<ul>
+<li>Materi pembelajaran lengkap</li>
+<li>Praktik langsung dengan tools</li>
+<li>Simulasi ujian sertifikasi</li>
+<li>Sertifikat keikutsertaan</li>
+</ul>
+
+<p>Biaya workshop sangat terjangkau dengan subsidi dari sekolah. Daftar sekarang juga!</p>',
+                'slug' => 'workshop-persiapan-sertifikasi-profesional',
+                'status' => 'published',
+                'is_featured' => false,
+                'category' => 'Pelatihan',
+                'author_id' => $admin->id,
+                'published_at' => now()->subDays(3),
+                'views' => 123,
+            ],
+            [
+                'title' => 'Kerjasama dengan Startup Technology Hub',
+                'content' => '<p>BKK SMKN 1 Surabaya menjalin kerjasama strategis dengan Technology Hub, sebuah ekosistem startup terbesar di Surabaya, untuk memberikan kesempatan magang dan kerja bagi alumni.</p>
+
+<h3>Program Kerjasama:</h3>
+<ul>
+<li>Internship Program selama 6 bulan</li>
+<li>Fresh Graduate Training Program</li>
+<li>Startup Bootcamp</li>
+<li>Mentoring dari founder startup sukses</li>
+</ul>
+
+<h3>Posisi yang Tersedia:</h3>
+<ul>
+<li>Junior Full Stack Developer</li>
+<li>Mobile App Developer</li>
+<li>Digital Marketing Specialist</li>
+<li>UI/UX Designer</li>
+<li>Data Analyst</li>
+</ul>
+
+<p>Program ini memberikan pengalaman kerja di lingkungan startup yang dinamis dan inovatif.</p>',
+                'slug' => 'kerjasama-dengan-startup-technology-hub',
+                'status' => 'published',
+                'is_featured' => false,
+                'category' => 'Kerjasama',
+                'author_id' => $admin->id,
+                'published_at' => now()->subDays(4),
+                'views' => 189,
+            ],
+            [
+                'title' => 'Alumni Multimedia Raih Penghargaan Designer Muda Terbaik',
+                'content' => '<p>Prestasi membanggakan kembali diraih oleh alumni SMKN 1 Surabaya. Sari Dewi, alumni jurusan Multimedia angkatan 2021, berhasil meraih penghargaan "Young Designer of the Year 2025" dalam ajang Indonesia Creative Awards.</p>
+
+<h3>Pencapaian Sari Dewi:</h3>
+<ul>
+<li>Founder studio desain "Creative Minds"</li>
+<li>Telah menangani 50+ klien nasional</li>
+<li>Portofolio mencakup branding, web design, dan packaging</li>
+<li>Omzet studio mencapai ratusan juta per tahun</li>
+</ul>
+
+<h3>Kunci Sukses:</h3>
+<p>"Semua dimulai dari passion dan dedikasi. Ilmu yang saya dapat di SMKN 1 Surabaya menjadi pondasi kuat untuk membangun karir. Ditambah dengan terus belajar dan mengikuti perkembangan teknologi," ungkap Sari.</p>
+
+<p>Sari juga aktif berbagi ilmu melalui workshop dan mentoring untuk adik-adik alumni yang berminat di bidang desain.</p>',
+                'slug' => 'alumni-multimedia-raih-penghargaan-designer-muda-terbaik',
+                'status' => 'published',
+                'is_featured' => false,
+                'category' => 'Success Story',
+                'author_id' => $admin->id,
+                'published_at' => now()->subDays(6),
+                'views' => 278,
+            ],
+            [
+                'title' => 'Tips Membangun Personal Branding di Era Digital',
+                'content' => '<p>Di era digital seperti sekarang, personal branding menjadi sangat penting untuk meningkatkan peluang karir. Berikut tips membangun personal branding yang efektif:</p>
+
+<h3>1. Tentukan Nilai Unik Anda</h3>
+<ul>
+<li>Identifikasi keahlian khusus yang dimiliki</li>
+<li>Tentukan nilai yang ingin ditawarkan</li>
+<li>Cari differentiation point dari kompetitor</li>
+</ul>
+
+<h3>2. Bangun Presence Digital</h3>
+<ul>
+<li>Optimalisasi profil LinkedIn</li>
+<li>Buat portfolio online yang menarik</li>
+<li>Konsisten posting konten berkualitas</li>
+<li>Engage dengan komunitas profesional</li>
+</ul>
+
+<h3>3. Network dan Kolaborasi</h3>
+<ul>
+<li>Hadiri event industri</li>
+<li>Join komunitas sesuai bidang</li>
+<li>Kolaborasi dengan profesional lain</li>
+<li>Berbagi knowledge dan pengalaman</li>
+</ul>
+
+<p>Personal branding yang kuat akan membuka banyak peluang karir dan bisnis di masa depan.</p>',
+                'slug' => 'tips-membangun-personal-branding-di-era-digital',
+                'status' => 'published',
+                'is_featured' => false,
+                'category' => 'Tips Karir',
+                'author_id' => $admin->id,
+                'published_at' => now()->subWeek(),
+                'views' => 156,
+            ],
+            [
+                'title' => 'Program Entrepreneur Muda untuk Alumni',
+                'content' => '<p>BKK SMKN 1 Surabaya meluncurkan program khusus "Entrepreneur Muda" untuk mendorong alumni yang ingin memulai bisnis sendiri. Program ini didukung oleh Kementerian Koperasi dan UKM.</p>
+
+<h3>Fasilitas Program:</h3>
+<ul>
+<li>Pelatihan business plan dan finansial</li>
+<li>Mentoring dari pengusaha sukses</li>
+<li>Akses ke modal usaha mikro</li>
+<li>Networking dengan investor angel</li>
+<li>Incubation space selama 1 tahun</li>
+</ul>
+
+<h3>Kriteria Peserta:</h3>
+<ul>
+<li>Alumni SMKN 1 Surabaya</li>
+<li>Memiliki ide bisnis yang jelas</li>
+<li>Berkomitmen mengikuti program 6 bulan</li>
+<li>Bersedia bermitra dengan sekolah</li>
+</ul>
+
+<h3>Timeline Program:</h3>
+<p><strong>Pendaftaran:</strong> 1-31 Agustus 2025<br>
+<strong>Seleksi:</strong> 1-7 September 2025<br>
+<strong>Program dimulai:</strong> 15 September 2025</p>
+
+<p>Kuota terbatas hanya 20 peserta. Daftar segera!</p>',
+                'slug' => 'program-entrepreneur-muda-untuk-alumni',
+                'status' => 'published',
+                'is_featured' => true,
+                'category' => 'Program',
+                'author_id' => $admin->id,
+                'published_at' => now()->subDays(8),
+                'views' => 445,
+            ],
+            [
+                'title' => 'Panduan Lengkap Menulis CV yang Menarik',
+                'content' => '<p>CV (Curriculum Vitae) adalah dokumen pertama yang dilihat oleh recruiter. Berikut panduan lengkap menulis CV yang menarik dan profesional:</p>
+
+<h3>1. Format dan Layout</h3>
+<ul>
+<li>Gunakan font yang mudah dibaca (Arial, Calibri)</li>
+<li>Maksimal 2 halaman untuk fresh graduate</li>
+<li>Konsisten dalam penggunaan bullet points</li>
+<li>Beri white space yang cukup</li>
+</ul>
+
+<h3>2. Informasi Wajib</h3>
+<ul>
+<li>Data pribadi (nama, kontak, alamat)</li>
+<li>Professional summary/objective</li>
+<li>Pengalaman kerja/magang</li>
+<li>Pendidikan</li>
+<li>Skills dan kompetensi</li>
+<li>Portofolio (jika relevan)</li>
+</ul>
+
+<h3>3. Tips Menulis yang Efektif</h3>
+<ul>
+<li>Sesuaikan dengan posisi yang dilamar</li>
+<li>Gunakan action words (managed, developed, created)</li>
+<li>Sertakan achievement dengan angka</li>
+<li>Hindari typo dan grammatical error</li>
+</ul>
+
+<h3>4. Kesalahan yang Harus Dihindari</h3>
+<ul>
+<li>Foto yang tidak profesional</li>
+<li>Informasi yang tidak relevan</li>
+<li>Format yang berantakan</li>
+<li>Berbohong tentang pengalaman</li>
+</ul>
+
+<p>CV yang baik adalah investasi untuk masa depan karir Anda!</p>',
+                'slug' => 'panduan-lengkap-menulis-cv-yang-menarik',
+                'status' => 'published',
+                'is_featured' => false,
+                'category' => 'Tips Karir',
+                'author_id' => $admin->id,
+                'published_at' => now()->subDays(10),
+                'views' => 234,
+            ],
+            [
+                'title' => 'Kerjasama dengan Bank untuk Program Credit Scoring Alumni',
+                'content' => '<p>BKK SMKN 1 Surabaya menjalin kerjasama dengan Bank ABC untuk memberikan kemudahan akses kredit kepada alumni yang telah bekerja. Program ini bertujuan membantu alumni dalam pengembangan karir dan bisnis.</p>
+
+<h3>Keuntungan Program:</h3>
+<ul>
+<li>Proses approval yang lebih cepat</li>
+<li>Suku bunga preferential</li>
+<li>Syarat yang lebih mudah</li>
+<li>Konsultasi finansial gratis</li>
+</ul>
+
+<h3>Jenis Kredit yang Tersedia:</h3>
+<ul>
+<li>Kredit Tanpa Agunan (KTA)</li>
+<li>Kredit Kendaraan Bermotor</li>
+<li>Kredit Usaha Mikro</li>
+<li>Kredit Pendidikan lanjutan</li>
+</ul>
+
+<h3>Syarat dan Ketentuan:</h3>
+<ul>
+<li>Alumni SMKN 1 Surabaya</li>
+<li>Telah bekerja minimal 1 tahun</li>
+<li>Memiliki slip gaji tetap</li>
+<li>Tidak ada riwayat kredit macet</li>
+</ul>
+
+<p>Konsultasi dan pendaftaran dapat dilakukan di kantor BKK atau melalui website resmi.</p>',
+                'slug' => 'kerjasama-dengan-bank-untuk-program-credit-scoring-alumni',
+                'status' => 'published',
+                'is_featured' => false,
+                'category' => 'Kerjasama',
+                'author_id' => $admin->id,
+                'published_at' => now()->subDays(12),
+                'views' => 167,
             ],
         ];
 
