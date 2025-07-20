@@ -48,6 +48,10 @@ return [
             'driver' => 'session',
             'provider' => 'admins',
         ],
+        'company' => [
+            'driver' => 'session',
+            'provider' => 'companies',
+        ],
     ],
 
     /*
@@ -81,6 +85,11 @@ return [
         'alumnis' => [
             'driver' => 'eloquent',
             'model' => App\Models\Alumni::class,
+        ],
+
+        'companies' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Company::class,
         ],
     ],
 

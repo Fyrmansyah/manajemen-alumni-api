@@ -13,11 +13,11 @@ class AdminSeeder extends Seeder
      */
     public function run(): void
     {
+        // Create admin user in admins table
         Admin::create([
-            'username' => 'firman',
-            'nama' => 'Rahmad Rizki Firmansyah',
-            'password' => 'firman123',
+            'nama' => 'Admin BKK SMKN 1 Surabaya',
+            'username' => 'admin',
+            'password' => 'admin123',
         ]);
-        
     }
 }

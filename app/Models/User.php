@@ -20,8 +20,10 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
+        'email',
         'username',
         'password',
+        'role',
     ];
 
     /**
@@ -43,6 +45,39 @@ class User extends Authenticatable
     {
         return [
             'password' => 'hashed',
+            'email_verified_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Get the alumni profile associated with the user.
+     */
+    public function alumni()
+    {
+        return $this->hasOne(Alumni::class);
+    }
+
+    /**
+     * Get the company profile associated with the user.
+     */
+    public function company()
+    {
+        return $this->hasOne(Company::class);
+    }
+
+    /**
+     * Get the admin profile associated with the user.
+     */
+    public function admin()
+    {
+        return $this->hasOne(Admin::class);
+    }
+
+    /**
+     * Check if user has a specific role.
+     */
+    public function hasRole($role)
+    {
+        return $this->role === $role;
     }
 }
