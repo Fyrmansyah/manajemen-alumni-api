@@ -80,19 +80,16 @@ class AuthController extends Controller
 
         // Try admin login (username)
         if (Auth::guard('admin')->attempt(['username' => $loginField, 'password' => $password], $remember)) {
-            $request->session()->regenerate();
             return redirect()->intended('/admin/dashboard');
         }
 
         // Try alumni login (email)
         if (Auth::guard('alumni')->attempt(['email' => $loginField, 'password' => $password], $remember)) {
-            $request->session()->regenerate();
             return redirect()->intended('/alumni/dashboard');
         }
 
         // Try company login (email)
         if (Auth::guard('company')->attempt(['email' => $loginField, 'password' => $password], $remember)) {
-            $request->session()->regenerate();
             return redirect()->intended('/company/dashboard');
         }
 
