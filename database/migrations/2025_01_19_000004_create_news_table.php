@@ -23,7 +23,6 @@ return new class extends Migration
             $table->integer('views')->default(0);
             $table->timestamps();
             
-            $table->foreign('author_id')->references('id')->on('admins')->onDelete('cascade');
             $table->index(['status', 'published_at']);
         });
     }

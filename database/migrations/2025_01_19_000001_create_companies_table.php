@@ -19,7 +19,7 @@ return new class extends Migration
             $table->text('address');
             $table->string('website')->nullable();
             $table->text('description')->nullable();
-            $table->foreignId('category_id')->nullable()->constrained('jurusans')->nullOnDelete();
+            $table->unsignedBigInteger('category_id')->nullable();
             $table->year('established_year')->nullable();
             $table->string('company_size')->nullable();
             $table->string('contact_person')->nullable();

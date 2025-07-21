@@ -12,8 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('alumnis', function (Blueprint $table) {
-            $table->unique('email');
-            $table->string('password')->nullable(false)->change();
+            $table->enum('jenis_kelamin', ['L', 'P'])->after('nisn');
         });
     }
 
@@ -23,8 +22,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('alumnis', function (Blueprint $table) {
-            $table->dropUnique(['email']);
-            $table->string('password')->nullable()->change();
+            $table->dropColumn('jenis_kelamin');
         });
     }
 };

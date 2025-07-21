@@ -147,21 +147,25 @@ class AuthController extends Controller
     public function register(\Illuminate\Http\Request $request)
     {
         $request->validate([
+            'nisn' => 'required|string|size:10|unique:alumnis',
             'nama' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:alumnis',
             'password' => 'required|string|min:8|confirmed',
-            'tgl_lahir' => 'required|date',
+            'jenis_kelamin' => 'required|in:L,P',
+            'tgl_lahir' => 'nullable|date',
             'tahun_mulai' => 'required|integer|min:2000|max:' . date('Y'),
             'tahun_lulus' => 'required|integer|min:2000|max:' . (date('Y') + 10),
             'no_tlp' => 'required|string|max:20',
-            'alamat' => 'required|string',
+            'alamat' => 'nullable|string',
             'jurusan_id' => 'required|exists:jurusans,id',
         ]);
 
         $alumni = \App\Models\Alumni::create([
+            'nisn' => $request->input('nisn'),
             'nama' => $request->input('nama'),
             'email' => $request->input('email'),
             'password' => $request->input('password'), // Will be auto-hashed by model
+            'jenis_kelamin' => $request->input('jenis_kelamin'),
             'tgl_lahir' => $request->input('tgl_lahir'),
             'tahun_mulai' => $request->input('tahun_mulai'),
             'tahun_lulus' => $request->input('tahun_lulus'),

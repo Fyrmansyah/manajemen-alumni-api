@@ -26,8 +26,6 @@
                     
                     <form method="POST" action="{{ route('register') }}" class="needs-validation" novalidate>
                         @csrf
-                        
-                        <!-- Row 1: NISN and Nama Lengkap -->
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
@@ -62,9 +60,26 @@
                             </div>
                         </div>
 
-                        <!-- Row 2: Email and Nomor Telepon -->
                         <div class="row">
                             <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="tahun_mulai" class="form-label">Tahun Mulai <span class="text-danger">*</span></label>
+                                    <select class="form-select @error('tahun_mulai') is-invalid @enderror" 
+                                            id="tahun_mulai" 
+                                            name="tahun_mulai" 
+                                            required>
+                                        <option value="">Pilih Tahun Mulai</option>
+                                        @for($year = date('Y'); $year >= 2010; $year--)
+                                            <option value="{{ $year }}" {{ old('tahun_mulai') == $year ? 'selected' : '' }}>
+                                                {{ $year }}
+                                            </option>
+                                        @endfor
+                                    </select>
+                                    @error('tahun_mulai')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
                                 <div class="mb-3">
                                     <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
                                     <input type="email" 
@@ -96,7 +111,6 @@
                             </div>
                         </div>
 
-                        <!-- Row 3: Jurusan and Tahun Lulus -->
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
@@ -138,32 +152,16 @@
                             </div>
                         </div>
 
-                        <!-- Row 4: Jenis Kelamin and Tanggal Lahir -->
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label for="jenis_kelamin" class="form-label">Jenis Kelamin <span class="text-danger">*</span></label>
-                                    <select class="form-select @error('jenis_kelamin') is-invalid @enderror" 
-                                            id="jenis_kelamin" 
-                                            name="jenis_kelamin" 
-                                            required>
-                                        <option value="">Pilih Jenis Kelamin</option>
-                                        <option value="L" {{ old('jenis_kelamin') == 'L' ? 'selected' : '' }}>Laki-laki</option>
-                                        <option value="P" {{ old('jenis_kelamin') == 'P' ? 'selected' : '' }}>Perempuan</option>
-                                    </select>
-                                    @error('jenis_kelamin')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="tgl_lahir" class="form-label">Tanggal Lahir</label>
+                                    <label for="tgl_lahir" class="form-label">Tanggal Lahir <span class="text-danger">*</span></label>
                                     <input type="date" 
                                            class="form-control @error('tgl_lahir') is-invalid @enderror" 
                                            id="tgl_lahir" 
                                            name="tgl_lahir" 
-                                           value="{{ old('tgl_lahir') }}">
+                                           value="{{ old('tgl_lahir') }}"
+                                           required>
                                     @error('tgl_lahir')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -171,43 +169,19 @@
                             </div>
                         </div>
 
-                        <!-- Row 5: Tahun Mulai -->
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="tahun_mulai" class="form-label">Tahun Mulai <span class="text-danger">*</span></label>
-                                    <select class="form-select @error('tahun_mulai') is-invalid @enderror" 
-                                            id="tahun_mulai" 
-                                            name="tahun_mulai" 
-                                            required>
-                                        <option value="">Pilih Tahun Mulai</option>
-                                        @for($year = date('Y'); $year >= 2010; $year--)
-                                            <option value="{{ $year }}" {{ old('tahun_mulai') == $year ? 'selected' : '' }}>
-                                                {{ $year }}
-                                            </option>
-                                        @endfor
-                                    </select>
-                                    @error('tahun_mulai')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Alamat -->
                         <div class="mb-3">
-                            <label for="alamat" class="form-label">Alamat</label>
+                            <label for="alamat" class="form-label">Alamat <span class="text-danger">*</span></label>
                             <textarea class="form-control @error('alamat') is-invalid @enderror" 
                                       id="alamat" 
                                       name="alamat" 
                                       rows="3" 
+                                      required
                                       placeholder="Alamat lengkap">{{ old('alamat') }}</textarea>
                             @error('alamat')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
 
-                        <!-- Password Fields -->
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">

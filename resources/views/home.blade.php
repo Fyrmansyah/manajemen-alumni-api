@@ -31,10 +31,7 @@
             <div class="col-lg-6">
                 <div class="hero-image text-center">
                     <div class="logo-container">
-                        <img src="https://www.smkn1-sby.sch.id/assets/template/landing/images/logo.png" alt="SMK Negeri 1 Surabaya" class="hero-logo">
-                        <div class="logo-text">
-                            <h2 class="school-name">SMKN<span class="text-warning">1</span></h2>
-                        </div>
+                        <img src="{{ asset('assets/images/logo BKK.png') }}" alt="SMK Negeri 1 Surabaya" class="hero-logo">   
                     </div>
                 </div>
             </div>
@@ -57,7 +54,7 @@
                         <i class="fas fa-briefcase"></i>
                     </div>
                     <div class="stat-number">{{ $stats['total_jobs'] ?? 0 }}</div>
-                    <div class="stat-label">Lowongan Aktif</div>
+                    <div class="stat-label">Lowongan</div>
                 </div>
             </div>
             <div class="col-md-3 col-sm-6 mb-4">
@@ -235,7 +232,7 @@
 <style>
 /* Hero Section */
 .hero-section {
-    background: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #6366f1 100%);
+    background: linear-gradient(135deg, #012340 0%, #012340 50%, #012340 100%);
     position: relative;
     min-height: 100vh;
     display: flex;
@@ -302,8 +299,8 @@
 }
 
 .hero-logo {
-    width: 200px;
-    height: 200px;
+    width: 350px;
+    height: 350px;
     object-fit: contain;
     filter: drop-shadow(0 10px 30px rgba(0,0,0,0.3));
 }
@@ -415,7 +412,6 @@
     transform: translateX(-50%);
     width: 60px;
     height: 4px;
-    background: linear-gradient(90deg, #3b82f6, #6366f1);
     border-radius: 2px;
 }
 

@@ -26,7 +26,7 @@
                     
                     <div class="alert alert-info">
                         <i class="fas fa-info-circle me-2"></i>
-                        <strong>Perhatian:</strong> Akun perusahaan akan diverifikasi terlebih dahulu oleh admin BKK sebelum dapat digunakan.
+                        <strong>Perhatian:</strong> Akun perusahaan akan diverifikasi terlebih dahulu oleh admin BKK sebelum dapat digunakan dan akan dikerjakan pada saat jam kerjai.
                     </div>
 
                     <form method="POST" action="{{ route('company.register') }}" class="needs-validation" novalidate>

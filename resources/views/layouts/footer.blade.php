@@ -17,7 +17,7 @@
                                 </a>
                             </li>
                             <li>
-                                <a style="border: 1px solid white; margin:5px; padding:10px; text-align:center;" href="https://www.instagram.com/smkn1surabaya.official/?hl=id" target="_blank" class="instagram-link">
+                                <a style="border: 1px solid white; margin:5px; padding:10px; text-align:center;" href="https://www.instagram.com/smkn1sby.official/" target="_blank" class="instagram-link">
                                     <i style="font-size: 20px;" class="fab fa-instagram" aria-hidden="true"></i>
                                 </a>
                             </li>

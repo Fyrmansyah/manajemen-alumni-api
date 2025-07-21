@@ -5,7 +5,7 @@
             <div class="col-md-3">
                 <div class="logo">
                     <a href="{{ route('home') }}">
-                        <img src="{{ asset('assets/images/logo.png') }}" alt="BKK SMKN 1 Surabaya" class="img-fluid">
+                        <img src="{{ asset('assets/images/logo BKK.png') }}" alt="BKK SMK Negeri 1 Surabaya" class="hero-logo">
                     </a>
                 </div>
             </div>
