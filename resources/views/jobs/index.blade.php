@@ -199,25 +199,23 @@
                                         <a href="{{ route('jobs.show', $job->id) }}" class="btn btn-outline-primary btn-sm">
                                             <i class="fas fa-eye me-1"></i>Detail
                                         </a>
-                                        @auth
-                                            @if(auth()->user()->role === 'alumni')
-                                                @php
-                                                    $hasApplied = false; // You can implement this check
-                                                    $canApply = $job->status === 'active' && !$job->isExpired();
-                                                @endphp
-                                                @if($hasApplied)
-                                                    <button class="btn btn-secondary btn-sm ms-2" disabled>
-                                                        <i class="fas fa-check me-1"></i>Sudah Melamar
-                                                    </button>
-                                                @elseif($canApply)
-                                                    <button class="btn btn-primary btn-sm ms-2" onclick="applyJob({{ $job->id }})">
-                                                        <i class="fas fa-paper-plane me-1"></i>Lamar
-                                                    </button>
-                                                @else
-                                                    <button class="btn btn-secondary btn-sm ms-2" disabled>
-                                                        <i class="fas fa-times me-1"></i>Tidak Tersedia
-                                                    </button>
-                                                @endif
+                                        @auth('alumni')
+                                            @php
+                                                $hasApplied = false; // You can implement this check
+                                                $canApply = $job->status === 'active' && !$job->isExpired();
+                                            @endphp
+                                            @if($hasApplied)
+                                                <button class="btn btn-secondary btn-sm ms-2" disabled>
+                                                    <i class="fas fa-check me-1"></i>Sudah Melamar
+                                                </button>
+                                            @elseif($canApply)
+                                                <button class="btn btn-primary btn-sm ms-2" onclick="applyJob({{ $job->id }})">
+                                                    <i class="fas fa-paper-plane me-1"></i>Lamar
+                                                </button>
+                                            @else
+                                                <button class="btn btn-secondary btn-sm ms-2" disabled>
+                                                    <i class="fas fa-times me-1"></i>Tidak Tersedia
+                                                </button>
                                             @endif
                                         @else
                                             <a href="{{ route('login') }}" class="btn btn-primary btn-sm ms-2">
@@ -269,14 +267,24 @@ document.getElementById('sort').addEventListener('change', function() {
 // Apply for job function
 @auth
 function applyJob(jobId) {
+    // Show apply modal with form
+    const coverLetter = prompt('Masukkan cover letter Anda (wajib diisi):');
+    
+    if (!coverLetter || coverLetter.trim() === '') {
+        alert('Cover letter harus diisi!');
+        return;
+    }
+
     if (confirm('Apakah Anda yakin ingin melamar pekerjaan ini?')) {
-        fetch(`/api/jobs/${jobId}/apply`, {
+        const formData = new FormData();
+        formData.append('cover_letter', coverLetter);
+        
+        fetch(`/jobs/${jobId}/apply`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                'Authorization': 'Bearer ' + localStorage.getItem('auth_token')
-            }
+            },
+            body: formData
         })
         .then(response => response.json())
         .then(data => {

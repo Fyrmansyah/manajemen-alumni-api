@@ -160,27 +160,30 @@
                         </h4>
                     @endif
 
-                    @auth
-                        @if(auth()->user()->hasRole('alumni'))
-                            @if($hasApplied)
-                                <div class="alert alert-info">
-                                    <i class="fas fa-check-circle me-2"></i>
-                                    Anda sudah melamar pekerjaan ini
-                                </div>
-                                <a href="{{ route('alumni.applications') }}" class="btn btn-outline-primary">
-                                    <i class="fas fa-eye me-2"></i>Lihat Status Lamaran
-                                </a>
-                            @else
-                                <button class="btn btn-primary btn-lg w-100 mb-3" onclick="applyJob({{ $job->id }})">
-                                    <i class="fas fa-paper-plane me-2"></i>Lamar Sekarang
-                                </button>
-                            @endif
-                        @else
-                            <div class="alert alert-warning">
-                                <i class="fas fa-info-circle me-2"></i>
-                                Hanya alumni yang dapat melamar pekerjaan
+                    @auth('alumni')
+                        @if($hasApplied)
+                            <div class="alert alert-info">
+                                <i class="fas fa-check-circle me-2"></i>
+                                Anda sudah melamar pekerjaan ini
                             </div>
+                            <a href="{{ route('alumni.applications') }}" class="btn btn-outline-primary">
+                                <i class="fas fa-eye me-2"></i>Lihat Status Lamaran
+                            </a>
+                        @else
+                            <button class="btn btn-primary btn-lg w-100 mb-3" onclick="applyJob({{ $job->id }})">
+                                <i class="fas fa-paper-plane me-2"></i>Lamar Sekarang
+                            </button>
                         @endif
+                    @elseauth('admin')
+                        <div class="alert alert-warning">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Admin tidak dapat melamar pekerjaan
+                        </div>
+                    @elseauth('company')
+                        <div class="alert alert-warning">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Perusahaan tidak dapat melamar pekerjaan
+                        </div>
                     @else
                         <a href="{{ route('login') }}" class="btn btn-primary btn-lg w-100 mb-3">
                             <i class="fas fa-sign-in-alt me-2"></i>Login untuk Melamar
@@ -275,14 +278,24 @@
 // Apply for job function
 @auth
 function applyJob(jobId) {
+    // Show apply modal with form
+    const coverLetter = prompt('Masukkan cover letter Anda (wajib diisi):');
+    
+    if (!coverLetter || coverLetter.trim() === '') {
+        alert('Cover letter harus diisi!');
+        return;
+    }
+
     if (confirm('Apakah Anda yakin ingin melamar pekerjaan ini?')) {
-        fetch(`/api/jobs/${jobId}/apply`, {
+        const formData = new FormData();
+        formData.append('cover_letter', coverLetter);
+        
+        fetch(`/jobs/${jobId}/apply`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                'Authorization': 'Bearer ' + localStorage.getItem('auth_token')
-            }
+            },
+            body: formData
         })
         .then(response => response.json())
         .then(data => {

@@ -71,8 +71,8 @@ class JobController extends Controller
         $job->incrementViews();
 
         $hasApplied = false;
-        if (Auth::check() && Auth::user() instanceof \App\Models\Alumni) {
-            $hasApplied = Auth::user()->hasAppliedFor($job);
+        if (Auth::guard('alumni')->check()) {
+            $hasApplied = Auth::guard('alumni')->user()->hasAppliedFor($job);
         }
 
         return response()->json([
@@ -93,7 +93,7 @@ class JobController extends Controller
         ]);
 
         $job = Job::findOrFail($id);
-        $alumni = Auth::user();
+        $alumni = Auth::guard('alumni')->user();
 
         // Check if already applied
         if ($alumni->hasAppliedFor($job)) {
@@ -136,7 +136,7 @@ class JobController extends Controller
 
     public function myApplications()
     {
-        $alumni = Auth::user();
+        $alumni = Auth::guard('alumni')->user();
         
         $applications = Application::with(['job.company'])
                                   ->forAlumni($alumni->id)
@@ -235,12 +235,70 @@ class JobController extends Controller
 
         // Check if current user has applied
         $hasApplied = false;
-        if (auth()->check() && auth()->user()->role === 'alumni') {
+        if (auth('alumni')->check()) {
+            $alumniId = auth('alumni')->id();
             $hasApplied = $job->applications()
-                ->where('alumni_id', auth()->user()->alumni->id)
+                ->where('alumni_id', $alumniId)
                 ->exists();
         }
 
         return view('jobs.show', compact('job', 'relatedJobs', 'hasApplied'));
+    }
+
+    /**
+     * Apply for a job via web (for authenticated alumni using session)
+     */
+    public function applyWeb(Request $request, $id)
+    {
+        $request->validate([
+            'cover_letter' => 'required|string|max:2000',
+            'cv_file' => 'nullable|file|mimes:pdf,doc,docx|max:2048',
+        ]);
+
+        $job = Job::findOrFail($id);
+        $alumni = Auth::guard('alumni')->user();
+
+        // Check if already applied
+        $existingApplication = Application::where('alumni_id', $alumni->getKey())
+            ->where('job_posting_id', $job->getKey())
+            ->first();
+
+        if ($existingApplication) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Anda sudah melamar untuk posisi ini'
+            ], 422);
+        }
+
+        // Check if job is still available
+        if ($job->status !== 'active') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lowongan ini sudah tidak tersedia'
+            ], 422);
+        }
+
+        $applicationData = [
+            'alumni_id' => $alumni->getKey(),
+            'job_posting_id' => $job->getKey(),
+            'cover_letter' => $request->input('cover_letter'),
+            'status' => 'pending',
+            'applied_at' => now(),
+        ];
+
+        // Handle CV upload
+        if ($request->hasFile('cv_file')) {
+            $cvFile = $request->file('cv_file');
+            $filename = time() . '_' . $alumni->getKey() . '.' . $cvFile->getClientOriginalExtension();
+            $cvFile->storeAs('cvs', $filename, 'public');
+            $applicationData['cv_file'] = $filename;
+        }
+
+        Application::create($applicationData);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Lamaran berhasil dikirim!'
+        ]);
     }
 }

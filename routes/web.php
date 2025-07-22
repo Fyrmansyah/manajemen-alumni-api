@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Auth; // Added this import for Auth facade
 
 // Public routes
 Route::get('/', [HomeController::class, 'index'])->name('home');
+
 Route::get('/about', function() {
     return view('about');
 })->name('about');
@@ -184,6 +185,11 @@ Route::post('/test-login', function(\Illuminate\Http\Request $request) {
 Route::prefix('jobs')->name('jobs.')->group(function () {
     Route::get('/', [JobController::class, 'indexWeb'])->name('index');
     Route::get('/{job}', [JobController::class, 'showWeb'])->name('show');
+    
+    // Apply job route for authenticated alumni
+    Route::middleware(['auth:alumni'])->group(function () {
+        Route::post('/{id}/apply', [JobController::class, 'applyWeb'])->name('apply');
+    });
 });
 
 // News routes

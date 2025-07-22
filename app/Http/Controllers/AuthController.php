@@ -176,7 +176,7 @@ class AuthController extends Controller
 
         Auth::guard('alumni')->login($alumni);
 
-        return redirect('/home');
+        return redirect()->route('home');
     }
 
     /**
