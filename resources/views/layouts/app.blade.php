@@ -617,6 +617,25 @@
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
+    <!-- Logout Helper Script -->
+    <script>
+        function performLogout(formId) {
+            try {
+                const form = document.getElementById(formId);
+                if (form) {
+                    form.submit();
+                } else {
+                    // Fallback: redirect to alternative logout route
+                    window.location.href = '{{ route("logout.alt") }}';
+                }
+            } catch (error) {
+                console.error('Logout error:', error);
+                // Fallback: redirect to alternative logout route
+                window.location.href = '{{ route("logout.alt") }}';
+            }
+        }
+    </script>
+
     @stack('scripts')
 </body>
 </html>

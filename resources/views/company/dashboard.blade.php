@@ -299,6 +299,7 @@ function closeJob(jobId) {
 @endpush
 
 @section('styles')
+<style>
 .border-left-primary {
     border-left: 0.25rem solid #4e73df !important;
 }
@@ -332,4 +333,5 @@ function closeJob(jobId) {
     padding: 0.25rem 0.5rem;
     font-size: 0.75rem;
 }
+</style>
 @endsection

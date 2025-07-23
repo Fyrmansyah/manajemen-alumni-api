@@ -34,10 +34,10 @@
                                 <a href="{{ route('admin.dashboard') }}">Dashboard Admin</a>
                             </li>
                             <li class="menu-item">
-                                <a href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                                <a href="{{ route('logout') }}" onclick="event.preventDefault(); performLogout('admin-logout-form');">
                                     Logout ({{ Auth::guard('admin')->user()->nama ?? Auth::guard('admin')->user()->username }})
                                 </a>
-                                <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
+                                <form id="admin-logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
                                     @csrf
                                 </form>
                             </li>
@@ -46,10 +46,10 @@
                                 <a href="{{ route('alumni.dashboard') }}">Dashboard Alumni</a>
                             </li>
                             <li class="menu-item">
-                                <a href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                                <a href="{{ route('logout') }}" onclick="event.preventDefault(); performLogout('alumni-logout-form');">
                                     Logout ({{ Auth::guard('alumni')->user()->nama ?? Auth::guard('alumni')->user()->email }})
                                 </a>
-                                <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
+                                <form id="alumni-logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
                                     @csrf
                                 </form>
                             </li>
@@ -58,10 +58,10 @@
                                 <a href="{{ route('company.dashboard') }}">Dashboard Perusahaan</a>
                             </li>
                             <li class="menu-item">
-                                <a href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                                <a href="{{ route('logout') }}" onclick="event.preventDefault(); performLogout('company-logout-form');">
                                     Logout ({{ Auth::guard('company')->user()->nama ?? Auth::guard('company')->user()->email }})
                                 </a>
-                                <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
+                                <form id="company-logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
                                     @csrf
                                 </form>
                             </li>

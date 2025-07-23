@@ -12,48 +12,81 @@ class CompanyDashboardController extends Controller
 {
     public function index()
     {
-        // Ensure company user is properly set in the guard
-        if (session('company_logged_in') && session('company_id')) {
-            $company = \App\Models\Company::find(session('company_id'));
-            if ($company) {
-                \Illuminate\Support\Facades\Auth::guard('company')->setUser($company);
-            }
-        }
-        
         $company = Auth::guard('company')->user();
         
         if (!$company) {
-            return redirect()->route('login');
+            return redirect()->route('login')->with('error', 'Please login as company to access dashboard.');
         }
         
-        // Get statistics
-        $stats = [
-            'total_jobs' => Job::where('company_id', $company->id)->count(),
-            'active_jobs' => Job::where('company_id', $company->id)->where('status', 'active')->count(),
-            'total_applications' => Application::whereHas('job', function($query) use ($company) {
-                $query->where('company_id', $company->id);
-            })->count(),
-            'pending_applications' => Application::whereHas('job', function($query) use ($company) {
-                $query->where('company_id', $company->id);
-            })->where('status', 'pending')->count(),
-        ];
+        try {
+            // Get statistics with error handling
+            $stats = [
+                'total_jobs' => 0,
+                'active_jobs' => 0,
+                'total_applications' => 0,
+                'pending_applications' => 0,
+            ];
 
-        // Get recent jobs
-        $recentJobs = Job::where('company_id', $company->id)
-            ->latest()
-            ->take(5)
-            ->get();
+            // Try to get job statistics
+            try {
+                $stats['total_jobs'] = Job::where('company_id', $company->getKey())->count();
+                $stats['active_jobs'] = Job::where('company_id', $company->getKey())->where('status', 'active')->count();
+            } catch (\Exception $e) {
+                // Job table might not exist or have issues
+            }
 
-        // Get recent applications
-        $recentApplications = Application::with(['alumni', 'job'])
-            ->whereHas('job', function($query) use ($company) {
-                $query->where('company_id', $company->id);
-            })
-            ->latest()
-            ->take(5)
-            ->get();
+            // Try to get application statistics
+            try {
+                $stats['total_applications'] = Application::whereHas('job', function($query) use ($company) {
+                    $query->where('company_id', $company->getKey());
+                })->count();
+                
+                $stats['pending_applications'] = Application::whereHas('job', function($query) use ($company) {
+                    $query->where('company_id', $company->getKey());
+                })->where('status', 'pending')->count();
+            } catch (\Exception $e) {
+                // Application table might not exist or have issues
+            }
 
-        return view('company.dashboard', compact('stats', 'recentJobs', 'recentApplications'));
+            // Get recent jobs with error handling
+            $recentJobs = collect();
+            try {
+                $recentJobs = Job::where('company_id', $company->getKey())
+                    ->latest()
+                    ->take(5)
+                    ->get();
+            } catch (\Exception $e) {
+                // Job table might not exist
+            }
+
+            // Get recent applications with error handling
+            $recentApplications = collect();
+            try {
+                $recentApplications = Application::with(['alumni', 'job'])
+                    ->whereHas('job', function($query) use ($company) {
+                        $query->where('company_id', $company->getKey());
+                    })
+                    ->latest()
+                    ->take(5)
+                    ->get();
+            } catch (\Exception $e) {
+                // Application table might not exist
+            }
+
+            return view('company.dashboard', compact('stats', 'recentJobs', 'recentApplications'));
+        } catch (\Exception $e) {
+            // Fallback to simple dashboard
+            return view('company.dashboard-test', [
+                'company' => $company,
+                'stats' => [
+                    'total_jobs' => 0,
+                    'active_jobs' => 0,
+                    'total_applications' => 0,
+                    'pending_applications' => 0,
+                ],
+                'error' => $e->getMessage()
+            ]);
+        }
     }
 
     public function jobs(Request $request)

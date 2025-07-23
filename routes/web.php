@@ -12,7 +12,7 @@ use App\Http\Controllers\Admin\AdminCompanyController;
 use App\Http\Controllers\Admin\AdminApplicationController;
 use App\Http\Controllers\Alumni\AlumniDashboardController;
 use App\Http\Controllers\Company\CompanyDashboardController;
-use Illuminate\Support\Facades\Auth; // Added this import for Auth facade
+use Illuminate\Support\Facades\Auth; 
 
 // Public routes
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -54,6 +54,9 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::post('/logout', [BaseAuthController::class, 'logout'])->name('logout');
+
+// Alternative logout route using GET method as backup
+Route::get('/logout-alt', [BaseAuthController::class, 'logout'])->name('logout.alt');
 
 // Force clear all authentication and redirect to login
 Route::get('/force-logout', function() {
@@ -228,6 +231,18 @@ Route::middleware('auth:alumni')->prefix('alumni')->name('alumni.')->group(funct
     Route::get('/applications', [AlumniDashboardController::class, 'applications'])->name('applications');
     Route::get('/profile', [AlumniDashboardController::class, 'profile'])->name('profile');
     Route::put('/profile', [AlumniDashboardController::class, 'updateProfile'])->name('profile.update');
+});
+
+// Company routes (using company guard)
+Route::middleware('auth:company')->prefix('company')->name('company.')->group(function () {
+    Route::get('/dashboard', [CompanyDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/jobs', [CompanyDashboardController::class, 'jobs'])->name('jobs');
+    Route::get('/applications', [CompanyDashboardController::class, 'applications'])->name('applications');
+    Route::get('/profile', [CompanyDashboardController::class, 'profile'])->name('profile');
+    Route::put('/profile', [CompanyDashboardController::class, 'updateProfile'])->name('profile.update');
+    Route::post('/jobs', [CompanyDashboardController::class, 'createJob'])->name('jobs.create');
+    Route::put('/jobs/{id}', [CompanyDashboardController::class, 'updateJob'])->name('jobs.update');
+    Route::put('/applications/{id}/status', [CompanyDashboardController::class, 'updateApplicationStatus'])->name('applications.update-status');
 });
 
 // Debug session restoration
