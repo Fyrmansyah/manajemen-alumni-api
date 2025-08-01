@@ -127,6 +127,13 @@
                                 <small class="text-muted">Perbarui data diri Anda</small>
                             </div>
                         </a>
+                        <a href="{{ route('alumni.cv.index') }}" class="list-group-item list-group-item-action border-0 d-flex align-items-center">
+                            <i class="fas fa-file-alt text-success me-3"></i>
+                            <div>
+                                <div class="fw-bold">Kelola CV</div>
+                                <small class="text-muted">Buat dan kelola CV Anda</small>
+                            </div>
+                        </a>
                         <a href="{{ route('news.index') }}" class="list-group-item list-group-item-action border-0 d-flex align-items-center">
                             <i class="fas fa-newspaper text-success me-3"></i>
                             <div>

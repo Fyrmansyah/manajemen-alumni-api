@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\WebhookController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\JobController;
 use App\Http\Controllers\NewsController;
@@ -15,6 +16,8 @@ use App\Http\Controllers\Company\CompanyDashboardController;
 use Illuminate\Support\Facades\Auth; 
 
 // Public routes
+// Fonnte Webhook endpoint
+Route::match(['get', 'post'], '/fonnte/webhook', [WebhookController::class, 'handle']);
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
 Route::get('/about', function() {
@@ -231,23 +234,41 @@ Route::middleware('auth:alumni')->prefix('alumni')->name('alumni.')->group(funct
     Route::get('/applications', [AlumniDashboardController::class, 'applications'])->name('applications');
     Route::get('/profile', [AlumniDashboardController::class, 'profile'])->name('profile');
     Route::put('/profile', [AlumniDashboardController::class, 'updateProfile'])->name('profile.update');
+    
+    // CV routes
+    Route::resource('cv', \App\Http\Controllers\Alumni\CVController::class);
+    Route::get('/cv/{cv}/download', [\App\Http\Controllers\Alumni\CVController::class, 'download'])->name('cv.download');
+    Route::patch('/cv/{cv}/default', [\App\Http\Controllers\Alumni\CVController::class, 'setAsDefault'])->name('cv.default');
 });
 
 // Company routes (using company guard)
 Route::middleware('auth:company')->prefix('company')->name('company.')->group(function () {
     Route::get('/dashboard', [CompanyDashboardController::class, 'index'])->name('dashboard');
-    Route::get('/jobs', [CompanyDashboardController::class, 'jobs'])->name('jobs');
+    Route::get('/jobs', function (\Illuminate\Http\Request $request) {
+        if ($request->query('action') === 'create') {
+            return redirect()->route('company.jobs.create');
+        }
+        if ($request->query('edit')) {
+            return redirect()->route('company.jobs.edit', $request->query('edit'));
+        }
+        return app(\App\Http\Controllers\Company\CompanyDashboardController::class)->jobs($request);
+    })->name('jobs');
+    Route::get('/jobs/manage', [CompanyDashboardController::class, 'manageJobs'])->name('jobs.manage');
+    Route::get('/jobs/create', [CompanyDashboardController::class, 'createJobForm'])->name('jobs.create');
+    Route::post('/jobs', [CompanyDashboardController::class, 'createJob'])->name('jobs.createJob');
+    Route::get('/jobs/{id}/edit', [CompanyDashboardController::class, 'editJobForm'])->name('jobs.edit');
+    Route::put('/jobs/{id}', [CompanyDashboardController::class, 'updateJob'])->name('jobs.update');
+    Route::delete('/jobs/{id}', [CompanyDashboardController::class, 'deleteJob'])->name('jobs.delete');
+    Route::patch('/jobs/{id}/close', [CompanyDashboardController::class, 'closeJob'])->name('jobs.close');
     Route::get('/applications', [CompanyDashboardController::class, 'applications'])->name('applications');
     Route::get('/profile', [CompanyDashboardController::class, 'profile'])->name('profile');
     Route::put('/profile', [CompanyDashboardController::class, 'updateProfile'])->name('profile.update');
-    Route::post('/jobs', [CompanyDashboardController::class, 'createJob'])->name('jobs.create');
-    Route::put('/jobs/{id}', [CompanyDashboardController::class, 'updateJob'])->name('jobs.update');
     Route::put('/applications/{id}/status', [CompanyDashboardController::class, 'updateApplicationStatus'])->name('applications.update-status');
 });
 
 // Debug session restoration
 Route::get('/debug-session', function() {
-    // Get the session data
+    // Get the session data->
     $sessionData = session()->all();
     
     // Try to manually login admin with ID 6

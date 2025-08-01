@@ -26,7 +26,7 @@
                     
                     <div class="alert alert-info">
                         <i class="fas fa-info-circle me-2"></i>
-                        <strong>Perhatian:</strong> Akun perusahaan akan diverifikasi terlebih dahulu oleh admin BKK sebelum dapat digunakan dan akan dikerjakan pada saat jam kerjai.
+                        <strong>Perhatian:</strong> Akun perusahaan akan diverifikasi terlebih dahulu oleh admin BKK sebelum dapat digunakan dan akan dikerjakan pada saat jam kerja.
                     </div>
 
                     <form method="POST" action="{{ route('company.register') }}" class="needs-validation" novalidate>
@@ -216,11 +216,20 @@
                                            value="{{ old('contact_person_phone') }}" 
                                            required
                                            placeholder="08xxxxxxxxxx">
+                                    <small class="form-text text-muted">
+                                        <i class="fab fa-whatsapp text-success"></i> 
+                                        Nomor ini akan digunakan untuk notifikasi WhatsApp
+                                    </small>
                                     @error('contact_person_phone')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
                             </div>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <i class="fab fa-whatsapp me-2"></i>
+                            <strong>Notifikasi WhatsApp:</strong> Sistem akan mengirimkan notifikasi WhatsApp ke nomor kontak person saat ada lamaran masuk atau update penting lainnya.
                         </div>
 
                         <h5 class="text-primary mb-3 mt-4">

@@ -97,16 +97,15 @@ class CompanyDashboardController extends Controller
             return redirect()->route('login');
         }
         
-        $query = Job::where('company_id', $company->id);
-
-        // Filter by status
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
-
-        $jobs = $query->latest()->paginate(10);
-
-        return view('company.jobs', compact('jobs'));
+        // Get all jobs for this company with pagination
+        $jobs = Job::where('company_id', $company->id)
+            ->withCount('applications')
+            ->latest()
+            ->paginate(10);
+        
+        $jobTypes = Job::JOB_TYPES;
+        
+        return view('company.jobs', compact('jobs', 'jobTypes'));
     }
 
     public function applications(Request $request)
@@ -140,6 +139,70 @@ class CompanyDashboardController extends Controller
             ->get();
 
         return view('company.applications', compact('applications', 'jobs'));
+    }
+
+    public function createJobForm()
+    {
+        $company = Auth::guard('company')->user();
+        
+        if (!$company) {
+            return redirect()->route('login');
+        }
+
+        $jobTypes = Job::JOB_TYPES;
+        
+        return view('company.create-job', compact('jobTypes'));
+    }
+
+    public function createJob(Request $request)
+    {
+        $company = Auth::guard('company')->user();
+        
+        if (!$company) {
+            return redirect()->route('login');
+        }
+
+        try {
+            $request->validate([
+                'title' => 'required|string|max:255',
+                'description' => 'required|string',
+                'requirements' => 'required|string',
+                'location' => 'required|string|max:255',
+                'job_type' => 'required|in:' . implode(',', array_keys(Job::JOB_TYPES)),
+                'salary_min' => 'nullable|numeric|min:0',
+                'salary_max' => 'nullable|numeric|min:0|gte:salary_min',
+                'application_deadline' => 'required|date|after:today',
+                'positions_available' => 'required|integer|min:1',
+            ]);
+
+            $job = Job::create([
+                'company_id' => $company->id,
+                'title' => $request->title,
+                'description' => $request->description,
+                'requirements' => $request->requirements,
+                'location' => $request->location,
+                'type' => $request->job_type,
+                'salary_min' => $request->salary_min ?: null,
+                'salary_max' => $request->salary_max ?: null,
+                'application_deadline' => $request->application_deadline,
+                'positions_available' => $request->positions_available,
+                'status' => 'active',
+            ]);
+
+            return redirect()->route('company.dashboard')
+                ->with('success', 'Lowongan berhasil dibuat!');
+                
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return back()
+                ->withErrors($e->validator)
+                ->withInput()
+                ->with('jobTypes', Job::JOB_TYPES);
+        } catch (\Exception $e) {
+            return back()
+                ->withErrors(['error' => 'Terjadi kesalahan saat membuat lowongan: ' . $e->getMessage()])
+                ->withInput()
+                ->with('jobTypes', Job::JOB_TYPES);
+        }
     }
 
     public function profile()
@@ -178,5 +241,198 @@ class CompanyDashboardController extends Controller
         ]));
 
         return back()->with('success', 'Profil perusahaan berhasil diperbarui!');
+    }
+
+    public function editJobForm($id)
+    {
+        $company = Auth::guard('company')->user();
+        if (!$company) {
+            return redirect()->route('login');
+        }
+        $job = Job::where('company_id', $company->id)->findOrFail($id);
+        $jobTypes = Job::JOB_TYPES;
+        return view('company.edit-job', compact('job', 'jobTypes'));
+    }
+
+    public function updateJob(Request $request, $id)
+    {
+        $company = Auth::guard('company')->user();
+        if (!$company) {
+            return redirect()->route('login');
+        }
+
+        try {
+            $job = Job::where('company_id', $company->id)->findOrFail($id);
+
+            $request->validate([
+                'title' => 'required|string|max:255',
+                'description' => 'required|string',
+                'requirements' => 'required|string',
+                'location' => 'required|string|max:255',
+                'job_type' => 'required|in:' . implode(',', array_keys(Job::JOB_TYPES)),
+                'salary_min' => 'nullable|numeric|min:0',
+                'salary_max' => 'nullable|numeric|min:0|gte:salary_min',
+                'application_deadline' => 'required|date|after:today',
+                'positions_available' => 'required|integer|min:1',
+            ]);
+
+            $job->update([
+                'title' => $request->title,
+                'description' => $request->description,
+                'requirements' => $request->requirements,
+                'location' => $request->location,
+                'type' => $request->job_type,
+                'salary_min' => $request->salary_min ?: null,
+                'salary_max' => $request->salary_max ?: null,
+                'application_deadline' => $request->application_deadline,
+                'positions_available' => $request->positions_available,
+            ]);
+
+            return redirect()->route('company.jobs')
+                ->with('success', 'Lowongan berhasil diperbarui!');
+                
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return back()
+                ->withErrors($e->validator)
+                ->withInput()
+                ->with('jobTypes', Job::JOB_TYPES);
+        } catch (\Exception $e) {
+            return back()
+                ->withErrors(['error' => 'Terjadi kesalahan saat memperbarui lowongan: ' . $e->getMessage()])
+                ->withInput()
+                ->with('jobTypes', Job::JOB_TYPES);
+        }
+    }
+
+    public function closeJob($id)
+    {
+        $company = Auth::guard('company')->user();
+        if (!$company) {
+            return redirect()->route('login');
+        }
+
+        try {
+            $job = Job::where('company_id', $company->id)->findOrFail($id);
+            
+            if ($job->status === 'closed') {
+                return redirect()->back()
+                    ->with('error', 'Lowongan sudah ditutup sebelumnya.');
+            }
+            
+            $jobTitle = $job->title;
+            $job->update(['status' => 'closed']);
+
+            return redirect()->back()
+                ->with('success', "Lowongan '{$jobTitle}' berhasil ditutup!");
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->with('error', 'Terjadi kesalahan saat menutup lowongan: ' . $e->getMessage());
+        }
+    }
+
+    public function deleteJob($id)
+    {
+        $company = Auth::guard('company')->user();
+        if (!$company) {
+            return redirect()->route('login');
+        }
+
+        try {
+            $job = Job::where('company_id', $company->id)->findOrFail($id);
+            $jobTitle = $job->title;
+            $job->delete();
+
+            return redirect()->route('company.jobs')
+                ->with('success', "Lowongan '{$jobTitle}' berhasil dihapus!");
+        } catch (\Exception $e) {
+            return redirect()->route('company.jobs')
+                ->with('error', 'Terjadi kesalahan saat menghapus lowongan: ' . $e->getMessage());
+        }
+    }
+
+    public function updateApplicationStatus(Request $request, $id)
+    {
+        $company = Auth::guard('company')->user();
+        
+        if (!$company) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
+        }
+
+        $request->validate([
+            'status' => 'required|in:reviewed,interview,accepted,rejected',
+            'notes' => 'nullable|string|max:1000',
+        ]);
+
+        try {
+            $application = Application::whereHas('job', function($query) use ($company) {
+                $query->where('company_id', $company->id);
+            })->findOrFail($id);
+
+            $application->update([
+                'status' => $request->status,
+                'notes' => $request->notes,
+                'reviewed_at' => now(),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Status lamaran berhasil diperbarui'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function getApplicationDetail($id)
+    {
+        $company = Auth::guard('company')->user();
+        
+        if (!$company) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
+        }
+
+        try {
+            $application = Application::with(['alumni.jurusan', 'job.company'])
+                                     ->whereHas('job', function($query) use ($company) {
+                                         $query->where('company_id', $company->id);
+                                     })
+                                     ->findOrFail($id);
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'id' => $application->id,
+                    'status' => $application->status,
+                    'applied_at' => $application->created_at->format('d M Y H:i'),
+                    'cover_letter' => $application->cover_letter,
+                    'cv_path' => $application->cv_path,
+                    'notes' => $application->notes,
+                    'reviewed_at' => $application->reviewed_at ? $application->reviewed_at->format('d M Y H:i') : null,
+                    'alumni' => [
+                        'id' => $application->alumni->id,
+                        'name' => $application->alumni->nama,
+                        'email' => $application->alumni->email,
+                        'phone' => $application->alumni->phone,
+                        'jurusan' => $application->alumni->jurusan->nama ?? 'Tidak diketahui',
+                        'tahun_lulus' => $application->alumni->tahun_lulus,
+                    ],
+                    'job' => [
+                        'id' => $application->job->id,
+                        'title' => $application->job->title,
+                        'company_name' => $application->job->company->company_name,
+                    ]
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lamaran tidak ditemukan'
+            ], 404);
+        }
     }
 }

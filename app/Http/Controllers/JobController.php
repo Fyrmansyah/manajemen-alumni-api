@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\Job;
 use App\Models\Company;
 use App\Models\Application;
+use App\Notifications\WhatsAppJobApplicationNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Notification;
 
 class JobController extends Controller
 {
@@ -95,6 +97,14 @@ class JobController extends Controller
         $job = Job::findOrFail($id);
         $alumni = Auth::guard('alumni')->user();
 
+        // Check if alumni profile is complete
+        if ($alumni->profile_completion < 80) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Silakan lengkapi profil Anda terlebih dahulu sebelum melamar pekerjaan'
+            ], 422);
+        }
+
         // Check if already applied
         if ($alumni->hasAppliedFor($job)) {
             return response()->json([
@@ -105,9 +115,18 @@ class JobController extends Controller
 
         // Check if job is still available
         if (!$job->canApply()) {
+            $message = 'Lowongan ini sudah tidak tersedia';
+            if ($job->status !== 'active') {
+                $message = 'Lowongan ini sudah tidak aktif';
+            } elseif ($job->isExpired()) {
+                $message = 'Lowongan ini sudah melewati batas waktu pendaftaran';
+            } elseif ($job->positions_available && $job->applications()->where('status', '!=', 'rejected')->count() >= $job->positions_available) {
+                $message = 'Lowongan ini sudah penuh';
+            }
+            
             return response()->json([
                 'success' => false,
-                'message' => 'Lowongan ini sudah tidak tersedia'
+                'message' => $message
             ], 422);
         }
 
@@ -115,6 +134,7 @@ class JobController extends Controller
             'alumni_id' => $alumni->id,
             'job_posting_id' => $job->id,
             'cover_letter' => $request->cover_letter,
+            'status' => 'submitted',
             'applied_at' => now(),
         ];
 
@@ -127,6 +147,25 @@ class JobController extends Controller
         }
 
         Application::create($applicationData);
+
+        // Send WhatsApp notification to company about new job application
+        try {
+            $company = $job->company;
+            if ($company) {
+                $company->notify(new WhatsAppJobApplicationNotification(
+                    $job->title,
+                    $alumni->nama ?? $alumni->name,
+                    $company->company_name
+                ));
+            }
+        } catch (\Exception $e) {
+            // Log error but don't fail the application
+            \Log::error('Failed to send WhatsApp notification for job application', [
+                'job_id' => $job->id,
+                'alumni_id' => $alumni->id,
+                'error' => $e->getMessage()
+            ]);
+        }
 
         return response()->json([
             'success' => true,
@@ -251,12 +290,26 @@ class JobController extends Controller
     public function applyWeb(Request $request, $id)
     {
         $request->validate([
-            'cover_letter' => 'required|string|max:2000',
+            'cover_letter' => 'required|string|min:50|max:2000',
             'cv_file' => 'nullable|file|mimes:pdf,doc,docx|max:2048',
+        ], [
+            'cover_letter.required' => 'Cover letter wajib diisi',
+            'cover_letter.min' => 'Cover letter minimal 50 karakter',
+            'cover_letter.max' => 'Cover letter maksimal 2000 karakter',
+            'cv_file.mimes' => 'File CV harus berformat PDF, DOC, atau DOCX',
+            'cv_file.max' => 'File CV maksimal 2MB',
         ]);
 
         $job = Job::findOrFail($id);
         $alumni = Auth::guard('alumni')->user();
+
+        // Check if alumni profile is complete
+        if ($alumni->profile_completion < 80) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Silakan lengkapi profil Anda terlebih dahulu sebelum melamar pekerjaan. Profil Anda saat ini ' . $alumni->profile_completion . '% lengkap.'
+            ], 422);
+        }
 
         // Check if already applied
         $existingApplication = Application::where('alumni_id', $alumni->getKey())
@@ -264,17 +317,35 @@ class JobController extends Controller
             ->first();
 
         if ($existingApplication) {
+            $statusText = match($existingApplication->status) {
+                'submitted' => 'menunggu review',
+                'reviewed' => 'sedang direview',
+                'interview' => 'dijadwalkan interview',
+                'accepted' => 'diterima',
+                'rejected' => 'ditolak',
+                default => 'diproses'
+            };
+            
             return response()->json([
                 'success' => false,
-                'message' => 'Anda sudah melamar untuk posisi ini'
+                'message' => 'Anda sudah melamar untuk posisi ini. Status lamaran: ' . $statusText
             ], 422);
         }
 
         // Check if job is still available
-        if ($job->status !== 'active') {
+        if (!$job->canApply()) {
+            $message = 'Lowongan ini sudah tidak tersedia';
+            if ($job->status !== 'active') {
+                $message = 'Lowongan ini sudah tidak aktif';
+            } elseif ($job->isExpired()) {
+                $message = 'Lowongan ini sudah melewati batas waktu pendaftaran (' . $job->application_deadline->format('d M Y') . ')';
+            } elseif ($job->positions_available && $job->applications()->where('status', '!=', 'rejected')->count() >= $job->positions_available) {
+                $message = 'Lowongan ini sudah penuh (' . $job->positions_available . ' posisi tersedia)';
+            }
+            
             return response()->json([
                 'success' => false,
-                'message' => 'Lowongan ini sudah tidak tersedia'
+                'message' => $message
             ], 422);
         }
 
@@ -282,7 +353,7 @@ class JobController extends Controller
             'alumni_id' => $alumni->getKey(),
             'job_posting_id' => $job->getKey(),
             'cover_letter' => $request->input('cover_letter'),
-            'status' => 'pending',
+            'status' => 'submitted',
             'applied_at' => now(),
         ];
 
@@ -295,6 +366,25 @@ class JobController extends Controller
         }
 
         Application::create($applicationData);
+
+        // Send WhatsApp notification to company about new job application
+        try {
+            $company = $job->company;
+            if ($company) {
+                $company->notify(new WhatsAppJobApplicationNotification(
+                    $job->title,
+                    $alumni->nama ?? $alumni->name,
+                    $company->company_name
+                ));
+            }
+        } catch (\Exception $e) {
+            // Log error but don't fail the application
+            \Log::error('Failed to send WhatsApp notification for job application (web)', [
+                'job_id' => $job->getKey(),
+                'alumni_id' => $alumni->getKey(),
+                'error' => $e->getMessage()
+            ]);
+        }
 
         return response()->json([
             'success' => true,

@@ -166,8 +166,7 @@
                             </p>
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
-                                    <span class="badge bg-primary">{{ ucfirst($featuredNews->category) }}</span>
-                                    <small class="text-muted ms-2">
+                                    <small class="text-muted">
                                         <i class="fas fa-eye me-1"></i>{{ $featuredNews->views ?? 0 }} views
                                     </small>
                                 </div>
@@ -200,7 +199,6 @@
                             
                             <div class="card-body d-flex flex-column">
                                 <div class="d-flex justify-content-between align-items-start mb-2">
-                                    <span class="badge bg-primary">{{ ucfirst($article->category) }}</span>
                                     <small class="text-muted">{{ $article->created_at->format('d M Y') }}</small>
                                 </div>
                                 

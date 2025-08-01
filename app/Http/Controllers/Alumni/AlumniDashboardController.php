@@ -72,7 +72,10 @@ class AlumniDashboardController extends Controller
             return redirect()->route('login');
         }
         
-        return view('alumni.profile', compact('alumni'));
+        // Get jurusan data for dropdown
+        $jurusans = \App\Models\Jurusan::orderBy('nama')->get();
+        
+        return view('alumni.profile', compact('alumni', 'jurusans'));
     }
 
     public function updateProfile(Request $request)
@@ -84,19 +87,37 @@ class AlumniDashboardController extends Controller
         }
         
         $request->validate([
-            'name' => 'required|string|max:255',
-            'phone' => 'nullable|string|max:20',
-            'address' => 'nullable|string',
-            'current_job' => 'nullable|string|max:255',
-            'current_company' => 'nullable|string|max:255',
-            'linkedin_url' => 'nullable|url',
-            'skills' => 'nullable|string',
+            'nama_lengkap' => 'required|string|max:255',
+            'email' => 'required|email|unique:alumnis,email,' . $alumni->id,
+            'phone' => 'required|string|max:20',
+            'tanggal_lahir' => 'required|date',
+            'jenis_kelamin' => 'required|in:L,P',
+            'nisn' => 'required|string|max:20|unique:alumnis,nisn,' . $alumni->id,
+            'jurusan_id' => 'required|exists:jurusans,id',
+            'tahun_lulus' => 'required|integer|min:2015|max:' . (date('Y') + 1),
+            'alamat' => 'required|string|max:500',
+            'pengalaman_kerja' => 'nullable|string|max:1000',
+            'keahlian' => 'nullable|string|max:1000',
+            'whatsapp_notifications' => 'nullable|boolean',
         ]);
 
-        $alumni->update($request->only([
-            'name', 'phone', 'address', 'current_job', 
-            'current_company', 'linkedin_url', 'skills'
-        ]));
+        $data = $request->only([
+            'nama_lengkap', 'email', 'phone', 'tanggal_lahir', 'jenis_kelamin',
+            'nisn', 'jurusan_id', 'tahun_lulus', 'alamat', 'pengalaman_kerja', 'keahlian'
+        ]);
+
+        // Handle WhatsApp notifications checkbox
+        $data['whatsapp_notifications'] = $request->has('whatsapp_notifications');
+
+        // Update both new and old field names for compatibility
+        $alumni->update($data);
+        
+        // Also update old field names for backward compatibility
+        $alumni->update([
+            'nama' => $data['nama_lengkap'],
+            'no_tlp' => $data['phone'],
+            'tgl_lahir' => $data['tanggal_lahir'],
+        ]);
 
         return back()->with('success', 'Profil berhasil diperbarui!');
     }

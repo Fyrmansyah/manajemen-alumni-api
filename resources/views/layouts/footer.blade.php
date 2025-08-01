@@ -29,7 +29,7 @@
                     <div class="widget quick_link">
                         <h3 class="sm">Links Terkait</h3>
                         <ul class="list-style-block">
-                            <li><a href="http://bkk.smkn1-sby.sch.id/">BKK</a></li>
+                            <li><a href="https://www.smkn1-sby.sch.id/">BERANDA</a></li>
                             <li><a href="http://lsp.smkn1-sby.sch.id/">LSP</a></li>
                             <li><a href="http://www.ppdbjatim.net/">PPDB</a></li>
                         </ul>

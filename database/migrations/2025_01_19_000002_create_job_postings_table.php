@@ -18,7 +18,7 @@ return new class extends Migration
             $table->text('description');
             $table->text('requirements');
             $table->string('location');
-            $table->enum('type', ['full_time', 'part_time', 'contract', 'internship']);
+            $table->enum('type', ['full_time', 'part_time', 'contract', 'freelance', 'internship']);
             $table->decimal('salary_min', 10, 2)->nullable();
             $table->decimal('salary_max', 10, 2)->nullable();
             $table->date('application_deadline');

@@ -199,4 +199,54 @@ class AlumniController extends Controller
             ->data(compact('bar_data', 'pie_data'))
             ->build();
     }
+
+    public function getApplicationDetail($id)
+    {
+        try {
+            $alumni = auth('alumni')->user();
+            
+            if (!$alumni) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized'
+                ], 401);
+            }
+
+            $application = \App\Models\Application::with(['job.company'])
+                                                 ->where('id', $id)
+                                                 ->where('alumni_id', $alumni->id)
+                                                 ->first();
+
+            if (!$application) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Application not found'
+                ], 404);
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'id' => $application->id,
+                    'status' => $application->status,
+                    'applied_at' => $application->created_at->format('d M Y H:i'),
+                    'cover_letter' => $application->cover_letter,
+                    'cv_path' => $application->cv_file,
+                    'notes' => $application->notes,
+                    'reviewed_at' => $application->reviewed_at ? $application->reviewed_at->format('d M Y H:i') : null,
+                    'job' => [
+                        'id' => $application->job->id,
+                        'title' => $application->job->title,
+                        'company_name' => $application->job->company->company_name,
+                    ]
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while fetching application details'
+            ], 500);
+        }
+    }
 }

@@ -106,7 +106,7 @@
                 </div>
                 <div class="card-body">
                     <div class="list-group list-group-flush">
-                        <a href="{{ route('company.jobs') }}?action=create" class="list-group-item list-group-item-action border-0 d-flex align-items-center">
+                        <a href="{{ route('company.jobs.create') }}" class="list-group-item list-group-item-action border-0 d-flex align-items-center">
                             <i class="fas fa-plus-circle text-success me-3"></i>
                             <div>
                                 <div class="fw-bold">Posting Lowongan</div>
@@ -245,7 +245,7 @@
                                         <i class="fas fa-edit"></i>
                                     </a>
                                     @if($job->status === 'active')
-                                        <button class="btn btn-outline-danger" onclick="closeJob({{ $job->id }})">
+                                        <button class="btn btn-outline-danger" onclick="closeJob({{ $job->id }}, '{{ $job->title }}')" title="Tutup Lowongan">
                                             <i class="fas fa-times"></i>
                                         </button>
                                     @endif
@@ -271,28 +271,30 @@
 
 @push('scripts')
 <script>
-function closeJob(jobId) {
-    if (confirm('Apakah Anda yakin ingin menutup lowongan ini?')) {
-        fetch(`/api/jobs/${jobId}/close`, {
-            method: 'PATCH',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                'Authorization': 'Bearer ' + localStorage.getItem('auth_token')
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                location.reload();
-            } else {
-                alert('Gagal menutup lowongan');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Terjadi kesalahan');
-        });
+function closeJob(jobId, jobTitle) {
+    if (confirm(`Apakah Anda yakin ingin menutup lowongan "${jobTitle}"?`)) {
+        // Create a form to submit the close request
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/company/jobs/${jobId}/close`;
+        
+        // Add CSRF token
+        const csrfToken = document.createElement('input');
+        csrfToken.type = 'hidden';
+        csrfToken.name = '_token';
+        csrfToken.value = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        form.appendChild(csrfToken);
+        
+        // Add method override
+        const methodField = document.createElement('input');
+        methodField.type = 'hidden';
+        methodField.name = '_method';
+        methodField.value = 'PATCH';
+        form.appendChild(methodField);
+        
+        // Submit the form
+        document.body.appendChild(form);
+        form.submit();
     }
 }
 </script>

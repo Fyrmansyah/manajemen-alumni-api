@@ -5,9 +5,13 @@ namespace App\Http\Controllers;
 use App\Models\Company;
 use App\Models\Job;
 use App\Models\Application;
+use App\Models\Admin;
+use App\Notifications\WhatsAppCompanyRegistrationNotification;
+use App\Notifications\WhatsAppJobStatusNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Notification;
 
 class CompanyController extends Controller
 {
@@ -56,6 +60,19 @@ class CompanyController extends Controller
             'password' => Hash::make($request->password),
             'status' => 'pending',
         ]);
+
+        // Kirim notifikasi WhatsApp ke admin dan company secara otomatis
+        try {
+            $company->notify(new \App\Notifications\WhatsAppCompanyRegistrationNotification(
+                $company->company_name,
+                $company->contact_person
+            ));
+        } catch (\Exception $e) {
+            \Log::error('Failed to send WhatsApp notification for company registration', [
+                'company_id' => $company->id,
+                'error' => $e->getMessage()
+            ]);
+        }
 
         return response()->json([
             'success' => true,
@@ -192,6 +209,8 @@ class CompanyController extends Controller
         ]);
     }
 
+
+
     public function applications(Request $request)
     {
         $company = Auth::user();
@@ -236,10 +255,80 @@ class CompanyController extends Controller
             'reviewed_at' => now(),
         ]);
 
+        // Send WhatsApp notification to alumni about status update
+        try {
+            $alumni = $application->alumni;
+            if ($alumni) {
+                $alumni->notify(new WhatsAppJobStatusNotification(
+                    $application->job->title,
+                    $application->job->company->company_name,
+                    $request->status
+                ));
+            }
+        } catch (\Exception $e) {
+            // Log error but don't fail the status update
+            \Log::error('Failed to send WhatsApp notification for status update', [
+                'application_id' => $application->id,
+                'status' => $request->status,
+                'error' => $e->getMessage()
+            ]);
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'Status lamaran berhasil diperbarui',
             'data' => $application
         ]);
+    }
+
+    public function getApplicationDetail($id)
+    {
+        try {
+            $application = Application::with(['alumni', 'job.company'])
+                                     ->findOrFail($id);
+
+            // Check if the current company can access this application
+            if (auth()->check() && auth()->user()->hasRole('company')) {
+                $company = auth()->user();
+                $canAccess = $application->job->company_id === $company->id;
+                if (!$canAccess) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Unauthorized'
+                    ], 403);
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'id' => $application->id,
+                    'status' => $application->status,
+                    'applied_at' => $application->created_at,
+                    'cover_letter' => $application->cover_letter,
+                    'cv_path' => $application->cv_path,
+                    'notes' => $application->notes,
+                    'reviewed_at' => $application->reviewed_at,
+                    'alumni' => [
+                        'id' => $application->alumni->id,
+                        'name' => $application->alumni->nama,
+                        'email' => $application->alumni->email,
+                        'phone' => $application->alumni->phone,
+                        'jurusan' => $application->alumni->jurusan->nama ?? '',
+                        'tahun_lulus' => $application->alumni->tahun_lulus,
+                    ],
+                    'job' => [
+                        'id' => $application->job->id,
+                        'title' => $application->job->title,
+                        'company_name' => $application->job->company->company_name,
+                    ]
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Application not found'
+            ], 404);
+        }
     }
 }

@@ -35,4 +35,11 @@ return [
         ],
     ],
 
+    'fonnte' => [
+        'token' => env('FONNTE_TOKEN', 'rzJG8FB7bmp7Dngqged5'),
+        'admin_numbers' => [
+            env('ADMIN_WHATSAPP_1', '6282329613405'), // Nomor admin 1
+        ],
+    ],
+
 ];

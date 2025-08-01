@@ -5,11 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
 class Alumni extends Authenticatable
 {
-    use HasFactory, HasApiTokens;
+    use HasFactory, HasApiTokens, Notifiable;
 
     protected $guarded = ['id'];
     protected $hidden = ['password'];
@@ -49,6 +50,11 @@ class Alumni extends Authenticatable
         return $this->hasMany(Application::class);
     }
 
+    public function cvs()
+    {
+        return $this->hasMany(CV::class);
+    }
+
     public function appliedJobs()
     {
         return $this->belongsToMany(Job::class, 'applications', 'alumni_id', 'job_posting_id')
@@ -76,5 +82,20 @@ class Alumni extends Authenticatable
         }
         
         return round(($completedFields / count($fields)) * 100);
+    }
+
+    public function getNamaLengkapAttribute($value)
+    {
+        return $value ?: $this->nama;
+    }
+
+    public function getPhoneAttribute($value)
+    {
+        return $value ?: $this->no_tlp;
+    }
+
+    public function getTanggalLahirAttribute($value)
+    {
+        return $value ?: $this->tgl_lahir;
     }
 }

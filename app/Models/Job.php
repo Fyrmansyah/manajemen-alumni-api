@@ -34,11 +34,11 @@ class Job extends Model
     ];
 
     const JOB_TYPES = [
-        'Full Time' => 'Full Time',
-        'Part Time' => 'Part Time',
-        'Kontrak' => 'Kontrak',
-        'Freelance' => 'Freelance',
-        'Magang' => 'Magang',
+        'full_time' => 'Full Time',
+        'part_time' => 'Part Time',
+        'contract' => 'Kontrak',
+        'freelance' => 'Freelance',
+        'internship' => 'Magang',
     ];
 
     const STATUSES = [
@@ -106,6 +106,52 @@ class Job extends Model
 
     public function canApply()
     {
-        return $this->status === 'active' && !$this->isExpired();
+        // Check if job is active
+        if ($this->status !== 'active') {
+            return false;
+        }
+        
+        // Check if job is expired
+        if ($this->isExpired()) {
+            return false;
+        }
+        
+        // Check if positions are still available
+        if ($this->positions_available) {
+            $activeApplications = $this->applications()
+                ->whereIn('status', ['submitted', 'reviewed', 'interview', 'accepted'])
+                ->count();
+            
+            if ($activeApplications >= $this->positions_available) {
+                return false;
+            }
+        }
+        
+        return true;
+    }
+
+    public function getAvailablePositionsAttribute()
+    {
+        if (!$this->positions_available) {
+            return null; // Unlimited positions
+        }
+        
+        $activeApplications = $this->applications()
+            ->whereIn('status', ['submitted', 'reviewed', 'interview', 'accepted'])
+            ->count();
+        
+        return max(0, $this->positions_available - $activeApplications);
+    }
+
+    public function getApplicationCountAttribute()
+    {
+        return $this->applications()->count();
+    }
+
+    public function getActiveApplicationCountAttribute()
+    {
+        return $this->applications()
+            ->whereIn('status', ['submitted', 'reviewed', 'interview', 'accepted'])
+            ->count();
     }
 }
