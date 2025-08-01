@@ -18,58 +18,29 @@ class AdminDashboardController extends Controller
         // Get statistics
         $stats = [
             'total_alumni' => Alumni::count(),
-            'total_companies' => Company::where('status', 'aktif')->count(),
-            'active_jobs' => Job::where('status', 'active')->count(),
+            'total_companies' => Company::where('status', 'active')->count(),
+            'active_jobs' => Job::where('status', 'published')->count(),
             'total_applications' => Application::count(),
         ];
 
-        // Get recent activities (mock data for now)
-        $recentActivities = [
-            [
-                'title' => 'Perusahaan Baru Terdaftar',
-                'description' => 'PT Teknologi Maju mendaftar sebagai partner',
-                'time' => '2 jam lalu',
-                'icon' => 'building',
-                'color' => 'success'
-            ],
-            [
-                'title' => 'Lamaran Baru',
-                'description' => 'Ahmad Rizki melamar sebagai Web Developer',
-                'time' => '3 jam lalu',
-                'icon' => 'file-alt',
-                'color' => 'info'
-            ],
-            [
-                'title' => 'Lowongan Diterbitkan',
-                'description' => 'PT Digital Solutions posting lowongan UI/UX Designer',
-                'time' => '5 jam lalu',
-                'icon' => 'briefcase',
-                'color' => 'primary'
-            ],
-            [
-                'title' => 'Berita Dipublikasi',
-                'description' => 'Tips Interview Kerja untuk Fresh Graduate',
-                'time' => '1 hari lalu',
-                'icon' => 'newspaper',
-                'color' => 'warning'
-            ]
-        ];
+        // Get real recent activities
+        $recentActivities = $this->getRecentActivities();
 
         // Get chart data for applications per month (last 12 months)
         $chartData = $this->getApplicationsChartData();
 
         // Get top companies by job count
         $topCompanies = Company::withCount(['jobs' => function($query) {
-                $query->where('status', 'active');
+                $query->where('status', 'published');
             }])
-            ->where('status', 'verified')
+            ->where('status', 'active')
             ->orderBy('jobs_count', 'desc')
             ->take(5)
             ->get();
 
         // Get recent jobs
         $recentJobs = Job::with('company')
-            ->where('status', 'active')
+            ->where('status', 'published')
             ->latest()
             ->take(5)
             ->get();
@@ -110,5 +81,122 @@ class AdminDashboardController extends Controller
             'months' => $months,
             'applications' => $applications
         ];
+    }
+
+    public function refreshActivities()
+    {
+        $activities = $this->getRecentActivities();
+        
+        // Set timezone untuk Indonesia
+        Carbon::setLocale('id');
+        $now = Carbon::now('Asia/Jakarta');
+        
+        return response()->json([
+            'success' => true,
+            'activities' => $activities,
+            'timestamp' => $now->format('H:i:s') . ' WIB'
+        ]);
+    }
+
+    private function getRecentActivities()
+    {
+        $activities = collect();
+        
+        // Set timezone untuk Indonesia
+        Carbon::setLocale('id');
+        $dayAgo = Carbon::now('Asia/Jakarta')->subDay();
+
+        // Get recent companies (last 24 hours)
+        $recentCompanies = Company::where('created_at', '>=', $dayAgo)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        foreach ($recentCompanies as $company) {
+            $createdAt = Carbon::parse($company->created_at)->setTimezone('Asia/Jakarta');
+            $activities->push([
+                'title' => 'Perusahaan Baru Terdaftar',
+                'description' => $company->company_name . ' mendaftar sebagai partner',
+                'time' => $createdAt->diffForHumans() . ' WIB',
+                'icon' => 'building',
+                'color' => 'success',
+                'timestamp' => $createdAt
+            ]);
+        }
+
+        // Get recent applications (last 24 hours)
+        $recentApplications = Application::with(['alumni', 'job'])
+            ->where('created_at', '>=', $dayAgo)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        foreach ($recentApplications as $application) {
+            $createdAt = Carbon::parse($application->created_at)->setTimezone('Asia/Jakarta');
+            $activities->push([
+                'title' => 'Lamaran Baru',
+                'description' => ($application->alumni->nama_lengkap ?? 'Alumni') . ' melamar sebagai ' . ($application->job->title ?? 'Posisi'),
+                'time' => $createdAt->diffForHumans() . ' WIB',
+                'icon' => 'file-alt',
+                'color' => 'info',
+                'timestamp' => $createdAt
+            ]);
+        }
+
+        // Get recent jobs (last 24 hours)
+        $recentJobs = Job::with('company')
+            ->where('created_at', '>=', $dayAgo)
+            ->where('status', 'published')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        foreach ($recentJobs as $job) {
+            $createdAt = Carbon::parse($job->created_at)->setTimezone('Asia/Jakarta');
+            $activities->push([
+                'title' => 'Lowongan Diterbitkan',
+                'description' => ($job->company->company_name ?? 'Perusahaan') . ' posting lowongan ' . $job->title,
+                'time' => $createdAt->diffForHumans() . ' WIB',
+                'icon' => 'briefcase',
+                'color' => 'primary',
+                'timestamp' => $createdAt
+            ]);
+        }
+
+        // Get recent news (last 24 hours)
+        $recentNews = News::where('created_at', '>=', $dayAgo)
+            ->where('status', 'published')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        foreach ($recentNews as $news) {
+            $createdAt = Carbon::parse($news->created_at)->setTimezone('Asia/Jakarta');
+            $activities->push([
+                'title' => 'Berita Dipublikasi',
+                'description' => $news->title,
+                'time' => $createdAt->diffForHumans() . ' WIB',
+                'icon' => 'newspaper',
+                'color' => 'warning',
+                'timestamp' => $createdAt
+            ]);
+        }
+
+        // Get recent alumni registrations (last 24 hours)
+        $recentAlumni = Alumni::with('jurusan')
+            ->where('created_at', '>=', $dayAgo)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        foreach ($recentAlumni as $alumni) {
+            $createdAt = Carbon::parse($alumni->created_at)->setTimezone('Asia/Jakarta');
+            $activities->push([
+                'title' => 'Alumni Baru Terdaftar',
+                'description' => $alumni->nama_lengkap . ' dari jurusan ' . ($alumni->jurusan->nama_jurusan ?? 'Tidak diketahui'),
+                'time' => $createdAt->diffForHumans() . ' WIB',
+                'icon' => 'user-graduate',
+                'color' => 'info',
+                'timestamp' => $createdAt
+            ]);
+        }
+
+        // Sort by timestamp descending and take 10 most recent
+        return $activities->sortByDesc('timestamp')->take(10)->values();
     }
 }

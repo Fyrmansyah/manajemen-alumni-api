@@ -177,6 +177,38 @@ class CVController extends Controller
         return response()->download($path, $cv->title . '.pdf');
     }
 
+    public function preview($id)
+    {
+        $alumni = Auth::guard('alumni')->user();
+        
+        // Debug: log authentication status
+        \Log::info('CV Preview Debug', [
+            'alumni_authenticated' => $alumni ? true : false,
+            'alumni_id' => $alumni ? $alumni->id : null,
+            'cv_id' => $id,
+            'auth_check' => Auth::guard('alumni')->check()
+        ]);
+        
+        if (!$alumni) {
+            abort(401, 'Unauthorized - Alumni not authenticated');
+        }
+        
+        $cv = $alumni->cvs()->findOrFail($id);
+        
+        $path = Storage::disk('public')->path('cvs/' . $cv->filename);
+        
+        // Periksa apakah file ada
+        if (!file_exists($path)) {
+            abort(404, 'File CV tidak ditemukan: ' . $path);
+        }
+        
+        // Return PDF untuk preview di browser (bukan download)
+        return response()->file($path, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="' . $cv->title . '.pdf"'
+        ]);
+    }
+
     public function destroy($id)
     {
         $alumni = Auth::guard('alumni')->user();

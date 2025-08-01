@@ -145,12 +145,18 @@
                 <div class="card-header py-3 d-flex justify-content-between align-items-center">
                     <h6 class="m-0 font-weight-bold text-primary">
                         <i class="fas fa-history me-2"></i>Aktivitas Terbaru
+                        <span class="badge bg-success ms-2" id="liveIndicator">LIVE</span>
                     </h6>
-                    <a href="#" class="btn btn-sm btn-outline-primary">Lihat Semua</a>
+                    <div class="d-flex align-items-center gap-2">
+                        <small class="text-muted" id="lastUpdate">Terakhir diperbarui: {{ \Carbon\Carbon::now('Asia/Jakarta')->format('H:i:s') }} WIB</small>
+                        <button class="btn btn-sm btn-outline-primary" onclick="refreshActivities()" id="refreshBtn">
+                            <i class="fas fa-sync-alt me-1"></i>Refresh
+                        </button>
+                    </div>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table class="table table-borderless">
+                        <table class="table table-borderless" id="activitiesTable">
                             <tbody>
                                 @forelse($recentActivities as $activity)
                                 <tr>
@@ -366,10 +372,128 @@ const applicationsChart = new Chart(ctx, {
     }
 });
 
-// Auto refresh dashboard data every 5 minutes
-setInterval(function() {
-    location.reload();
-}, 300000);
+// Auto refresh dashboard data every 30 seconds
+let refreshInterval;
+
+function startAutoRefresh() {
+    refreshInterval = setInterval(function() {
+        refreshActivities();
+    }, 30000); // 30 seconds
+}
+
+function stopAutoRefresh() {
+    if (refreshInterval) {
+        clearInterval(refreshInterval);
+    }
+}
+
+function refreshActivities() {
+    const refreshBtn = document.getElementById('refreshBtn');
+    const refreshIcon = refreshBtn.querySelector('i');
+    
+    // Show loading state
+    refreshIcon.className = 'fas fa-spinner fa-spin me-1';
+    refreshBtn.disabled = true;
+    
+    fetch('/admin/dashboard/refresh-activities')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                updateActivitiesTable(data.activities);
+                updateLastUpdateTime(data.timestamp);
+                
+                // Show notification for new activities
+                showActivityNotification();
+            }
+        })
+        .catch(error => {
+            console.error('Error refreshing activities:', error);
+        })
+        .finally(() => {
+            // Reset button state
+            refreshIcon.className = 'fas fa-sync-alt me-1';
+            refreshBtn.disabled = false;
+        });
+}
+
+function updateActivitiesTable(activities) {
+    const tbody = document.querySelector('#activitiesTable tbody');
+    
+    if (activities.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="3" class="text-center text-muted py-4">
+                    <i class="fas fa-inbox fa-2x mb-2"></i>
+                    <div>Belum ada aktivitas terbaru</div>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    let html = '';
+    activities.forEach(activity => {
+        html += `
+            <tr class="activity-row">
+                <td style="width: 50px;">
+                    <div class="rounded-circle bg-${activity.color} text-white d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                        <i class="fas fa-${activity.icon}"></i>
+                    </div>
+                </td>
+                <td>
+                    <div class="fw-bold">${activity.title}</div>
+                    <div class="text-muted small">${activity.description}</div>
+                </td>
+                <td class="text-end">
+                    <small class="text-muted">${activity.time}</small>
+                </td>
+            </tr>
+        `;
+    });
+    
+    tbody.innerHTML = html;
+    
+    // Add animation to new rows
+    setTimeout(() => {
+        document.querySelectorAll('.activity-row').forEach(row => {
+            row.style.backgroundColor = '#e3f2fd';
+            setTimeout(() => {
+                row.style.backgroundColor = '';
+                row.style.transition = 'background-color 0.3s ease';
+            }, 1000);
+        });
+    }, 100);
+}
+
+function updateLastUpdateTime(timestamp) {
+    document.getElementById('lastUpdate').textContent = `Terakhir diperbarui: ${timestamp} WIB`;
+}
+
+function showActivityNotification() {
+    const indicator = document.getElementById('liveIndicator');
+    indicator.style.animation = 'pulse 1s ease-in-out';
+    
+    setTimeout(() => {
+        indicator.style.animation = '';
+    }, 1000);
+}
+
+// Start auto refresh when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    startAutoRefresh();
+    
+    // Stop auto refresh when page is hidden (user switches tabs)
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            stopAutoRefresh();
+        } else {
+            startAutoRefresh();
+        }
+    });
+});
+
+// Manual refresh button
+window.refreshActivities = refreshActivities;
 </script>
 @endpush
 
@@ -402,6 +526,50 @@ setInterval(function() {
 .card {
     border: 0;
     box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+}
+
+/* Real-time indicators */
+#liveIndicator {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(40, 167, 69, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(40, 167, 69, 0);
+    }
+}
+
+.activity-row {
+    transition: background-color 0.3s ease;
+}
+
+.activity-row:hover {
+    background-color: #f8f9fa;
+}
+
+#refreshBtn:disabled {
+    opacity: 0.6;
+}
+
+/* Loading animation for refresh button */
+.fa-spin {
+    animation: fa-spin 1s infinite linear;
+}
+
+@keyframes fa-spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
 }
 </style>
 @endsection

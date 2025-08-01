@@ -50,22 +50,53 @@
 
             <div class="card shadow-sm border-0">
                 <div class="card-header bg-light">
-                    <h5 class="mb-0">
-                        <i class="fas fa-eye me-2"></i>
-                        Preview CV
-                    </h5>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-eye me-2"></i>
+                            Preview CV
+                        </h5>
+                        <div class="btn-group btn-group-sm">
+                            <button type="button" class="btn btn-outline-secondary" onclick="openFullscreen()">
+                                <i class="fas fa-expand"></i> Full Screen
+                            </button>
+                            <a href="{{ route('alumni.cv.preview', $cv->id) }}" target="_blank" class="btn btn-outline-primary">
+                                <i class="fas fa-external-link-alt"></i> Buka Tab Baru
+                            </a>
+                        </div>
+                    </div>
                 </div>
                 <div class="card-body p-0">
-                    <div class="ratio ratio-16x9">
-                        <iframe src="{{ route('alumni.cv.download', $cv->id) }}" 
+                    <div style="height: 700px; background: #f8f9fa;">
+                        <iframe id="cvPreview"
+                                src="{{ route('alumni.cv.preview', $cv->id) }}" 
                                 frameborder="0" 
-                                style="width: 100%; height: 100%;">
+                                style="width: 100%; height: 100%; border: none;"
+                                onerror="handleIframeError()">
                             <p>Browser Anda tidak mendukung iframe. 
-                               <a href="{{ route('alumni.cv.download', $cv->id) }}" target="_blank">
+                               <a href="{{ route('alumni.cv.preview', $cv->id) }}" target="_blank">
                                    Klik di sini untuk melihat CV
                                </a>
                             </p>
                         </iframe>
+                        
+                        <!-- Error fallback (hidden by default) -->
+                        <div id="previewError" style="display: none; height: 100%; padding: 50px; text-align: center;">
+                            <div class="text-center">
+                                <i class="fas fa-exclamation-triangle text-warning" style="font-size: 3rem;"></i>
+                                <h5 class="mt-3 text-muted">Tidak Dapat Memuat Preview</h5>
+                                <p class="text-muted">File CV mungkin tidak tersedia atau format tidak didukung.</p>
+                                <div class="mt-3">
+                                    <a href="{{ route('alumni.cv.preview', $cv->id) }}" target="_blank" class="btn btn-primary me-2">
+                                        <i class="fas fa-external-link-alt me-1"></i>
+                                        Buka di Tab Baru
+                                    </a>
+                                    <a href="{{ route('alumni.cv.download', $cv->id) }}" class="btn btn-success">
+                                        <i class="fas fa-download me-1"></i>
+                                        Download PDF
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -252,6 +283,23 @@ function setAsDefault(cvId) {
     new bootstrap.Modal(document.getElementById('defaultModal')).show();
 }
 
+function openFullscreen() {
+    const iframe = document.getElementById('cvPreview');
+    const cvUrl = iframe.src;
+    
+    // Buka CV di window baru dengan ukuran penuh
+    const newWindow = window.open(cvUrl, '_blank', 'width=' + screen.width + ',height=' + screen.height + ',fullscreen=yes');
+    if (newWindow) {
+        newWindow.focus();
+    }
+}
+
+function handleIframeError() {
+    console.log('Iframe error detected');
+    document.getElementById('cvPreview').style.display = 'none';
+    document.getElementById('previewError').style.display = 'block';
+}
+
 // Auto-hide alerts after 5 seconds
 document.addEventListener('DOMContentLoaded', function() {
     setTimeout(function() {
@@ -261,6 +309,55 @@ document.addEventListener('DOMContentLoaded', function() {
             bsAlert.close();
         });
     }, 5000);
+    
+    // Tambahkan loading indicator untuk iframe
+    const iframe = document.getElementById('cvPreview');
+    const loadingHtml = `
+        <div class="d-flex justify-content-center align-items-center" style="height: 100%; background: #f8f9fa;">
+            <div class="text-center">
+                <div class="spinner-border text-primary mb-3" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="text-muted">Memuat preview CV...</p>
+            </div>
+        </div>
+    `;
+    
+    const loadingDiv = document.createElement('div');
+    loadingDiv.innerHTML = loadingHtml;
+    loadingDiv.style.cssText = 'position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10;';
+    iframe.parentNode.style.position = 'relative';
+    iframe.parentNode.appendChild(loadingDiv);
+    
+    iframe.onload = function() {
+        loadingDiv.remove();
+        
+        // Check if iframe content loaded successfully
+        try {
+            // Coba akses iframe content untuk detect error
+            const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+            if (iframeDoc.body && iframeDoc.body.innerHTML.includes('404') || 
+                iframeDoc.body.innerHTML.includes('error') ||
+                iframeDoc.body.innerHTML.includes('not found')) {
+                handleIframeError();
+            }
+        } catch (e) {
+            // Cross-origin atau error lain, ignore
+            console.log('Cannot access iframe content (normal for PDF files)');
+        }
+    };
+    
+    iframe.onerror = function() {
+        loadingDiv.remove();
+        handleIframeError();
+    };
+    
+    // Timeout fallback
+    setTimeout(function() {
+        if (loadingDiv.parentNode) {
+            loadingDiv.remove();
+        }
+    }, 10000); // 10 second timeout
 });
 </script>
 @endpush 

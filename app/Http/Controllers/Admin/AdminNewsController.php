@@ -5,12 +5,55 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\News;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class AdminNewsController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $news = News::latest()->paginate(15);
+        $query = News::query();
+
+        // Search
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                  ->orWhere('content', 'like', "%{$search}%")
+                  ->orWhere('excerpt', 'like', "%{$search}%");
+            });
+        }
+
+        // Filter by status
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        // Filter by category
+        if ($request->filled('category')) {
+            $query->where('category', $request->category);
+        }
+
+        // Sorting
+        switch ($request->get('sort', 'newest')) {
+            case 'oldest':
+                $query->oldest();
+                break;
+            case 'title_asc':
+                $query->orderBy('title', 'asc');
+                break;
+            case 'title_desc':
+                $query->orderBy('title', 'desc');
+                break;
+            case 'views':
+                $query->orderBy('views', 'desc');
+                break;
+            default:
+                $query->latest();
+        }
+
+        $news = $query->paginate(15)->withQueryString();
+
         return view('admin.news.index', compact('news'));
     }
 
@@ -21,8 +64,45 @@ class AdminNewsController extends Controller
 
     public function store(Request $request)
     {
-        // Implement news creation logic
-        return redirect()->route('admin.news.index')->with('success', 'Berita berhasil dibuat');
+        $validatedData = $request->validate([
+            'title' => 'required|string|max:255',
+            'excerpt' => 'nullable|string|max:500',
+            'content' => 'required|string',
+            'category' => 'required|in:info,achievement,job,event,announcement',
+            'status' => 'required|in:draft,published,archived',
+            'featured_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'published_at' => 'nullable|date',
+            'tags' => 'nullable|string',
+            'meta_description' => 'nullable|string|max:160',
+        ]);
+
+        // Generate slug
+        $validatedData['slug'] = Str::slug($validatedData['title']);
+        
+        // Make slug unique
+        $originalSlug = $validatedData['slug'];
+        $counter = 1;
+        while (News::where('slug', $validatedData['slug'])->exists()) {
+            $validatedData['slug'] = $originalSlug . '-' . $counter;
+            $counter++;
+        }
+
+        // Handle file upload
+        if ($request->hasFile('featured_image')) {
+            $validatedData['featured_image'] = $request->file('featured_image')
+                ->store('news/images', 'public');
+        }
+
+        // Handle published_at
+        if (!$validatedData['published_at'] && $validatedData['status'] === 'published') {
+            $validatedData['published_at'] = now();
+        }
+
+        $news = News::create($validatedData);
+
+        return redirect()
+            ->route('admin.news.index')
+            ->with('success', 'Berita berhasil dibuat.');
     }
 
     public function show(News $news)
@@ -37,13 +117,69 @@ class AdminNewsController extends Controller
 
     public function update(Request $request, News $news)
     {
-        // Implement news update logic
-        return redirect()->route('admin.news.index')->with('success', 'Berita berhasil diperbarui');
+        $validatedData = $request->validate([
+            'title' => 'required|string|max:255',
+            'excerpt' => 'nullable|string|max:500',
+            'content' => 'required|string',
+            'category' => 'required|in:info,achievement,job,event,announcement',
+            'status' => 'required|in:draft,published,archived',
+            'featured_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'published_at' => 'nullable|date',
+            'tags' => 'nullable|string',
+            'meta_description' => 'nullable|string|max:160',
+        ]);
+
+        // Update slug if title changed
+        if ($validatedData['title'] !== $news->title) {
+            $validatedData['slug'] = Str::slug($validatedData['title']);
+            
+            // Make slug unique
+            $originalSlug = $validatedData['slug'];
+            $counter = 1;
+            while (News::where('slug', $validatedData['slug'])->where('id', '!=', $news->id)->exists()) {
+                $validatedData['slug'] = $originalSlug . '-' . $counter;
+                $counter++;
+            }
+        }
+
+        // Handle file upload
+        if ($request->hasFile('featured_image')) {
+            // Delete old image
+            if ($news->featured_image && Storage::disk('public')->exists($news->featured_image)) {
+                Storage::disk('public')->delete($news->featured_image);
+            }
+            
+            $validatedData['featured_image'] = $request->file('featured_image')
+                ->store('news/images', 'public');
+        }
+
+        // Handle published_at
+        if (!$validatedData['published_at'] && $validatedData['status'] === 'published' && $news->status !== 'published') {
+            $validatedData['published_at'] = now();
+        }
+
+        $news->update($validatedData);
+
+        return redirect()
+            ->route('admin.news.index')
+            ->with('success', 'Berita berhasil diperbarui.');
     }
 
     public function destroy(News $news)
     {
-        $news->delete();
-        return redirect()->route('admin.news.index')->with('success', 'Berita berhasil dihapus');
+        try {
+            // Delete featured image if exists
+            if ($news->featured_image && Storage::disk('public')->exists($news->featured_image)) {
+                Storage::disk('public')->delete($news->featured_image);
+            }
+
+            $news->delete();
+
+            return redirect()
+                ->route('admin.news.index')
+                ->with('success', 'Berita berhasil dihapus.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Terjadi kesalahan saat menghapus berita.');
+        }
     }
 }
