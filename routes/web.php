@@ -24,18 +24,6 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/about', function() {
     return view('about');
 })->name('about');
-Route::get('/test', function() {
-    return view('home', [
-        'stats' => [
-            'total_jobs' => 25,
-            'total_companies' => 15,
-            'total_alumni' => 150,
-            'total_applications' => 75
-        ],
-        'latest_jobs' => [],
-        'latest_news' => []
-    ]);
-})->name('test');
 
 // Authentication routes
 Route::middleware('guest')->group(function () {
@@ -58,150 +46,6 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::post('/logout', [BaseAuthController::class, 'logout'])->name('logout');
-
-// Alternative logout route using GET method as backup
-Route::get('/logout-alt', [BaseAuthController::class, 'logout'])->name('logout.alt');
-
-// Force clear all authentication and redirect to login
-Route::get('/force-logout', function() {
-    // Clear all session data
-    session()->flush();
-    
-    // Logout from all guards
-    Auth::guard('admin')->logout();
-    Auth::guard('alumni')->logout();
-    Auth::guard('company')->logout();
-    
-    // Invalidate and regenerate session
-    request()->session()->invalidate();
-    request()->session()->regenerateToken();
-    
-    return redirect('/login')->with('success', 'All sessions cleared. Please login again.');
-});
-
-// Test current authentication status
-Route::get('/test-auth', function() {
-    return [
-        'admin_auth' => Auth::guard('admin')->check(),
-        'admin_user' => Auth::guard('admin')->user(),
-        'alumni_auth' => Auth::guard('alumni')->check(),
-        'alumni_user' => Auth::guard('alumni')->user(),
-        'company_auth' => Auth::guard('company')->check(),
-        'company_user' => Auth::guard('company')->user(),
-        'session_id' => session()->getId(),
-        'session_data' => session()->all()
-    ];
-});
-
-// Test logout functionality
-Route::get('/test-logout', function() {
-    // Test logout
-    Auth::guard('admin')->logout();
-    Auth::guard('alumni')->logout();
-    Auth::guard('company')->logout();
-    
-    session()->flush();
-    request()->session()->invalidate();
-    request()->session()->regenerateToken();
-    
-    return [
-        'message' => 'Logout test completed',
-        'admin_auth' => Auth::guard('admin')->check(),
-        'alumni_auth' => Auth::guard('alumni')->check(),
-        'company_auth' => Auth::guard('company')->check(),
-        'session_data' => session()->all()
-    ];
-});
-
-// Debug admin authentication
-Route::get('/debug-admin', function() {
-    $admin = \App\Models\Admin::where('username', 'admin')->first();
-    
-    if (!$admin) {
-        return ['error' => 'Admin not found'];
-    }
-    
-    // Test admin login
-    $loginResult = Auth::guard('admin')->attempt([
-        'username' => 'admin',
-        'password' => 'admin123'
-    ]);
-    
-    return [
-        'admin_exists' => true,
-        'admin_data' => [
-            'id' => $admin->id,
-            'username' => $admin->username,
-            'password_length' => strlen($admin->password),
-            'password_starts_with' => substr($admin->password, 0, 7)
-        ],
-        'login_attempt_result' => $loginResult,
-        'auth_check_after_login' => Auth::guard('admin')->check(),
-        'admin_user_after_login' => Auth::guard('admin')->user()
-    ];
-});
-
-// Debug login process
-Route::get('/debug-login', function() {
-    $loginField = 'admin';
-    $password = 'admin123';
-    
-    // Test admin login step by step
-    $adminAttempt = Auth::guard('admin')->attempt(['username' => $loginField, 'password' => $password]);
-    
-    return [
-        'login_field' => $loginField,
-        'password' => $password,
-        'admin_attempt_result' => $adminAttempt,
-        'admin_auth_check' => Auth::guard('admin')->check(),
-        'admin_user' => Auth::guard('admin')->user(),
-        'session_data' => session()->all()
-    ];
-});
-
-// Test login form submission
-Route::post('/test-login', function(\Illuminate\Http\Request $request) {
-    $loginField = $request->input('email');
-    $password = $request->input('password');
-    $remember = $request->filled('remember');
-    
-    // Try admin login (username)
-    if (Auth::guard('admin')->attempt(['username' => $loginField, 'password' => $password], $remember)) {
-        $request->session()->regenerate();
-        return redirect()->intended('/admin/dashboard');
-    }
-
-    // Try alumni login (email)
-    if (Auth::guard('alumni')->attempt(['email' => $loginField, 'password' => $password], $remember)) {
-        $request->session()->regenerate();
-        return redirect()->intended('/alumni/dashboard');
-    }
-
-    // Try company login (email)
-    if (Auth::guard('company')->attempt(['email' => $loginField, 'password' => $password], $remember)) {
-        $request->session()->regenerate();
-        return redirect()->intended('/company/dashboard');
-    }
-
-    return back()->withErrors([
-        'email' => 'Kredensial tidak valid.',
-    ])->onlyInput('email');
-});
-
-// Temporary public route for testing CV preview
-Route::get('/test-cv-preview/{id}', function($id) {
-    $cv = \App\Models\CV::findOrFail($id);
-    $path = \Illuminate\Support\Facades\Storage::disk('public')->path('cvs/' . $cv->filename);
-    
-    if (!file_exists($path)) {
-        abort(404, 'File CV tidak ditemukan: ' . $path);
-    }
-    
-    return response()->file($path, [
-        'Content-Type' => 'application/pdf',
-        'Content-Disposition' => 'inline; filename="' . $cv->title . '.pdf"'
-    ]);
-});
 
 // Jobs routes
 Route::prefix('jobs')->name('jobs.')->group(function () {
@@ -228,6 +72,10 @@ Route::middleware('auth:admin')->prefix('admin')->name('admin.')->group(function
     
     // Job management
     Route::resource('jobs', AdminJobController::class);
+    Route::patch('/jobs/{job}/archive', [AdminJobController::class, 'archive'])->name('jobs.archive');
+    Route::patch('/jobs/{job}/reactivate', [AdminJobController::class, 'reactivate'])->name('jobs.reactivate');
+    Route::post('/jobs/bulk-archive', [AdminJobController::class, 'bulkArchive'])->name('jobs.bulk-archive');
+    Route::post('/jobs/bulk-reactivate', [AdminJobController::class, 'bulkReactivate'])->name('jobs.bulk-reactivate');
     
     // News management
     Route::resource('news', AdminNewsController::class);
@@ -290,54 +138,4 @@ Route::middleware('auth:company')->prefix('company')->name('company.')->group(fu
     Route::get('/profile', [CompanyDashboardController::class, 'profile'])->name('profile');
     Route::put('/profile', [CompanyDashboardController::class, 'updateProfile'])->name('profile.update');
     Route::put('/applications/{id}/status', [CompanyDashboardController::class, 'updateApplicationStatus'])->name('applications.update-status');
-});
-
-// Debug session restoration
-Route::get('/debug-session', function() {
-    // Get the session data->
-    $sessionData = session()->all();
-    
-    // Try to manually login admin with ID 6
-    $admin = \App\Models\Admin::find(6);
-    
-    if (!$admin) {
-        return ['error' => 'Admin with ID 6 not found'];
-    }
-    
-    // Manually login the admin
-    Auth::guard('admin')->login($admin);
-    
-    return [
-        'session_data' => $sessionData,
-        'admin_exists' => $admin ? true : false,
-        'admin_data' => $admin ? [
-            'id' => $admin->id,
-            'username' => $admin->username
-        ] : null,
-        'auth_check_before_login' => Auth::guard('admin')->check(),
-        'auth_check_after_login' => Auth::guard('admin')->check(),
-        'admin_user_after_login' => Auth::guard('admin')->user()
-    ];
-});
-
-// Simple login test
-Route::get('/simple-login-test', function() {
-    // Clear any existing auth
-    Auth::guard('admin')->logout();
-    Auth::guard('alumni')->logout();
-    Auth::guard('company')->logout();
-    
-    // Try to login admin
-    $result = Auth::guard('admin')->attempt([
-        'username' => 'admin',
-        'password' => 'admin123'
-    ]);
-    
-    return [
-        'login_attempt_result' => $result,
-        'auth_check_immediately' => Auth::guard('admin')->check(),
-        'admin_user' => Auth::guard('admin')->user(),
-        'session_id' => session()->getId(),
-        'session_data' => session()->all()
-    ];
 });

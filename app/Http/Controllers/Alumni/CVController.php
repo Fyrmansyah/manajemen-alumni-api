@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\View;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 class CVController extends Controller
@@ -45,6 +44,7 @@ class CVController extends Controller
                     'custom_last_name' => 'nullable|string|max:255',
                     'custom_email' => 'required|email',
                     'custom_phone' => 'nullable|string|max:20',
+                    'custom_photo' => 'nullable|image|mimes:jpeg,jpg,png|max:2048',
                     'custom_birth_date' => 'nullable|date',
                     'custom_birth_place' => 'nullable|string|max:255',
                     'custom_address' => 'nullable|string|max:500',
@@ -104,28 +104,15 @@ class CVController extends Controller
             // Load jurusan relationship to avoid N+1 queries
             $alumni->load('jurusan');
             
-            \Log::info('CV Store - Request Data:', [
-                'data_source' => $request->input('data_source'),
-                'title' => $request->input('title'),
-                'template' => $request->input('template'),
-                'alumni_id' => $alumni->id,
-            ]);
-            
             // Generate CV data
             $cvData = $this->generateCVData($request, $alumni);
-            
-            \Log::info('CV Store - Generated CV Data:', $cvData);
         
             // Generate PDF
             $pdf = $this->generatePDF($cvData, $request->template);
             
-            \Log::info('CV Store - PDF Generated successfully');
-            
             // Save CV
             $filename = 'cv_' . time() . '_' . $alumni->id . '.pdf';
             Storage::disk('public')->put('cvs/' . $filename, $pdf);
-            
-            \Log::info('CV Store - File saved:', ['filename' => $filename]);
             
             // Save CV record to database
             $cv = $alumni->cvs()->create([
@@ -136,8 +123,6 @@ class CVController extends Controller
                 'is_default' => $request->has('set_as_default'),
             ]);
             
-            \Log::info('CV Store - CV record created:', ['cv_id' => $cv->id]);
-            
             // If this is set as default, unset others
             if ($request->has('set_as_default')) {
                 $alumni->cvs()->where('id', '!=', $cv->id)->update(['is_default' => false]);
@@ -146,13 +131,6 @@ class CVController extends Controller
             return redirect()->route('alumni.cv.index')->with('success', 'CV berhasil dibuat!');
             
         } catch (\Exception $e) {
-            \Log::error('CV Store - Error occurred:', [
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-                'request_data' => $request->all(),
-                'alumni_id' => Auth::guard('alumni')->id(),
-            ]);
-            
             return redirect()->back()
                 ->withInput()
                 ->with('error', 'Terjadi kesalahan saat membuat CV: ' . $e->getMessage());
@@ -180,14 +158,6 @@ class CVController extends Controller
     public function preview($id)
     {
         $alumni = Auth::guard('alumni')->user();
-        
-        // Debug: log authentication status
-        \Log::info('CV Preview Debug', [
-            'alumni_authenticated' => $alumni ? true : false,
-            'alumni_id' => $alumni ? $alumni->id : null,
-            'cv_id' => $id,
-            'auth_check' => Auth::guard('alumni')->check()
-        ]);
         
         if (!$alumni) {
             abort(401, 'Unauthorized - Alumni not authenticated');
@@ -261,30 +231,6 @@ class CVController extends Controller
     private function generateCVData(Request $request, $alumni)
     {
         if ($request->input('data_source') === 'profile') {
-            // Debug: Log alumni data
-            \Log::info('CV Generation - Alumni Data:', [
-                'id' => $alumni->id,
-                'nama' => $alumni->nama,
-                'nama_lengkap' => $alumni->nama_lengkap,
-                'email' => $alumni->email,
-                'phone' => $alumni->phone,
-                'no_tlp' => $alumni->no_tlp,
-                'alamat' => $alumni->alamat,
-                'tanggal_lahir' => $alumni->tanggal_lahir,
-                'tgl_lahir' => $alumni->tgl_lahir,
-                'jenis_kelamin' => $alumni->jenis_kelamin,
-                'nisn' => $alumni->nisn,
-                'tahun_mulai' => $alumni->tahun_mulai,
-                'tahun_lulus' => $alumni->tahun_lulus,
-                'tempat_kerja' => $alumni->tempat_kerja,
-                'jabatan_kerja' => $alumni->jabatan_kerja,
-                'tempat_kuliah' => $alumni->tempat_kuliah,
-                'prodi_kuliah' => $alumni->prodi_kuliah,
-                'pengalaman_kerja' => $alumni->pengalaman_kerja,
-                'keahlian' => $alumni->keahlian,
-                'jurusan' => $alumni->jurusan ? $alumni->jurusan->nama : null,
-            ]);
-            
             // Use profile data with proper fallbacks and formatting
             // Access raw attributes to avoid accessor method issues
             $namaLengkap = $alumni->getAttributeValue('nama_lengkap') ?: $alumni->getAttributeValue('nama');
@@ -434,7 +380,7 @@ class CVController extends Controller
                 'skills' => $request->input('custom_skills') ?: 'Belum ada keahlian yang dicantumkan',
                 'references' => $references,
                 'references_available' => $request->input('references_available', false),
-                'photo' => null,
+                'photo' => $this->getPhotoBase64($request, $alumni),
                 'created_at' => now()->format('d F Y'),
                 
                 // Legacy fields for backward compatibility
@@ -495,12 +441,14 @@ class CVController extends Controller
             <title>CV - ' . htmlspecialchars($data['name']) . '</title>
             <style>
                 body {
-                    font-family: Arial, sans-serif;
+                    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
                     margin: 0;
-                    padding: 20px;
+                    padding: 15px;
                     background: #fff;
                     position: relative;
                     color: #333;
+                    line-height: 1.6;
+                    font-size: 14px;
                 }
                 .watermark {
                     position: absolute;
@@ -525,79 +473,143 @@ class CVController extends Controller
                     background: #fff;
                     border-radius: 10px;
                     box-shadow: 0 2px 8px rgba(0,0,0,0.07);
-                    max-width: 800px;
+                    max-width: 750px;
                     margin: 0 auto;
-                    padding: 30px 40px;
+                    padding: 25px 35px;
                     position: relative;
                     z-index: 1;
                 }
                 .personal-info {
-                    display: flex;
-                    align-items: flex-start;
-                    margin-bottom: 30px;
-                    border-bottom: 2px solid #2563eb;
+                    display: table;
+                    width: 100%;
+                    margin-bottom: 25px;
+                    border-bottom: 3px solid #2563eb;
                     padding-bottom: 20px;
                 }
+                .photo-section {
+                    display: table-cell;
+                    width: 120px;
+                    vertical-align: top;
+                    padding-right: 25px;
+                }
                 .personal-photo {
-                    width: 110px;
-                    height: 110px;
+                    width: 100px;
+                    height: 120px;
                     border-radius: 8px;
                     background: #f0f0f0;
                     object-fit: cover;
-                    margin-right: 30px;
+                    border: 2px solid #e5e7eb;
                 }
-                .personal-details {
-                    flex: 1;
+                .details-section {
+                    display: table-cell;
+                    vertical-align: top;
                 }
-                .personal-details h1 {
-                    font-size: 2.1em;
-                    margin: 0 0 8px 0;
+                .details-section h1 {
+                    font-size: 24px;
+                    margin: 0 0 15px 0;
                     color: #2563eb;
+                    font-weight: 700;
+                    text-transform: uppercase;
+                    letter-spacing: 0.5px;
                 }
-                .personal-details .row {
-                    display: flex;
-                    flex-wrap: wrap;
-                    margin-bottom: 7px;
+                .info-table {
+                    width: 100%;
+                    border-collapse: collapse;
                 }
-                .personal-details .row label {
-                    width: 120px;
-                    font-weight: bold;
+                .info-table tr {
+                    margin-bottom: 8px;
+                }
+                .info-table td:first-child {
+                    width: 140px;
+                    font-weight: 600;
                     color: #555;
+                    padding: 3px 0;
+                    vertical-align: top;
                 }
-                .personal-details .row span {
-                    flex: 1;
+                .info-table td:nth-child(2) {
+                    width: 10px;
+                    padding: 3px 0;
+                    vertical-align: top;
+                }
+                .info-table td:last-child {
+                    padding: 3px 0;
+                    color: #333;
+                    vertical-align: top;
+                    word-wrap: break-word;
                 }
                 .section {
-                    margin-bottom: 22px;
+                    margin-bottom: 20px;
+                    page-break-inside: avoid;
                 }
                 .section-title {
                     color: #2563eb;
-                    font-size: 1.18em;
-                    font-weight: bold;
-                    margin-bottom: 7px;
+                    font-size: 16px;
+                    font-weight: 700;
+                    margin-bottom: 12px;
                     border-left: 4px solid #2563eb;
-                    padding-left: 8px;
+                    padding-left: 12px;
+                    text-transform: uppercase;
+                    letter-spacing: 0.5px;
                 }
                 .section-content {
-                    margin-left: 12px;
+                    margin-left: 16px;
+                }
+                .entry-item {
+                    margin-bottom: 15px;
+                    padding: 12px;
+                    background: #f8fafc;
+                    border-left: 4px solid #3b82f6;
+                    border-radius: 0 6px 6px 0;
+                }
+                .entry-title {
+                    font-weight: 600;
+                    color: #1e40af;
+                    font-size: 15px;
+                    margin-bottom: 4px;
+                }
+                .entry-subtitle {
+                    font-style: italic;
+                    color: #6b7280;
+                    font-size: 14px;
+                    margin-bottom: 6px;
+                }
+                .entry-date {
+                    color: #9ca3af;
+                    font-size: 12px;
+                    margin-bottom: 8px;
+                    font-weight: 500;
+                }
+                .entry-description {
+                    color: #374151;
+                    font-size: 13px;
+                    line-height: 1.5;
                 }
                 .skills-list {
                     display: flex;
                     flex-wrap: wrap;
                     gap: 8px;
+                    margin-top: 5px;
                 }
                 .skill-tag {
-                    background: #e0e7ff;
+                    background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
                     color: #1e40af;
-                    border-radius: 5px;
-                    padding: 4px 12px;
-                    font-size: 0.97em;
+                    border-radius: 15px;
+                    padding: 6px 14px;
+                    font-size: 12px;
+                    font-weight: 500;
+                    border: 1px solid #c7d2fe;
                 }
                 .footer {
-                    margin-top: 30px;
-                    text-align: right;
-                    color: #888;
-                    font-size: 0.95em;
+                    margin-top: 25px;
+                    text-align: center;
+                    color: #9ca3af;
+                    font-size: 11px;
+                    border-top: 1px solid #e5e7eb;
+                    padding-top: 15px;
+                }
+                @media print {
+                    body { padding: 0; }
+                    .cv-container { box-shadow: none; }
                 }
             </style>
         </head>
@@ -610,22 +622,24 @@ class CVController extends Controller
             </div>
             <div class="cv-container">
                 <div class="personal-info">
-                    <div>
-                        <img class="personal-photo" src="'.(isset($data['photo']) && $data['photo'] ? htmlspecialchars($data['photo']) : 'https://ui-avatars.com/api/?name='.urlencode($data['name']).'&background=E0E7FF&color=1E40AF&size=110').'" alt="Foto Profil">
+                    <div class="photo-section">
+                        <img class="personal-photo" src="'.(isset($data['photo']) && $data['photo'] ? htmlspecialchars($data['photo']) : 'https://ui-avatars.com/api/?name='.urlencode($data['name']).'&background=E0E7FF&color=1E40AF&size=120').'" alt="Foto Profil">
                     </div>
-                    <div class="personal-details">
+                    <div class="details-section">
                         <h1>' . htmlspecialchars($data['name']) . '</h1>
-                        <div class="row"><label>Email</label><span>' . htmlspecialchars($data['email']) . '</span></div>
-                        <div class="row"><label>Telepon</label><span>' . htmlspecialchars($data['phone']) . '</span></div>
-                        <div class="row"><label>Alamat</label><span>' . htmlspecialchars($data['address'] ?? '-') . (isset($data['city']) && $data['city'] ? ', ' . htmlspecialchars($data['city']) : '') . (isset($data['postal_code']) && $data['postal_code'] ? ' ' . htmlspecialchars($data['postal_code']) : '') . '</span></div>
-                        <div class="row"><label>Tempat, Tgl Lahir</label><span>' . htmlspecialchars(($data['birth_place'] ?? '-') . ', ' . ($data['birth_date'] ?? '-')) . '</span></div>
-                        <div class="row"><label>Jenis Kelamin</label><span>' . htmlspecialchars($data['gender'] ?? '-') . '</span></div>';
-                        
+                        <table class="info-table">
+                            <tr><td>Email</td><td>:</td><td>' . htmlspecialchars($data['email']) . '</td></tr>
+                            <tr><td>Telepon</td><td>:</td><td>' . htmlspecialchars($data['phone']) . '</td></tr>
+                            <tr><td>Alamat</td><td>:</td><td>' . htmlspecialchars($data['address'] ?? '-') . (isset($data['city']) && $data['city'] ? ', ' . htmlspecialchars($data['city']) : '') . (isset($data['postal_code']) && $data['postal_code'] ? ' ' . htmlspecialchars($data['postal_code']) : '') . '</td></tr>
+                            <tr><td>Tempat, Tgl Lahir</td><td>:</td><td>' . htmlspecialchars(($data['birth_place'] ?? '-') . ', ' . ($data['birth_date'] ?? '-')) . '</td></tr>
+                            <tr><td>Jenis Kelamin</td><td>:</td><td>' . htmlspecialchars($data['gender'] ?? '-') . '</td></tr>';
+                            
         if (isset($data['nationality']) && $data['nationality']) {
-            $html .= '<div class="row"><label>Kewarganegaraan</label><span>' . htmlspecialchars($data['nationality']) . '</span></div>';
+            $html .= '<tr><td>Kewarganegaraan</td><td>:</td><td>' . htmlspecialchars($data['nationality']) . '</td></tr>';
         }
         
-        $html .= '<div class="row"><label>NISN</label><span>' . htmlspecialchars($data['nisn'] ?? '-') . '</span></div>
+        $html .= '<tr><td>NISN</td><td>:</td><td>' . htmlspecialchars($data['nisn'] ?? '-') . '</td></tr>
+                        </table>
                     </div>
                 </div>';
 
@@ -637,12 +651,12 @@ class CVController extends Controller
         if (isset($data['educations']) && !empty($data['educations'])) {
             // Display detailed education data from form
             foreach ($data['educations'] as $education) {
-                $html .= '<div style="margin-bottom: 15px; padding: 10px; background: #f8f9fa; border-left: 4px solid #2563eb;">
-                            <strong>' . htmlspecialchars($education['school_name']) . '</strong><br>
-                            <em>' . htmlspecialchars($education['degree']) . '</em><br>';
+                $html .= '<div class="entry-item">
+                            <div class="entry-title">' . htmlspecialchars($education['school_name']) . '</div>
+                            <div class="entry-subtitle">' . htmlspecialchars($education['degree']) . '</div>';
                 
                 if ($education['start_date'] || $education['end_date']) {
-                    $html .= '<small style="color: #666;">';
+                    $html .= '<div class="entry-date">';
                     if ($education['start_date']) {
                         $html .= htmlspecialchars($education['start_date']);
                     }
@@ -652,21 +666,22 @@ class CVController extends Controller
                     if ($education['end_date']) {
                         $html .= htmlspecialchars($education['end_date']);
                     }
-                    $html .= '</small><br>';
+                    $html .= '</div>';
                 }
                 
                 if ($education['description']) {
-                    $html .= '<small>' . nl2br(htmlspecialchars($education['description'])) . '</small>';
+                    $html .= '<div class="entry-description">' . nl2br(htmlspecialchars($education['description'])) . '</div>';
                 }
                 
                 $html .= '</div>';
             }
         } else {
             // Display basic education data
-            $html .= '<strong>Sekolah:</strong> ' . htmlspecialchars($data['education']['school']) . '<br>
-                      <strong>Jurusan:</strong> ' . htmlspecialchars($data['education']['major']) . '<br>
-                      <strong>Tahun Masuk:</strong> ' . htmlspecialchars($data['education']['start_year']) . '<br>
-                      <strong>Tahun Lulus:</strong> ' . htmlspecialchars($data['education']['graduation_year']) . '<br>';
+            $html .= '<div class="entry-item">
+                        <div class="entry-title">' . htmlspecialchars($data['education']['school']) . '</div>
+                        <div class="entry-subtitle">Jurusan: ' . htmlspecialchars($data['education']['major']) . '</div>
+                        <div class="entry-date">' . htmlspecialchars($data['education']['start_year']) . ' - ' . htmlspecialchars($data['education']['graduation_year']) . '</div>
+                      </div>';
         }
         
         $html .= '</div>
@@ -680,12 +695,12 @@ class CVController extends Controller
         if (isset($data['experiences']) && !empty($data['experiences'])) {
             // Display detailed experience data from form
             foreach ($data['experiences'] as $experience) {
-                $html .= '<div style="margin-bottom: 15px; padding: 10px; background: #f8f9fa; border-left: 4px solid #2563eb;">
-                            <strong>' . htmlspecialchars($experience['job_title']) . '</strong><br>
-                            <em>' . htmlspecialchars($experience['company']) . '</em><br>';
+                $html .= '<div class="entry-item">
+                            <div class="entry-title">' . htmlspecialchars($experience['job_title']) . '</div>
+                            <div class="entry-subtitle">' . htmlspecialchars($experience['company']) . '</div>';
                 
                 if ($experience['start_date'] || $experience['end_date']) {
-                    $html .= '<small style="color: #666;">';
+                    $html .= '<div class="entry-date">';
                     if ($experience['start_date']) {
                         $html .= htmlspecialchars($experience['start_date']);
                     }
@@ -695,18 +710,20 @@ class CVController extends Controller
                     if ($experience['end_date']) {
                         $html .= htmlspecialchars($experience['end_date']);
                     }
-                    $html .= '</small><br>';
+                    $html .= '</div>';
                 }
                 
                 if ($experience['description']) {
-                    $html .= '<div style="margin-top: 8px;">' . nl2br(htmlspecialchars($experience['description'])) . '</div>';
+                    $html .= '<div class="entry-description">' . nl2br(htmlspecialchars($experience['description'])) . '</div>';
                 }
                 
                 $html .= '</div>';
             }
         } else {
             // Display basic experience data
-            $html .= htmlspecialchars($data['work_experience']['experience_detail']);
+            $html .= '<div class="entry-item">
+                        <div class="entry-description">' . nl2br(htmlspecialchars($data['work_experience']['experience_detail'] ?? 'Belum ada pengalaman kerja')) . '</div>
+                      </div>';
         }
         
         $html .= '</div>
@@ -729,7 +746,7 @@ class CVController extends Controller
                 $html .= '<span class="skill-tag">' . htmlspecialchars($data['skills']) . '</span>';
             }
         } else {
-            $html .= '<span class="skill-tag">' . htmlspecialchars($data['skills']) . '</span>';
+            $html .= '<span class="skill-tag">Belum ada keahlian yang dicantumkan</span>';
         }
         
         $html .= '</div>
@@ -742,10 +759,10 @@ class CVController extends Controller
                         <div class="section-content">';
             
             foreach ($data['references'] as $reference) {
-                $html .= '<div style="margin-bottom: 10px;">
-                            <strong>' . htmlspecialchars($reference['name']) . '</strong><br>
-                            <em>' . htmlspecialchars($reference['position']) . '</em><br>
-                            <small>Telepon: ' . htmlspecialchars($reference['phone']) . '</small>
+                $html .= '<div class="entry-item">
+                            <div class="entry-title">' . htmlspecialchars($reference['name']) . '</div>
+                            <div class="entry-subtitle">' . htmlspecialchars($reference['position']) . '</div>
+                            <div class="entry-description">Telepon: ' . htmlspecialchars($reference['phone']) . '</div>
                           </div>';
             }
             
@@ -753,7 +770,7 @@ class CVController extends Controller
                     </div>';
         }
         
-        $html .= '<div class="footer">CV dibuat pada ' . htmlspecialchars($data['created_at']) . '</div>
+        $html .= '<div class="footer">CV dibuat pada ' . htmlspecialchars($data['created_at']) . ' | BKK SMK Negeri 1 Surabaya</div>
             </div>
         </body>
         </html>';
@@ -779,5 +796,27 @@ class CVController extends Controller
         ];
         
         return isset($months[$month]) ? $months[$month] : $month;
+    }
+    
+    private function getPhotoBase64($request, $alumni)
+    {
+        // Check if custom photo is uploaded
+        if ($request->hasFile('custom_photo')) {
+            $file = $request->file('custom_photo');
+            $photoData = file_get_contents($file->getRealPath());
+            $mimeType = $file->getMimeType();
+            return 'data:' . $mimeType . ';base64,' . base64_encode($photoData);
+        }
+        
+        // Check if alumni has a photo in storage
+        if ($alumni->photo && Storage::exists('photos/' . $alumni->photo)) {
+            $photoPath = storage_path('app/photos/' . $alumni->photo);
+            $photoData = file_get_contents($photoPath);
+            $mimeType = mime_content_type($photoPath);
+            return 'data:' . $mimeType . ';base64,' . base64_encode($photoData);
+        }
+        
+        // Return null if no photo available
+        return null;
     }
 }

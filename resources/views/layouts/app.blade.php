@@ -625,13 +625,13 @@
                 if (form) {
                     form.submit();
                 } else {
-                    // Fallback: redirect to alternative logout route
-                    window.location.href = '{{ route("logout.alt") }}';
+                    // Fallback: redirect to login page
+                    window.location.href = '{{ route("login") }}';
                 }
             } catch (error) {
                 console.error('Logout error:', error);
-                // Fallback: redirect to alternative logout route
-                window.location.href = '{{ route("logout.alt") }}';
+                // Fallback: redirect to login page
+                window.location.href = '{{ route("login") }}';
             }
         }
     </script>

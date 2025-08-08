@@ -24,6 +24,8 @@ class Job extends Model
         'application_deadline',
         'status',
         'positions_available',
+        'archived_at',
+        'archive_reason',
     ];
 
     protected $casts = [
@@ -31,6 +33,7 @@ class Job extends Model
         'salary_max' => 'float',
         'application_deadline' => 'datetime',
         'positions_available' => 'integer',
+        'archived_at' => 'datetime',
     ];
 
     const JOB_TYPES = [
@@ -43,9 +46,8 @@ class Job extends Model
 
     const STATUSES = [
         'draft' => 'Draft',
-        'active' => 'Active',
+        'active' => 'Active', 
         'closed' => 'Closed',
-        'expired' => 'Expired',
     ];
 
     public function company()
@@ -70,7 +72,7 @@ class Job extends Model
 
     public function scopeActive($query)
     {
-        return $query->where('status', 'active');
+        return $query->where('status', 'active')->whereNull('archived_at');
     }
 
     public function scopeForCompany($query, $companyId)
@@ -153,5 +155,47 @@ class Job extends Model
         return $this->applications()
             ->whereIn('status', ['submitted', 'reviewed', 'interview', 'accepted'])
             ->count();
+    }
+
+    // Scopes for archive functionality
+    public function scopeArchived($query)
+    {
+        return $query->whereNotNull('archived_at');
+    }
+
+    public function scopeExpiredButNotArchived($query)
+    {
+        return $query->whereNull('archived_at')
+            ->where('application_deadline', '<', now())
+            ->where('status', 'active');
+    }
+
+    // Archive methods
+    public function archive($reason = 'Deadline expired')
+    {
+        $this->update([
+            'archived_at' => now(),
+            'archive_reason' => $reason,
+            'status' => 'closed'  // Use 'closed' instead of 'expired' as per enum
+        ]);
+    }
+
+    public function unarchive()
+    {
+        $this->update([
+            'archived_at' => null,
+            'archive_reason' => null,
+            'status' => 'active'
+        ]);
+    }
+
+    public function isArchived()
+    {
+        return !is_null($this->archived_at);
+    }
+
+    public function canBeReactivated()
+    {
+        return $this->isArchived() && auth('admin')->check();
     }
 }

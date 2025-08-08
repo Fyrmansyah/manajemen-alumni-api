@@ -11,7 +11,29 @@ class AdminJobController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Job::with('company');
+        // Get counts for statistics
+        $counts = [
+            'active' => Job::active()->count(),
+            'archived' => Job::archived()->count(),
+            'all' => Job::count()
+        ];
+
+        $query = Job::with(['company', 'applications']);
+
+        // Filter by view (active, archived, all)
+        $view = $request->get('view', 'active');
+        switch ($view) {
+            case 'archived':
+                $query->archived();
+                break;
+            case 'all':
+                // Show all jobs
+                break;
+            case 'active':
+            default:
+                $query->active();
+                break;
+        }
 
         // Search
         if ($request->filled('search')) {
@@ -61,10 +83,13 @@ class AdminJobController extends Controller
                 $query->latest();
         }
 
+        // Add applications count for statistics
+        $query->withCount('applications');
+
         $jobs = $query->paginate(15)->withQueryString();
         $companies = Company::where('status', 'active')->orderBy('company_name')->get();
 
-        return view('admin.jobs.index', compact('jobs', 'companies'));
+        return view('admin.jobs.index', compact('jobs', 'companies', 'view', 'counts'));
     }
 
     public function create()
@@ -144,6 +169,106 @@ class AdminJobController extends Controller
                 ->with('success', 'Lowongan kerja berhasil dihapus.');
         } catch (\Exception $e) {
             return back()->with('error', 'Terjadi kesalahan saat menghapus lowongan kerja.');
+        }
+    }
+
+    public function archive(Job $job, Request $request)
+    {
+        try {
+            // Log for debugging
+            \Log::info('Attempting to archive job', [
+                'job_id' => $job->id,
+                'job_title' => $job->title,
+                'reason' => $request->input('reason'),
+                'is_archived_before' => $job->isArchived()
+            ]);
+
+            // Validate that job is not already archived
+            if ($job->isArchived()) {
+                return back()->with('error', 'Lowongan kerja ini sudah diarsipkan.');
+            }
+
+            $reason = $request->input('reason', 'Archived by admin');
+            $job->archive($reason);
+            
+            // Log success
+            \Log::info('Job archived successfully', [
+                'job_id' => $job->id,
+                'archived_at' => $job->archived_at,
+                'archive_reason' => $job->archive_reason
+            ]);
+            
+            return redirect()
+                ->route('admin.jobs.index')
+                ->with('success', "Lowongan '{$job->title}' berhasil diarsipkan.");
+        } catch (\Exception $e) {
+            \Log::error('Failed to archive job', [
+                'job_id' => $job->id ?? 'unknown',
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return back()->with('error', 'Terjadi kesalahan saat mengarsipkan lowongan kerja: ' . $e->getMessage());
+        }
+    }
+
+    public function reactivate(Job $job)
+    {
+        try {
+            if (!$job->isArchived()) {
+                return back()->with('error', 'Lowongan ini tidak dalam status arsip.');
+            }
+
+            $job->unarchive();
+            
+            return redirect()
+                ->route('admin.jobs.index')
+                ->with('success', "Lowongan '{$job->title}' berhasil diaktifkan kembali.");
+        } catch (\Exception $e) {
+            return back()->with('error', 'Terjadi kesalahan saat mengaktifkan kembali lowongan kerja.');
+        }
+    }
+
+    public function bulkArchive(Request $request)
+    {
+        try {
+            $jobIds = $request->input('job_ids', []);
+            $reason = $request->input('reason', 'Bulk archived by admin');
+            
+            if (empty($jobIds)) {
+                return back()->with('error', 'Pilih minimal satu lowongan untuk diarsipkan.');
+            }
+
+            $jobs = Job::whereIn('id', $jobIds)->whereNull('archived_at')->get();
+            
+            foreach ($jobs as $job) {
+                $job->archive($reason);
+            }
+            
+            return back()->with('success', "Berhasil mengarsipkan {$jobs->count()} lowongan.");
+        } catch (\Exception $e) {
+            return back()->with('error', 'Terjadi kesalahan saat mengarsipkan lowongan kerja.');
+        }
+    }
+
+    public function bulkReactivate(Request $request)
+    {
+        try {
+            $jobIds = $request->input('job_ids', []);
+            
+            if (empty($jobIds)) {
+                return back()->with('error', 'Pilih minimal satu lowongan untuk diaktifkan kembali.');
+            }
+
+            $jobs = Job::whereIn('id', $jobIds)->whereNotNull('archived_at')->get();
+            
+            foreach ($jobs as $job) {
+                $job->unarchive();
+            }
+            
+            return back()->with('success', "Berhasil mengaktifkan kembali {$jobs->count()} lowongan.");
+        } catch (\Exception $e) {
+            return back()->with('error', 'Terjadi kesalahan saat mengaktifkan kembali lowongan kerja.');
         }
     }
 }
