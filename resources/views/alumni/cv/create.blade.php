@@ -807,35 +807,54 @@ document.addEventListener('DOMContentLoaded', function() {
         const template = document.getElementById('template').value;
         const dataSource = document.querySelector('input[name="data_source"]:checked');
         
+        let errorMessage = '';
+        
         if (!title) {
-            e.preventDefault();
-            alert('Judul CV harus diisi');
-            return;
-        }
-        
-        if (!template) {
-            e.preventDefault();
-            alert('Template harus dipilih');
-            return;
-        }
-        
-        if (!dataSource) {
-            e.preventDefault();
-            alert('Sumber data harus dipilih');
-            return;
-        }
-        
-        if (dataSource.value === 'custom') {
+            errorMessage = 'Judul CV harus diisi';
+        } else if (!template) {
+            errorMessage = 'Template harus dipilih';
+        } else if (!dataSource) {
+            errorMessage = 'Sumber data harus dipilih';
+        } else if (dataSource.value === 'custom') {
             const customName = document.getElementById('custom_name').value.trim();
             const customEmail = document.getElementById('custom_email').value.trim();
             
             if (!customName || !customEmail) {
-                e.preventDefault();
-                alert('Nama depan dan email harus diisi untuk data manual');
-                return;
+                errorMessage = 'Nama depan dan email harus diisi untuk data manual';
             }
         }
+        
+        if (errorMessage) {
+            e.preventDefault();
+            // Show error using Bootstrap toast or single alert
+            showErrorMessage(errorMessage);
+            return;
+        }
     });
+
+    // Function to show error message (replace multiple alerts)
+    function showErrorMessage(message) {
+        // Create or update error alert
+        const existingAlert = document.querySelector('.validation-alert');
+        if (existingAlert) {
+            existingAlert.remove();
+        }
+
+        const alertDiv = document.createElement('div');
+        alertDiv.className = 'alert alert-danger alert-dismissible fade show validation-alert';
+        alertDiv.innerHTML = `
+            <i class="fas fa-exclamation-circle me-2"></i>
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+
+        // Insert at the top of the form
+        const form = document.getElementById('cvForm');
+        form.insertBefore(alertDiv, form.firstChild);
+
+        // Auto-scroll to alert
+        alertDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
 
     // Initialize remove buttons
     updateRemoveButtons();

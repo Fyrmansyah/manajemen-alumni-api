@@ -8,6 +8,9 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\View;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Barryvdh\DomPDF\PDF as DomPDF;
+use Dompdf\Dompdf as BaseDompdf;
+use Dompdf\Options;
 
 class CVController extends Controller
 {
@@ -465,11 +468,39 @@ class CVController extends Controller
         // Generate HTML based on template
         $html = $this->generateHTML($data, $template);
         
-        // Generate PDF using Laravel DomPDF
-        $pdf = Pdf::loadHTML($html);
-        $pdf->setPaper('A4', 'portrait');
-        
-        return $pdf->output();
+        try {
+            // Method 1: Try Laravel DomPDF Facade
+            $pdf = Pdf::loadHTML($html);
+            $pdf->setPaper('A4', 'portrait');
+            
+            return $pdf->output();
+        } catch (\Exception $e) {
+            try {
+                // Method 2: Try DomPDF wrapper from service container
+                $pdf = app('dompdf.wrapper');
+                $pdf->loadHTML($html);
+                $pdf->setPaper('A4', 'portrait');
+                
+                return $pdf->output();
+            } catch (\Exception $e2) {
+                try {
+                    // Method 3: Use direct Dompdf instantiation
+                    $options = new Options();
+                    $options->set('defaultFont', 'Arial');
+                    $options->set('isRemoteEnabled', true);
+                    
+                    $dompdf = new BaseDompdf($options);
+                    $dompdf->loadHtml($html);
+                    $dompdf->setPaper('A4', 'portrait');
+                    $dompdf->render();
+                    
+                    return $dompdf->output();
+                } catch (\Exception $e3) {
+                    // If all methods fail, return error
+                    throw new \Exception('PDF generation failed: ' . $e3->getMessage());
+                }
+            }
+        }
     }
 
     private function generateHTML($data, $template)
