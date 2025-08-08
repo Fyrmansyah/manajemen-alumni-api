@@ -24,6 +24,8 @@ class Job extends Model
         'application_deadline',
         'status',
         'positions_available',
+        'archived_at',
+        'archive_reason',
     ];
 
     protected $casts = [
@@ -31,6 +33,7 @@ class Job extends Model
         'salary_max' => 'float',
         'application_deadline' => 'datetime',
         'positions_available' => 'integer',
+        'archived_at' => 'datetime',
     ];
 
     const JOB_TYPES = [
@@ -43,9 +46,8 @@ class Job extends Model
 
     const STATUSES = [
         'draft' => 'Draft',
-        'active' => 'Active',
+        'active' => 'Active', 
         'closed' => 'Closed',
-        'expired' => 'Expired',
     ];
 
     public function company()
@@ -70,7 +72,7 @@ class Job extends Model
 
     public function scopeActive($query)
     {
-        return $query->where('status', 'active');
+        return $query->where('status', 'active')->whereNull('archived_at');
     }
 
     public function scopeForCompany($query, $companyId)
@@ -102,6 +104,48 @@ class Job extends Model
     public function isExpired()
     {
         return $this->application_deadline && $this->application_deadline < now();
+    }
+
+    /**
+     * Get formatted days left until deadline
+     * @return array|null ['days' => int, 'text' => string, 'is_urgent' => bool, 'is_expired' => bool] or null if no deadline
+     */
+    public function getDeadlineInfo(): ?array
+    {
+        if (!$this->application_deadline) {
+            return null;
+        }
+
+        $daysLeft = now()->diffInDays($this->application_deadline, false);
+        $daysLeftFormatted = floor(abs($daysLeft));
+        $isUrgent = $daysLeft <= 7 && $daysLeft >= 0;
+        $isExpired = $daysLeft < 0;
+
+        if ($isExpired) {
+            return [
+                'days' => $daysLeftFormatted,
+                'text' => 'Expired',
+                'is_urgent' => false,
+                'is_expired' => true,
+                'css_class' => 'text-danger'
+            ];
+        } elseif ($isUrgent) {
+            return [
+                'days' => $daysLeftFormatted,
+                'text' => $daysLeftFormatted . ' hari lagi',
+                'is_urgent' => true,
+                'is_expired' => false,
+                'css_class' => 'text-warning'
+            ];
+        } else {
+            return [
+                'days' => $daysLeftFormatted,
+                'text' => 'Deadline: ' . $this->application_deadline->format('d M Y'),
+                'is_urgent' => false,
+                'is_expired' => false,
+                'css_class' => 'text-muted'
+            ];
+        }
     }
 
     public function canApply()
@@ -153,5 +197,112 @@ class Job extends Model
         return $this->applications()
             ->whereIn('status', ['submitted', 'reviewed', 'interview', 'accepted'])
             ->count();
+    }
+
+    /**
+     * Get real-time status including auto-expired jobs
+     */
+    public function getRealTimeStatusAttribute()
+    {
+        // If job is archived, return archived status
+        if ($this->isArchived()) {
+            return 'archived';
+        }
+        
+        // If job is expired but not yet archived, return expired
+        if ($this->isExpired() && $this->status === 'active') {
+            return 'expired';
+        }
+        
+        // Return actual status
+        return $this->status;
+    }
+
+    /**
+     * Get status display text
+     */
+    public function getStatusDisplayAttribute()
+    {
+        $status = $this->getRealTimeStatusAttribute();
+        
+        switch ($status) {
+            case 'active':
+                return 'Aktif';
+            case 'draft':
+                return 'Draft';
+            case 'closed':
+                return 'Ditutup';
+            case 'expired':
+                return 'Kadaluarsa';
+            case 'archived':
+                return 'Diarsipkan';
+            default:
+                return ucfirst($status);
+        }
+    }
+
+    /**
+     * Get status CSS class
+     */
+    public function getStatusCssClassAttribute()
+    {
+        $status = $this->getRealTimeStatusAttribute();
+        
+        switch ($status) {
+            case 'active':
+                return 'success';
+            case 'draft':
+                return 'warning';
+            case 'closed':
+                return 'secondary';
+            case 'expired':
+                return 'danger';
+            case 'archived':
+                return 'dark';
+            default:
+                return 'secondary';
+        }
+    }
+
+    // Scopes for archive functionality
+    public function scopeArchived($query)
+    {
+        return $query->whereNotNull('archived_at');
+    }
+
+    public function scopeExpiredButNotArchived($query)
+    {
+        return $query->whereNull('archived_at')
+            ->where('application_deadline', '<', now())
+            ->where('status', 'active');
+    }
+
+    // Archive methods
+    public function archive($reason = 'Deadline expired')
+    {
+        $this->update([
+            'archived_at' => now(),
+            'archive_reason' => $reason,
+            'status' => 'closed'  // Use 'closed' instead of 'expired' as per enum
+        ]);
+    }
+
+    public function unarchive()
+    {
+        $this->update([
+            'archived_at' => null,
+            'archive_reason' => null,
+            'status' => 'active'
+        ]);
+    }
+
+    public function isArchived()
+    {
+        return !is_null($this->archived_at);
+    }
+
+    public function canBeReactivated()
+    {
+        return $this->isArchived() && auth('admin')->check();
     }
 }

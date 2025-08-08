@@ -14,6 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withCommands([
         \App\Console\Commands\SendNewJobNotificationCommand::class,
         \App\Console\Commands\SendNewsNotificationCommand::class,
+        \App\Console\Commands\ArchiveExpiredJobs::class,
     ])
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([

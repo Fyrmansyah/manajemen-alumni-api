@@ -11,10 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('alumnis', function (Blueprint $table) {
-            if (!Schema::hasColumn('alumnis', 'nisn')) {
-                $table->string('nisn')->nullable()->after('id')->comment('Nomor Induk Siswa Nasional');
-            }
+        Schema::table('job_postings', function (Blueprint $table) {
+            $table->timestamp('archived_at')->nullable()->after('application_deadline');
+            $table->string('archive_reason')->nullable()->after('archived_at');
         });
     }
 
@@ -23,8 +22,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('alumnis', function (Blueprint $table) {
-            $table->dropColumn('nisn');
+        Schema::table('job_postings', function (Blueprint $table) {
+            $table->dropColumn(['archived_at', 'archive_reason']);
         });
     }
 };

@@ -676,12 +676,10 @@ function bulkAction(action) {
     if (action === 'verify') {
         if (confirm(`Verifikasi ${selectedIds.length} alumni?`)) {
             // Implementation for bulk verify
-            console.log('Bulk verify:', selectedIds);
         }
     } else if (action === 'delete') {
         if (confirm(`Hapus ${selectedIds.length} alumni?`)) {
             // Implementation for bulk delete
-            console.log('Bulk delete:', selectedIds);
         }
     }
 }

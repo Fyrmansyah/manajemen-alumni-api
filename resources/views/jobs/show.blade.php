@@ -387,8 +387,6 @@
 <script>
 // Apply for job function
 function applyJob(jobId) {
-    console.log('applyJob called with jobId:', jobId);
-    
     // Check if modal exists
     const modal = document.getElementById('applyModal');
     if (!modal) {
@@ -405,7 +403,6 @@ function applyJob(jobId) {
     const form = document.getElementById('applyForm');
     if (form) {
         form.action = `/jobs/${jobId}/apply`;
-        console.log('Form action set to:', form.action);
     } else {
         console.error('Form not found');
     }
@@ -413,11 +410,8 @@ function applyJob(jobId) {
 
 // Submit application form
 function submitApplication() {
-    console.log('submitApplication called');
-    
     // Validate form first
     if (!validateApplicationForm()) {
-        console.log('Form validation failed');
         return;
     }
     
@@ -432,18 +426,9 @@ function submitApplication() {
     const submitBtn = document.getElementById('submitApplicationBtn');
     const originalText = submitBtn.innerHTML;
     
-    console.log('Form action:', form.action);
-    console.log('Form data entries:');
-    for (let [key, value] of formData.entries()) {
-        console.log(key, value);
-    }
-    
     // Disable submit button and show loading
     submitBtn.disabled = true;
     submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Mengirim...';
-    
-    console.log('Sending fetch request to:', form.action);
-    console.log('CSRF Token:', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
     
     fetch(form.action, {
         method: 'POST',
@@ -453,9 +438,6 @@ function submitApplication() {
         body: formData
     })
     .then(response => {
-        console.log('Response status:', response.status);
-        console.log('Response headers:', response.headers);
-        
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -468,7 +450,6 @@ function submitApplication() {
         return response.json();
     })
     .then(data => {
-        console.log('Response data:', data);
         if (data.success) {
             // Show success message
             document.getElementById('applyModalBody').innerHTML = `

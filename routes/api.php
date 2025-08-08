@@ -49,10 +49,7 @@ Route::controller(CompanyController::class)->prefix('companies')->group(function
     Route::get('/', 'index');
 });
 
-// Public application detail route for testing
-Route::get('/applications/{id}', [CompanyController::class, 'getApplicationDetail']);
-
-// Application detail route
+// Public application detail route
 Route::get('/applications/{id}', [CompanyController::class, 'getApplicationDetail']);
 
 Route::controller(NewsController::class)->prefix('news')->group(function () {

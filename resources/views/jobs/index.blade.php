@@ -179,20 +179,14 @@
                                         </span>
                                         @if($job->application_deadline)
                                             @php
-                                                $daysLeft = now()->diffInDays($job->application_deadline, false);
-                                                $isUrgent = $daysLeft <= 7 && $daysLeft >= 0;
-                                                $isExpired = $daysLeft < 0;
+                                                $deadlineInfo = $job->getDeadlineInfo();
                                             @endphp
-                                            <small class="text-muted ms-2">
-                                                <i class="fas fa-calendar-times me-1 {{ $isUrgent ? 'text-warning' : ($isExpired ? 'text-danger' : '') }}"></i>
-                                                @if($isExpired)
-                                                    <span class="text-danger">Expired</span>
-                                                @elseif($isUrgent)
-                                                    <span class="text-warning">{{ abs($daysLeft) }} hari lagi</span>
-                                                @else
-                                                    Deadline: {{ $job->application_deadline->format('d M Y') }}
-                                                @endif
-                                            </small>
+                                            @if($deadlineInfo)
+                                                <small class="text-muted ms-2">
+                                                    <i class="fas fa-calendar-times me-1 {{ $deadlineInfo['is_urgent'] ? 'text-warning' : ($deadlineInfo['is_expired'] ? 'text-danger' : '') }}"></i>
+                                                    <span class="{{ $deadlineInfo['css_class'] }}">{{ $deadlineInfo['text'] }}</span>
+                                                </small>
+                                            @endif
                                         @endif
                                     </div>
                                     <div class="job-actions">

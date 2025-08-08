@@ -97,15 +97,39 @@ class CompanyDashboardController extends Controller
             return redirect()->route('login');
         }
         
-        // Get all jobs for this company with pagination
-        $jobs = Job::where('company_id', $company->id)
-            ->withCount('applications')
+        $query = Job::where('company_id', $company->id);
+        
+        // Filter by status (including archived)
+        $view = $request->get('view', 'active'); // active, archived, all
+        
+        switch ($view) {
+            case 'archived':
+                $query->archived();
+                break;
+            case 'all':
+                // Show all jobs
+                break;
+            case 'active':
+            default:
+                $query->active();
+                break;
+        }
+        
+        // Get jobs with pagination
+        $jobs = $query->withCount('applications')
             ->latest()
             ->paginate(10);
         
         $jobTypes = Job::JOB_TYPES;
         
-        return view('company.jobs', compact('jobs', 'jobTypes'));
+        // Count for tabs
+        $counts = [
+            'active' => Job::where('company_id', $company->id)->active()->count(),
+            'archived' => Job::where('company_id', $company->id)->archived()->count(),
+            'all' => Job::where('company_id', $company->id)->count(),
+        ];
+        
+        return view('company.jobs', compact('jobs', 'jobTypes', 'view', 'counts'));
     }
 
     public function applications(Request $request)

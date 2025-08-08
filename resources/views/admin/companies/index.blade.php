@@ -477,7 +477,6 @@ function bulkAction(action) {
     if (action === 'delete') {
         if (confirm(`Apakah Anda yakin ingin menghapus ${selectedIds.length} perusahaan?`)) {
             // Implementation for bulk delete
-            console.log('Bulk delete:', selectedIds);
         }
     }
 }
