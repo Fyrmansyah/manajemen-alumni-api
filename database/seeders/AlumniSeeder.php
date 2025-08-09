@@ -16,6 +16,7 @@ class AlumniSeeder extends Seeder
     {
         $jurusan = Jurusan::first();
         Alumni::create([
+            'nisn' => '1234567890', // Add NISN field
             'nama' => 'Budi Pekerti',
             'tgl_lahir' => '1996-08-19',
             'tahun_mulai' => 2021,
