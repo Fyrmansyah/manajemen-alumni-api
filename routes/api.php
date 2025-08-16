@@ -6,6 +6,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\JurusanController;
 use App\Http\Controllers\JobController;
 use App\Http\Controllers\CompanyController;
+use App\Http\Controllers\JalurMasukKuliahController;
 use App\Http\Controllers\NewsController;
 use App\Http\Controllers\WhatsAppController;
 use Illuminate\Http\Request;
@@ -20,6 +21,7 @@ Route::post('/alumni/login', [AuthController::class, 'loginAlumni']); //1
 Route::post('/company/register', [CompanyController::class, 'register']); //1
 
 Route::apiResource('admins', AdminController::class); // 5
+Route::apiResource('jalur-masuk-kuliah', JalurMasukKuliahController::class);
 
 Route::controller(AlumniController::class)->group(function () {
     Route::get('/alumnis', 'getAll');

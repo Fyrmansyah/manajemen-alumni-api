@@ -2,12 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\Admin;
-use App\Models\Alumni;
-use App\Models\Jurusan;
-use App\Models\User;
-use Carbon\Carbon;
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -20,6 +14,7 @@ class DatabaseSeeder extends Seeder
         // User::factory(10)->create();
 
         $this->call([
+            JalurMasukKuliahSeeder::class,
             AdminSeeder::class,
             JurusanSeeder::class,
             NisnSeeder::class,
