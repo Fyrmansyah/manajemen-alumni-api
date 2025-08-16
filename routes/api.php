@@ -24,6 +24,7 @@ Route::apiResource('admins', AdminController::class); // 5
 Route::controller(AlumniController::class)->group(function () {
     Route::get('/alumnis', 'getAll');
     Route::get('/alumnis/chart', 'getChart');
+    Route::get('/alumnis/check-nisn-valid/{nisn}', 'checkNisnValid');
     Route::get('/alumnis/{alumni_id}', 'getDetail');
     Route::post('/check-email-exist', 'checkEmailExist');
     Route::post('/alumnis', 'create');
@@ -65,10 +66,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::post('/{id}/apply', 'apply');
         Route::get('/my/applications', 'myApplications');
     });
-    
+
     // Alumni application details
     Route::get('/alumni/applications/{id}', [AlumniController::class, 'getApplicationDetail']);
-    
+
     // Admin dashboard and management
     Route::controller(AdminController::class)->prefix('admin')->group(function () {
         Route::get('/dashboard', 'dashboard');
@@ -77,7 +78,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/applications', 'applications');
         Route::post('/companies/{id}/approve', 'approveCompany');
     });
-    
+
     // Company management
     Route::controller(CompanyController::class)->prefix('company')->group(function () {
         Route::get('/dashboard', 'dashboard');
@@ -88,24 +89,24 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/applications/{id}', 'getApplicationDetail');
         Route::put('/applications/{id}/status', 'updateApplicationStatus');
     });
-    
+
     // News management (Admin only)
     Route::controller(NewsController::class)->prefix('admin/news')->group(function () {
         Route::post('/', 'store');
         Route::put('/{id}', 'update');
         Route::delete('/{id}', 'destroy');
     });
-    
+
     // WhatsApp notification management
     Route::controller(WhatsAppController::class)->prefix('whatsapp')->group(function () {
         // Alumni settings
         Route::get('/alumni/settings', 'getAlumniSettings')->middleware('auth:alumni');
         Route::put('/alumni/settings', 'updateAlumniSettings')->middleware('auth:alumni');
-        
+
         // Company settings
         Route::get('/company/settings', 'getCompanySettings')->middleware('auth:company');
         Route::put('/company/settings', 'updateCompanySettings')->middleware('auth:company');
-        
+
         // Admin functions
         Route::post('/test', 'testNotification')->middleware('auth:admin');
         Route::post('/bulk-send', 'sendBulkNotification')->middleware('auth:admin');

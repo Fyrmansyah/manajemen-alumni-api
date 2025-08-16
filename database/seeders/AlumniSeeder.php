@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Alumni;
 use App\Models\Jurusan;
+use App\Models\Nisn;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -15,8 +16,8 @@ class AlumniSeeder extends Seeder
     public function run(): void
     {
         $jurusan = Jurusan::first();
+        $nisn = Nisn::first();
         Alumni::create([
-            'nisn' => '1234567890', // Add NISN field
             'nama' => 'Budi Pekerti',
             'tgl_lahir' => '1996-08-19',
             'tahun_mulai' => 2021,
@@ -31,7 +32,8 @@ class AlumniSeeder extends Seeder
             'prodi_kuliah' => 'Teknik Informatika',
             'kesesuaian_kerja' => null,
             'kesesuaian_kuliah' => true,
-            'jurusan_id' => $jurusan->id
+            'jurusan_id' => $jurusan->id,
+            'nisn_id' => $nisn->id,
         ]);
 
         // Alumni::factory()->count(50)->create();

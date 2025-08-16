@@ -8,6 +8,7 @@ use App\Http\Requests\UpdateAlumniRequest;
 use App\Http\Resources\AlumniResource;
 use App\Imports\AlumnisImport;
 use App\Models\Alumni;
+use App\Models\Nisn;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -200,11 +201,21 @@ class AlumniController extends Controller
             ->build();
     }
 
+    public function checkNisnValid(string $nisn): JsonResponse
+    {
+        $valid_nisn = Nisn::query()->where('number', $nisn)->first();
+        if (!$valid_nisn) {
+            return ResponseBuilder::fail()->message('NISN Tidak ditemukan')->build();
+        }
+
+        return ResponseBuilder::success()->message('NISN valid')->build();
+    }
+
     public function getApplicationDetail($id)
     {
         try {
             $alumni = auth('alumni')->user();
-            
+
             if (!$alumni) {
                 return response()->json([
                     'success' => false,
@@ -213,9 +224,9 @@ class AlumniController extends Controller
             }
 
             $application = \App\Models\Application::with(['job.company'])
-                                                 ->where('id', $id)
-                                                 ->where('alumni_id', $alumni->id)
-                                                 ->first();
+                ->where('id', $id)
+                ->where('alumni_id', $alumni->id)
+                ->first();
 
             if (!$application) {
                 return response()->json([
@@ -241,7 +252,6 @@ class AlumniController extends Controller
                     ]
                 ]
             ]);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
