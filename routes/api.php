@@ -7,6 +7,7 @@ use App\Http\Controllers\JurusanController;
 use App\Http\Controllers\JobController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\JalurMasukKuliahController;
+use App\Http\Controllers\JenisPerusahaanController;
 use App\Http\Controllers\MasaTungguKerjaController;
 use App\Http\Controllers\NewsController;
 use App\Http\Controllers\WhatsAppController;
@@ -24,6 +25,7 @@ Route::post('/company/register', [CompanyController::class, 'register']); //1
 Route::apiResource('admins', AdminController::class); // 5
 Route::apiResource('jalur-masuk-kuliah', JalurMasukKuliahController::class);
 Route::apiResource('masa-tunggu-kerja', MasaTungguKerjaController::class);
+Route::apiResource('jenis-perusahaan', JenisPerusahaanController::class);
 
 Route::controller(AlumniController::class)->group(function () {
     Route::get('/alumnis', 'getAll');
