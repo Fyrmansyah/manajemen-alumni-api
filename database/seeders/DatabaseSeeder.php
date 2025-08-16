@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
             JalurMasukKuliahSeeder::class,
             MasaTungguKerjaSeeder::class,
             JenisPerusahaanSeeder::class,
+            DurasiKerjaSeeder::class,
             AdminSeeder::class,
             JurusanSeeder::class,
             NisnSeeder::class,
