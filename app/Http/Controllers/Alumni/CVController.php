@@ -268,7 +268,8 @@ class CVController extends Controller
                     'education_suitability' => $alumni->kesesuaian_kuliah,
                 ],
                 'skills' => $alumni->keahlian ?: 'Belum ada keahlian yang dicantumkan',
-                'photo' => $alumni->foto ? asset('storage/photos/' . $alumni->foto) : null,
+                // Always provide a data URI for DomPDF compatibility (avoid remote URLs)
+                'photo' => $this->getPhotoBase64($request, $alumni),
                 'created_at' => now()->format('d F Y'),
             ];
         } else {
@@ -465,7 +466,9 @@ class CVController extends Controller
             $bkkLogoBase64 = 'data:image/png;base64,' . base64_encode(file_get_contents($bkkLogoPath));
         }
         
-        $html = '<!DOCTYPE html>
+    $initials = $this->getInitials($data['name'] ?? '');
+
+    $html = '<!DOCTYPE html>
         <html>
         <head>
             <meta charset="utf-8">
@@ -530,6 +533,16 @@ class CVController extends Controller
                     background: #f0f0f0;
                     object-fit: cover;
                     border: 2px solid #e5e7eb;
+                }
+                .personal-photo.placeholder {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    background: linear-gradient(135deg, #e5e7eb, #f9fafb);
+                    color: #1f2937;
+                    font-weight: 700;
+                    font-size: 28px;
+                    text-transform: uppercase;
                 }
                 .details-section {
                     display: table-cell;
@@ -653,9 +666,15 @@ class CVController extends Controller
             </div>
             <div class="cv-container">
                 <div class="personal-info">
-                    <div class="photo-section">
-                        <img class="personal-photo" src="'.(isset($data['photo']) && $data['photo'] ? htmlspecialchars($data['photo']) : 'https://ui-avatars.com/api/?name='.urlencode($data['name']).'&background=E0E7FF&color=1E40AF&size=120').'" alt="Foto Profil">
-                    </div>
+                    <div class="photo-section">';
+
+        if (!empty($data['photo'])) {
+            $html .= '<img class="personal-photo" src="' . htmlspecialchars($data['photo']) . '" alt="Foto Profil">';
+        } else {
+            $html .= '<div class="personal-photo placeholder">' . htmlspecialchars($initials) . '</div>';
+        }
+
+        $html .= '    </div>
                     <div class="details-section">
                         <h1>' . htmlspecialchars($data['name']) . '</h1>
                         <table class="info-table">
@@ -840,14 +859,24 @@ class CVController extends Controller
         }
         
         // Check if alumni has a photo in storage
-        if ($alumni->photo && Storage::exists('photos/' . $alumni->photo)) {
-            $photoPath = storage_path('app/photos/' . $alumni->photo);
+        if ($alumni->foto && Storage::disk('public')->exists('alumni_photos/' . $alumni->foto)) {
+            $photoPath = storage_path('app/public/alumni_photos/' . $alumni->foto);
             $photoData = file_get_contents($photoPath);
             $mimeType = mime_content_type($photoPath);
             return 'data:' . $mimeType . ';base64,' . base64_encode($photoData);
         }
         
-        // Return null if no photo available
+        // Return null if no photo available, HTML will render a local placeholder
         return null;
+    }
+
+    private function getInitials(string $name): string
+    {
+        $name = trim($name);
+        if ($name === '') return 'NA';
+        $parts = preg_split('/\s+/', $name);
+        $first = mb_strtoupper(mb_substr($parts[0], 0, 1));
+        $last = count($parts) > 1 ? mb_strtoupper(mb_substr($parts[count($parts) - 1], 0, 1)) : '';
+        return $first . $last;
     }
 }

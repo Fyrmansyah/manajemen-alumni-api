@@ -43,7 +43,7 @@ class JobApplicationSeeder extends Seeder
                 Application::create([
                     'alumni_id' => $alumnus->id,
                     'job_posting_id' => $job->id,
-                    'cover_letter' => 'Saya sangat tertarik untuk bergabung dengan ' . $job->company->company_name . ' sebagai ' . $job->title . '. Dengan latar belakang pendidikan di ' . $alumnus->jurusan->nama_jurusan . ', saya yakin dapat berkontribusi positif untuk perusahaan.',
+                    'cover_letter' => 'Saya sangat tertarik untuk bergabung dengan ' . $job->company->company_name . ' sebagai ' . $job->title . '. Dengan latar belakang pendidikan di ' . $alumnus->jurusan->nama . ', saya yakin dapat berkontribusi positif untuk perusahaan.',
                     'status' => collect(['submitted', 'reviewed', 'interview', 'accepted', 'rejected'])->random(),
                     'applied_at' => now()->subDays(rand(1, 30)),
                 ]);

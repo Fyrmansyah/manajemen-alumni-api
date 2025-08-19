@@ -98,7 +98,7 @@
                         </div>
                     @endif
 
-                    <form action="{{ route('alumni.cv.store') }}" method="POST" id="cvForm">
+                    <form action="{{ route('alumni.cv.store') }}" method="POST" id="cvForm" enctype="multipart/form-data">
                         @csrf
                         
                         <div class="row">
@@ -207,6 +207,13 @@
                                 </div>
                                 <div class="card-body">
                                     <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="custom_photo" class="form-label">Foto Profil (opsional)</label>
+                                                <input type="file" class="form-control" id="custom_photo" name="custom_photo" accept="image/*">
+                                                <div id="customPhotoPreview" class="mt-2"></div>
+                                            </div>
+                                        </div>
                                         <div class="col-md-6">
                                             <div class="mb-3">
                                                 <label for="custom_name" class="form-label">Nama depan <span class="text-danger">*</span></label>
@@ -858,6 +865,21 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initialize remove buttons
     updateRemoveButtons();
+
+    // Custom photo preview
+    const photoInput = document.getElementById('custom_photo');
+    const photoPreview = document.getElementById('customPhotoPreview');
+    if (photoInput && photoPreview) {
+        photoInput.addEventListener('change', function(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) { photoPreview.innerHTML = ''; return; }
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                photoPreview.innerHTML = '<img src="' + e.target.result + '" alt="Preview Foto" style="max-width:120px;height:auto;border-radius:8px;border:1px solid #ddd;" />';
+            };
+            reader.readAsDataURL(file);
+        });
+    }
 });
 </script>
 @endpush 

@@ -101,7 +101,7 @@
                                 <div class="col-md-6">
                                     <strong>Tipe Pekerjaan:</strong>
                                     <p class="mb-2">
-                                        <span class="badge bg-info">{{ App\Models\Job::JOB_TYPES[$job->type] ?? $job->type }}</span>
+                                        <span>{{ App\Models\Job::JOB_TYPES[$job->type] ?? $job->type }}</span>
                                     </p>
                                 </div>
                                 <div class="col-md-6">
@@ -115,20 +115,20 @@
                                     <strong>Status:</strong>
                                     <p class="mb-2">
                                         @if($job->isArchived())
-                                            <span class="badge bg-secondary">Diarsipkan</span>
+                                            <span>Diarsipkan</span>
                                         @else
                                             @switch($job->status)
                                                 @case('active')
-                                                    <span class="badge bg-success">Aktif</span>
+                                                    <span>Aktif</span>
                                                     @break
                                                 @case('draft')
-                                                    <span class="badge bg-warning">Draft</span>
+                                                    <span>Draft</span>
                                                     @break
                                                 @case('closed')
-                                                    <span class="badge bg-danger">Ditutup</span>
+                                                    <span>Ditutup</span>
                                                     @break
                                                 @default
-                                                    <span class="badge bg-secondary">{{ $job->status }}</span>
+                                                    <span>{{ $job->status }}</span>
                                             @endswitch
                                         @endif
                                     </p>
@@ -213,7 +213,7 @@
                                                     <small class="fw-medium">{{ $application->alumni->full_name ?? 'Alumni' }}</small><br>
                                                     <small class="text-muted">{{ $application->created_at->format('d M Y') }}</small>
                                                 </div>
-                                                <span class="badge bg-primary">Baru</span>
+                                                <span>Baru</span>
                                             </div>
                                         @endforeach
                                         

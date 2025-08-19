@@ -60,6 +60,14 @@
                             <!-- Personal Information -->
                             <div class="col-md-6">
                                 <h6 class="text-primary mb-3">Informasi Pribadi</h6>
+                                <div class="mb-3">
+                                    <label for="foto" class="form-label">Foto Profil</label>
+                                    <input type="file" class="form-control @error('foto') is-invalid @enderror" id="foto" name="foto" accept="image/*">
+                                    @error('foto')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                    <small class="text-muted">Format: JPG/PNG, maks 2MB.</small>
+                                </div>
                                 
                                 <div class="mb-3">
                                     <label for="nama_lengkap" class="form-label">Nama Lengkap <span class="text-danger">*</span></label>
@@ -160,6 +168,30 @@
                                         @endfor
                                     </select>
                                     @error('tahun_lulus')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <!-- Informasi Kuliah (opsional) -->
+                                <div class="mb-3">
+                                    <label for="tempat_kuliah" class="form-label">Nama Kampus/Universitas</label>
+                                    <input type="text" class="form-control @error('tempat_kuliah') is-invalid @enderror"
+                                           id="tempat_kuliah" name="tempat_kuliah"
+                                           value="{{ old('tempat_kuliah', auth('alumni')->user()->tempat_kuliah) }}"
+                                           placeholder="Contoh: Universitas Negeri Surabaya">
+                                    @error('tempat_kuliah')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                    <div class="form-text">Isi jika Anda sedang/ Pernah kuliah.</div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="prodi_kuliah" class="form-label">Program Studi</label>
+                                    <input type="text" class="form-control @error('prodi_kuliah') is-invalid @enderror"
+                                           id="prodi_kuliah" name="prodi_kuliah"
+                                           value="{{ old('prodi_kuliah', auth('alumni')->user()->prodi_kuliah) }}"
+                                           placeholder="Contoh: Teknik Informatika">
+                                    @error('prodi_kuliah')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>

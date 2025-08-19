@@ -114,9 +114,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
         // Company settings
         Route::get('/company/settings', 'getCompanySettings')->middleware('auth:company');
         Route::put('/company/settings', 'updateCompanySettings')->middleware('auth:company');
-
-        // Admin functions
-        Route::post('/test', 'testNotification')->middleware('auth:admin');
+        
+    // Admin functions
         Route::post('/bulk-send', 'sendBulkNotification')->middleware('auth:admin');
         Route::get('/stats', 'getNotificationStats')->middleware('auth:admin');
     });

@@ -43,7 +43,7 @@
                                     <i class="fas fa-users fa-2x text-primary"></i>
                                 </div>
                                 <h5 class="mb-1">{{ $jurusan->alumni_count ?? 0 }}</h5>
-                                <small class="text-muted">{{ $jurusan->nama_jurusan }}</small>
+                                <small class="text-muted">{{ $jurusan->nama }}</small>
                                 <div class="mt-2">
                                     <button class="btn btn-sm btn-outline-primary" 
                                             onclick="filterByJurusan('{{ $jurusan->id }}')">
@@ -90,7 +90,7 @@
                                 <option value="">Semua Jurusan</option>
                                 @foreach($jurusans as $jurusan)
                                     <option value="{{ $jurusan->id }}" {{ request('jurusan_id') == $jurusan->id ? 'selected' : '' }}>
-                                        {{ $jurusan->nama_jurusan }}
+                                        {{ $jurusan->nama }}
                                     </option>
                                 @endforeach
                             </select>
@@ -149,7 +149,7 @@
                             <i class="fas fa-list me-2"></i>
                             Daftar Alumni
                             @if(request('jurusan_id'))
-                                - {{ $jurusans->find(request('jurusan_id'))->nama_jurusan ?? '' }}
+                                - {{ $jurusans->find(request('jurusan_id'))->nama ?? '' }}
                             @endif
                         </h5>
                         <div class="d-flex gap-2">
@@ -192,55 +192,63 @@
                                             <td>
                                                 <div class="d-flex align-items-center">
                                                     <div class="avatar-sm rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-3">
-                                                        {{ strtoupper(substr($alumnus->nama_lengkap, 0, 2)) }}
+                                                        {{ strtoupper(substr($alumnus->nama_lengkap ?? $alumnus->nama, 0, 2)) }}
                                                     </div>
                                                     <div>
-                                                        <h6 class="mb-0">{{ $alumnus->nama_lengkap }}</h6>
+                                                        <h6 class="mb-0">{{ $alumnus->nama_lengkap ?? $alumnus->nama }}</h6>
                                                         <small class="text-muted">NISN: {{ $alumnus->nisn }}</small>
                                                     </div>
                                                 </div>
                                             </td>
                                             <td>
-                                                <span class="badge bg-info">{{ $alumnus->jurusan->nama_jurusan ?? '-' }}</span>
+                                                <span>{{ $alumnus->jurusan->nama ?? '-' }}</span>
                                             </td>
                                             <td>
                                                 <strong>{{ $alumnus->tahun_lulus }}</strong>
                                             </td>
                                             <td>
-                                                @php
-                                                    $statusConfig = [
-                                                        'bekerja' => ['class' => 'success', 'icon' => 'briefcase'],
-                                                        'kuliah' => ['class' => 'info', 'icon' => 'graduation-cap'],
-                                                        'wirausaha' => ['class' => 'warning', 'icon' => 'store'],
-                                                        'menganggur' => ['class' => 'secondary', 'icon' => 'user-clock'],
-                                                    ];
-                                                    $status = $statusConfig[$alumnus->status_kerja] ?? ['class' => 'light', 'icon' => 'question'];
-                                                @endphp
-                                                <span class="badge bg-{{ $status['class'] }}">
-                                                    <i class="fas fa-{{ $status['icon'] }} me-1"></i>
-                                                    {{ ucfirst($alumnus->status_kerja) }}
-                                                </span>
-                                                @if($alumnus->perusahaan)
-                                                    <div class="small text-muted mt-1">{{ Str::limit($alumnus->perusahaan, 30) }}</div>
+                                                @if($alumnus->tempat_kerja)
+                                                    <span>
+                                                        <i class="fas fa-briefcase me-1"></i>
+                                                        Bekerja
+                                                    </span>
+                                                    <div class="small text-muted mt-1">{{ Str::limit($alumnus->tempat_kerja, 30) }}</div>
+                                                    @if($alumnus->jabatan_kerja)
+                                                        <div class="small text-muted">{{ Str::limit($alumnus->jabatan_kerja, 30) }}</div>
+                                                    @endif
+                                                @elseif($alumnus->tempat_kuliah)
+                                                    <span>
+                                                        <i class="fas fa-graduation-cap me-1"></i>
+                                                        Kuliah
+                                                    </span>
+                                                    <div class="small text-muted mt-1">{{ Str::limit($alumnus->tempat_kuliah, 30) }}</div>
+                                                    @if($alumnus->prodi_kuliah)
+                                                        <div class="small text-muted">{{ Str::limit($alumnus->prodi_kuliah, 30) }}</div>
+                                                    @endif
+                                                @else
+                                                    <span>
+                                                        <i class="fas fa-question me-1"></i>
+                                                        Belum diisi
+                                                    </span>
                                                 @endif
                                             </td>
                                             <td>
                                                 <div>
                                                     <i class="fas fa-envelope text-muted me-1"></i>{{ $alumnus->email }}
                                                 </div>
-                                                @if($alumnus->no_hp)
+                                                @if($alumnus->no_hp || $alumnus->no_tlp)
                                                     <div>
-                                                        <i class="fas fa-phone text-muted me-1"></i>{{ $alumnus->no_hp }}
+                                                        <i class="fas fa-phone text-muted me-1"></i>{{ $alumnus->no_hp ?? $alumnus->no_tlp }}
                                                     </div>
                                                 @endif
                                             </td>
                                             <td>
                                                 @if($alumnus->is_verified)
-                                                    <span class="badge bg-success">
+                                                    <span>
                                                         <i class="fas fa-check me-1"></i>Terverifikasi
                                                     </span>
                                                 @else
-                                                    <span class="badge bg-warning">
+                                                    <span>
                                                         <i class="fas fa-clock me-1"></i>Pending
                                                     </span>
                                                 @endif
@@ -262,7 +270,7 @@
                                                         </button>
                                                     @endif
                                                     <button type="button" class="btn btn-sm btn-outline-danger" 
-                                                            onclick="deleteAlumni({{ $alumnus->id }}, '{{ $alumnus->nama_lengkap }}')" title="Hapus">
+                                                            onclick="deleteAlumni({{ $alumnus->id }}, '{{ $alumnus->nama_lengkap ?? $alumnus->nama }}')" title="Hapus">
                                                         <i class="fas fa-trash"></i>
                                                     </button>
                                                 </div>
@@ -428,10 +436,6 @@
     background-color: rgba(0, 123, 255, 0.05);
 }
 
-.badge {
-    font-size: 0.75em;
-}
-
 .btn-group .btn {
     margin-right: 2px;
 }
@@ -453,136 +457,166 @@ function filterByJurusan(jurusanId) {
 
 // View alumni detail
 function viewAlumni(alumniId) {
-    fetch(`/admin/alumni/${alumniId}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                const alumni = data.data;
-                const modalContent = document.getElementById('alumniDetailContent');
-                
-                modalContent.innerHTML = `
-                    <div class="row">
-                        <div class="col-md-8">
-                            <h6 class="text-primary mb-3">Data Pribadi</h6>
-                            <table class="table table-borderless">
-                                <tr>
-                                    <td width="150"><strong>Nama Lengkap</strong></td>
-                                    <td>: ${alumni.nama_lengkap}</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>NISN</strong></td>
-                                    <td>: ${alumni.nisn}</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Jurusan</strong></td>
-                                    <td>: ${alumni.jurusan?.nama_jurusan || '-'}</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Tahun Lulus</strong></td>
-                                    <td>: ${alumni.tahun_lulus}</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Email</strong></td>
-                                    <td>: ${alumni.email}</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>No. HP</strong></td>
-                                    <td>: ${alumni.no_hp || '-'}</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Alamat</strong></td>
-                                    <td>: ${alumni.alamat || '-'}</td>
-                                </tr>
-                            </table>
-                            
-                            <h6 class="text-primary mb-3 mt-4">Status Pekerjaan</h6>
-                            <table class="table table-borderless">
-                                <tr>
-                                    <td width="150"><strong>Status Kerja</strong></td>
-                                    <td>: ${alumni.status_kerja || '-'}</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Perusahaan</strong></td>
-                                    <td>: ${alumni.perusahaan || '-'}</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Posisi</strong></td>
-                                    <td>: ${alumni.posisi || '-'}</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Gaji</strong></td>
-                                    <td>: ${alumni.gaji ? 'Rp ' + new Intl.NumberFormat('id-ID').format(alumni.gaji) : '-'}</td>
-                                </tr>
-                            </table>
-                        </div>
-                        <div class="col-md-4">
-                            <h6 class="text-primary mb-3">Status Verifikasi</h6>
-                            <div class="text-center">
-                                <div class="mb-3">
-                                    ${alumni.is_verified ? 
-                                        '<span class="badge bg-success fs-6"><i class="fas fa-check me-2"></i>Terverifikasi</span>' :
-                                        '<span class="badge bg-warning fs-6"><i class="fas fa-clock me-2"></i>Pending</span>'
-                                    }
-                                </div>
-                                ${!alumni.is_verified ? 
-                                    `<button class="btn btn-success btn-sm" onclick="verifyAlumni(${alumni.id})">
-                                        <i class="fas fa-check me-1"></i>Verifikasi Sekarang
-                                    </button>` : ''
-                                }
-                            </div>
-                            
-                            <div class="mt-4">
-                                <h6 class="text-primary mb-3">CV & Dokumen</h6>
-                                ${alumni.cv_path ? 
-                                    `<a href="/alumni/cv/${alumni.id}/preview" target="_blank" class="btn btn-outline-primary btn-sm w-100 mb-2">
-                                        <i class="fas fa-file-pdf me-1"></i>Lihat CV
-                                    </a>` : 
-                                    '<p class="text-muted small">CV belum diupload</p>'
-                                }
-                            </div>
-                            
-                            <div class="mt-3">
-                                <small class="text-muted">Terdaftar: ${new Date(alumni.created_at).toLocaleDateString('id-ID')}</small>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                
-                const modal = new bootstrap.Modal(document.getElementById('alumniDetailModal'));
-                modal.show();
-            } else {
-                alert('Gagal memuat detail alumni');
+    const modalContent = document.getElementById('alumniDetailContent');
+    modalContent.innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin fa-2x"></i><br><span class="text-muted">Memuat data...</span></div>';
+    const modal = new bootstrap.Modal(document.getElementById('alumniDetailModal'));
+    modal.show();
+
+    fetch(`/admin/alumni/${alumniId}`, { headers: { 'Accept': 'application/json','X-Requested-With': 'XMLHttpRequest' } })
+        .then(async r => {
+            const contentType = r.headers.get('content-type') || '';
+            const isJson = contentType.includes('application/json');
+            const res = isJson ? await r.json() : null;
+            if (!r.ok || !res || res.status === 'fail') {
+                const msg = (res && res.message) ? res.message : `HTTP ${r.status}`;
+                throw new Error(msg);
             }
+            const a = res.data || {};
+            modalContent.innerHTML = `
+                <div class="row">
+                    <div class="col-md-8">
+                        <h6 class="text-primary mb-3">Data Pribadi</h6>
+                        <table class="table table-borderless">
+                            <tr><td width="150"><strong>Nama Lengkap</strong></td><td>: ${(a.nama_lengkap || a.nama || '-')}</td></tr>
+                            <tr><td><strong>NISN</strong></td><td>: ${a.nisn || '-'}</td></tr>
+                            <tr><td><strong>Jurusan</strong></td><td>: ${(a.jurusan && a.jurusan.nama) || (a.jurusan_nama || '-') }</td></tr>
+                            <tr><td><strong>Tahun Lulus</strong></td><td>: ${a.tahun_lulus || '-'}</td></tr>
+                            <tr><td><strong>Email</strong></td><td>: ${a.email || '-'}</td></tr>
+                            <tr><td><strong>No. HP</strong></td><td>: ${a.phone || a.no_hp || a.no_tlp || '-'}</td></tr>
+                            <tr><td><strong>Alamat</strong></td><td>: ${a.alamat || '-'}</td></tr>
+                            <tr><td><strong>Tanggal Lahir</strong></td><td>: ${a.tanggal_lahir || '-'}</td></tr>
+                            <tr><td><strong>Jenis Kelamin</strong></td><td>: ${a.jenis_kelamin === 'L' ? 'Laki-laki' : (a.jenis_kelamin === 'P' ? 'Perempuan' : '-')}</td></tr>
+                        </table>
+                        <h6 class="text-primary mb-3 mt-4">Status Pekerjaan & Pendidikan</h6>
+                        <table class="table table-borderless">
+                            <tr><td width="150"><strong>Tempat Kerja</strong></td><td>: ${a.tempat_kerja || '-'}</td></tr>
+                            <tr><td><strong>Jabatan</strong></td><td>: ${a.jabatan_kerja || '-'}</td></tr>
+                            <tr><td><strong>Kesesuaian Kerja</strong></td><td>: ${a.kesesuaian_kerja === true ? 'Sesuai' : (a.kesesuaian_kerja === false ? 'Tidak Sesuai' : '-')}</td></tr>
+                            <tr><td><strong>Tempat Kuliah</strong></td><td>: ${a.tempat_kuliah || '-'}</td></tr>
+                            <tr><td><strong>Program Studi</strong></td><td>: ${a.prodi_kuliah || '-'}</td></tr>
+                            <tr><td><strong>Kesesuaian Kuliah</strong></td><td>: ${a.kesesuaian_kuliah === true ? 'Sesuai' : (a.kesesuaian_kuliah === false ? 'Tidak Sesuai' : '-')}</td></tr>
+                        </table>
+                        ${a.pengalaman_kerja ? `<h6 class=\"text-primary mb-3 mt-4\">Pengalaman Kerja</h6><div class=\"card bg-light border-0\"><div class=\"card-body\"><p class=\"mb-0\">${a.pengalaman_kerja}</p></div></div>` : ''}
+                        ${a.keahlian ? `<h6 class=\"text-primary mb-3 mt-4\">Keahlian</h6><div class=\"card bg-light border-0\"><div class=\"card-body\"><p class=\"mb-0\">${a.keahlian}</p></div></div>` : ''}
+                    </div>
+                    <div class="col-md-4">
+                        ${a.foto ? `<div class=\"text-center mb-4\"><img src=\"/storage/${a.foto}\" class=\"img-thumbnail rounded-circle\" style=\"width:120px;height:120px;object-fit:cover;\"></div>` : ''}
+                        <h6 class="text-primary mb-3">Status Verifikasi</h6>
+                        <div class="text-center">
+                            <div class="mb-3">${a.is_verified ? '<span class=\"text-success\"><i class=\"fas fa-check me-2\"></i>Terverifikasi</span>' : '<span class=\"text-warning\"><i class=\"fas fa-clock me-2\"></i>Pending</span>'}</div>
+                            ${!a.is_verified ? `<button class=\"btn btn-success btn-sm\" onclick=\"verifyAlumni(${a.id}, true)\"><i class=\"fas fa-check me-1\"></i>Verifikasi Sekarang</button>` : '<p class=\"text-muted small\">Alumni sudah terverifikasi</p>'}
+                        </div>
+                        <div class="mt-4"><h6 class="text-primary mb-3">Notifikasi WhatsApp</h6><p class="small"><i class="fab fa-whatsapp me-1 text-success"></i>${a.whatsapp_notifications ? 'Aktif' : 'Nonaktif'}</p></div>
+                        <div class="mt-4"><h6 class="text-primary mb-3">CV & Dokumen</h6>${a.cv_path ? `<a href=\"/alumni/cv/${a.id}/preview\" target=\"_blank\" class=\"btn btn-outline-primary btn-sm w-100 mb-2\"><i class=\"fas fa-file-pdf me-1\"></i>Lihat CV</a>` : '<p class="text-muted small">CV belum diupload</p>'}</div>
+                        <div class="mt-3"><small class="text-muted"><i class="fas fa-calendar me-1"></i>Terdaftar: ${a.created_at ? new Date(a.created_at).toLocaleDateString('id-ID') : '-'}</small></div>
+                    </div>
+                </div>`;
         })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Terjadi kesalahan saat memuat data');
+        .catch(err => {
+            modalContent.innerHTML = `<div class=\"text-center text-danger\"><i class=\"fas fa-exclamation-triangle fa-2x\"></i><br><span>${err.message || 'Gagal memuat detail alumni'}</span></div>`;
         });
 }
 
 // Verify alumni
-function verifyAlumni(alumniId) {
-    if (confirm('Verifikasi data alumni ini?')) {
-        fetch(`/admin/alumni/${alumniId}/verify`, {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                'Content-Type': 'application/json',
+function verifyAlumni(alumniId, fromModal = false) {
+    if (!confirm('Apakah Anda yakin ingin memverifikasi alumni ini?')) {
+        return;
+    }
+    
+    // Show loading on button (if available)
+    let button = null;
+    let originalHtml = '';
+    try { button = (typeof event !== 'undefined' && event?.target) ? event.target : null; } catch (e) { button = null; }
+    if (button) {
+        originalHtml = button.innerHTML;
+        button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memverifikasi...';
+        button.disabled = true;
+    }
+    
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+    if (!csrfToken) {
+        console.error('CSRF token not found');
+        alert('CSRF token tidak ditemukan. Refresh halaman dan coba lagi.');
+        if (button) {
+            button.innerHTML = originalHtml;
+            button.disabled = false;
+        }
+        return;
+    }
+    
+    fetch(`/admin/alumni/${alumniId}/verify`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': csrfToken,
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({ is_verified: 1 })
+    })
+        .then(async response => {
+            const data = await response.json().catch(() => null);
+            if (!response.ok || !data) {
+                const msg = (data && data.message) ? data.message : `HTTP ${response.status}`;
+                throw new Error(msg);
             }
+            return data;
         })
-        .then(response => response.json())
         .then(data => {
-            if (data.success) {
-                location.reload();
+            const isSuccess = !!(data && (data.status === 'success' || data.success === true));
+            if (isSuccess) {
+                // Show success message
+                const toast = document.createElement('div');
+                toast.className = 'toast align-items-center text-bg-success border-0 position-fixed';
+                toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999;';
+                toast.innerHTML = `
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            <i class="fas fa-check me-2"></i>${(data && data.message) ? data.message : 'Alumni berhasil diverifikasi!'}
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                    </div>
+                `;
+                document.body.appendChild(toast);
+                
+                const bootstrapToast = new bootstrap.Toast(toast);
+                bootstrapToast.show();
+                
+                setTimeout(() => toast.remove(), 5000);
+                
+                // Update UI
+                if (fromModal) {
+                    // If called from modal, close modal and refresh main table
+                    bootstrap.Modal.getInstance(document.getElementById('alumniDetailModal'))?.hide();
+                    location.reload();
+                } else if (button) {
+                    // Update the status in the table
+                    const row = button.closest('tr');
+                    if (row) {
+                        const statusCell = row.querySelector('.alumni-status');
+                        if (statusCell) {
+                            statusCell.innerHTML = '<span class="text-success">Terverifikasi</span>';
+                        }
+                    }
+                    button.innerHTML = '<i class="fas fa-check"></i> Terverifikasi';
+                    button.className = 'btn btn-sm btn-success';
+                    button.disabled = true;
+                } else {
+                    // Fallback if button reference is unavailable
+                    location.reload();
+                }
             } else {
-                alert('Gagal memverifikasi alumni');
+                throw new Error((data && data.message) || 'Gagal memverifikasi alumni');
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('Terjadi kesalahan');
+            alert(`Terjadi kesalahan: ${error.message}`);
+            if (button) {
+                button.innerHTML = originalHtml;
+                button.disabled = false;
+            }
         });
-    }
 }
 
 // Delete alumni
@@ -599,7 +633,8 @@ function showStatistics() {
     fetch('/admin/alumni/statistics')
         .then(response => response.json())
         .then(data => {
-            if (data.success) {
+            const ok = !!(data && (data.status === 'success' || data.success === true));
+            if (ok) {
                 const stats = data.data;
                 const modalContent = document.getElementById('statisticsContent');
                 

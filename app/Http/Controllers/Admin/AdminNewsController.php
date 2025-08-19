@@ -76,6 +76,9 @@ class AdminNewsController extends Controller
             'meta_description' => 'nullable|string|max:160',
         ]);
 
+        // Set author_id to current admin user
+        $validatedData['author_id'] = auth('admin')->id();
+
         // Generate slug
         $validatedData['slug'] = Str::slug($validatedData['title']);
         
@@ -94,7 +97,7 @@ class AdminNewsController extends Controller
         }
 
         // Handle published_at
-        if (!$validatedData['published_at'] && $validatedData['status'] === 'published') {
+        if (!isset($validatedData['published_at']) && $validatedData['status'] === 'published') {
             $validatedData['published_at'] = now();
         }
 
@@ -154,7 +157,7 @@ class AdminNewsController extends Controller
         }
 
         // Handle published_at
-        if (!$validatedData['published_at'] && $validatedData['status'] === 'published' && $news->status !== 'published') {
+        if (!isset($validatedData['published_at']) && $validatedData['status'] === 'published' && $news->status !== 'published') {
             $validatedData['published_at'] = now();
         }
 

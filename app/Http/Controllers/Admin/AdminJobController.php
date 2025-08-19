@@ -187,10 +187,18 @@ class AdminJobController extends Controller
     public function destroy(Job $job)
     {
         try {
-            $job->delete();
+            // Gunakan pengarsipan sebagai penghapusan yang aman (soft delete via archive)
+            if ($job->isArchived()) {
+                // Jika sudah diarsip, tidak perlu menghapus lagi
+                return redirect()
+                    ->route('admin.jobs.index')
+                    ->with('info', "Lowongan '{$job->title}' sudah dalam status arsip.");
+            }
+
+            $job->archive('Deleted by admin');
             return redirect()
                 ->route('admin.jobs.index')
-                ->with('success', 'Lowongan kerja berhasil dihapus.');
+                ->with('success', "Lowongan '{$job->title}' dipindahkan ke arsip (hapus aman).");
         } catch (\Exception $e) {
             return back()->with('error', 'Terjadi kesalahan saat menghapus lowongan kerja.');
         }
@@ -243,11 +251,29 @@ class AdminJobController extends Controller
                 return back()->with('error', 'Lowongan ini tidak dalam status arsip.');
             }
 
+            // Jika deadline telah lewat, otomatis perpanjang agar tidak langsung terarsip lagi
+            $extended = false;
+            if ($job->application_deadline && $job->application_deadline < now()) {
+                $job->application_deadline = now()->addDays(30); // perpanjang 30 hari
+                $extended = true;
+            }
+
+            // Unarchive dan aktifkan kembali
             $job->unarchive();
-            
+
+            // Simpan perubahan deadline jika ada
+            if ($extended) {
+                $job->save();
+            }
+
+            $message = "Lowongan '{$job->title}' berhasil diaktifkan kembali.";
+            if ($extended) {
+                $message .= ' Deadline lamaran telah diperpanjang 30 hari ke depan.';
+            }
+
             return redirect()
                 ->route('admin.jobs.index')
-                ->with('success', "Lowongan '{$job->title}' berhasil diaktifkan kembali.");
+                ->with('success', $message);
         } catch (\Exception $e) {
             return back()->with('error', 'Terjadi kesalahan saat mengaktifkan kembali lowongan kerja.');
         }
@@ -285,12 +311,26 @@ class AdminJobController extends Controller
             }
 
             $jobs = Job::whereIn('id', $jobIds)->whereNotNull('archived_at')->get();
-            
+
+            $extendedCount = 0;
             foreach ($jobs as $job) {
+                // Perpanjang deadline jika sudah lewat agar tidak langsung diarsip ulang
+                if ($job->application_deadline && $job->application_deadline < now()) {
+                    $job->application_deadline = now()->addDays(30);
+                    $extendedCount++;
+                }
+
                 $job->unarchive();
+                // Simpan jika ada perubahan deadline
+                $job->save();
             }
-            
-            return back()->with('success', "Berhasil mengaktifkan kembali {$jobs->count()} lowongan.");
+
+            $baseMsg = "Berhasil mengaktifkan kembali {$jobs->count()} lowongan.";
+            if ($extendedCount > 0) {
+                $baseMsg .= " {$extendedCount} lowongan diperpanjang deadlinenya 30 hari.";
+            }
+
+            return back()->with('success', $baseMsg);
         } catch (\Exception $e) {
             return back()->with('error', 'Terjadi kesalahan saat mengaktifkan kembali lowongan kerja.');
         }

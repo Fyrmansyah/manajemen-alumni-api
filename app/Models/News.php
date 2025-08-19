@@ -12,6 +12,7 @@ class News extends Model
     protected $fillable = [
         'title',
         'content',
+        'excerpt',
         'featured_image',
         'slug',
         'status',
@@ -20,6 +21,8 @@ class News extends Model
         'author_id',
         'published_at',
         'views',
+        'tags',
+        'meta_description',
     ];
 
     protected $casts = [

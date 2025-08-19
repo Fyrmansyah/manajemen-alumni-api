@@ -188,7 +188,7 @@ class AdminDashboardController extends Controller
             $createdAt = Carbon::parse($alumni->created_at)->setTimezone('Asia/Jakarta');
             $activities->push([
                 'title' => 'Alumni Baru Terdaftar',
-                'description' => $alumni->nama_lengkap . ' dari jurusan ' . ($alumni->jurusan->nama_jurusan ?? 'Tidak diketahui'),
+                'description' => $alumni->nama_lengkap . ' dari jurusan ' . ($alumni->jurusan->nama ?? 'Tidak diketahui'),
                 'time' => $createdAt->diffForHumans() . ' WIB',
                 'icon' => 'user-graduate',
                 'color' => 'info',

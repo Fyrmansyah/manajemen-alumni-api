@@ -8,6 +8,8 @@ use App\Models\Jurusan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\AlumnisExport;
 
 class AdminAlumniController extends Controller
 {
@@ -72,9 +74,48 @@ class AdminAlumniController extends Controller
         $alumni->load(['jurusan']);
 
         if (request()->ajax()) {
+            // Normalisasi data agar front-end tidak mendapatkan null untuk field alternatif
+            $normalized = [
+                'id' => $alumni->id,
+                'nama' => $alumni->nama,
+                'nama_lengkap' => $alumni->nama_lengkap ?? $alumni->nama,
+                'nisn' => $alumni->nisn,
+                'email' => $alumni->email,
+                'phone' => $alumni->phone ?? $alumni->no_hp ?? $alumni->no_tlp,
+                'no_hp' => $alumni->no_hp ?? $alumni->no_tlp,
+                'no_tlp' => $alumni->no_tlp,
+                'alamat' => $alumni->alamat,
+                'tanggal_lahir' => $alumni->tanggal_lahir ?? $alumni->tgl_lahir,
+                'tgl_lahir' => $alumni->tgl_lahir,
+                'jenis_kelamin' => $alumni->jenis_kelamin,
+                'tahun_lulus' => $alumni->tahun_lulus,
+                'jurusan' => $alumni->jurusan ? [
+                    'id' => $alumni->jurusan->id,
+                    'nama' => $alumni->jurusan->nama,
+                ] : null,
+                'status_kerja' => $alumni->status_kerja,
+                'perusahaan' => $alumni->perusahaan,
+                'posisi' => $alumni->posisi,
+                'gaji' => $alumni->gaji,
+                'is_verified' => (bool) $alumni->is_verified,
+                'whatsapp_notifications' => (bool) $alumni->whatsapp_notifications,
+                'cv_path' => $alumni->cv_path,
+                'foto' => $alumni->foto,
+                'created_at' => $alumni->created_at,
+                // Field pekerjaan/kuliah tambahan jika ada di tabel
+                'tempat_kerja' => $alumni->tempat_kerja ?? $alumni->perusahaan,
+                'jabatan_kerja' => $alumni->jabatan_kerja ?? $alumni->posisi,
+                'kesesuaian_kerja' => $alumni->kesesuaian_kerja,
+                'tempat_kuliah' => $alumni->tempat_kuliah,
+                'prodi_kuliah' => $alumni->prodi_kuliah,
+                'kesesuaian_kuliah' => $alumni->kesesuaian_kuliah,
+                'pengalaman_kerja' => $alumni->pengalaman_kerja,
+                'keahlian' => $alumni->keahlian,
+            ];
+
             return response()->json([
                 'success' => true,
-                'data' => $alumni
+                'data' => $normalized,
             ]);
         }
 
@@ -89,25 +130,62 @@ class AdminAlumniController extends Controller
 
     public function store(Request $request)
     {
-        $validatedData = $request->validate([
-            'nama_lengkap' => 'required|string|max:255',
-            'nisn' => 'required|string|unique:alumni|max:20',
-            'email' => 'required|email|unique:alumni',
-            'no_hp' => 'nullable|string|max:20',
-            'alamat' => 'nullable|string',
+        // Validasi menyesuaikan kolom wajib pada tabel alumnis (legacy + baru)
+        $request->validate([
+            'nama' => 'required|string|max:255',
+            'nama_lengkap' => 'nullable|string|max:255',
+            'nisn' => 'required|string|max:20|unique:alumnis,nisn',
+            'email' => 'required|email|unique:alumnis,email',
+            'no_tlp' => 'required|string|max:20',
+            'alamat' => 'required|string',
             'jurusan_id' => 'required|exists:jurusans,id',
+            'tahun_mulai' => 'required|integer|min:2000|max:' . (date('Y') + 5),
             'tahun_lulus' => 'required|integer|min:2000|max:' . (date('Y') + 5),
-            'status_kerja' => 'nullable|in:bekerja,kuliah,wirausaha,menganggur',
-            'perusahaan' => 'nullable|string|max:255',
-            'posisi' => 'nullable|string|max:255',
-            'gaji' => 'nullable|numeric|min:0',
-            'is_verified' => 'boolean',
+            'jenis_kelamin' => 'required|in:L,P',
+            'tgl_lahir' => 'required|date',
+            'password' => 'required|string|min:6',
+            // Opsional
+            'tempat_kerja' => 'nullable|string|max:255',
+            'jabatan_kerja' => 'nullable|string|max:255',
+            'tempat_kuliah' => 'nullable|string|max:255',
+            'prodi_kuliah' => 'nullable|string|max:255',
+            'kesesuaian_kerja' => 'nullable|in:0,1',
+            'kesesuaian_kuliah' => 'nullable|in:0,1',
+            'pengalaman_kerja' => 'nullable|string',
+            'keahlian' => 'nullable|string',
+            'is_verified' => 'nullable|boolean',
         ]);
 
-        $alumni = Alumni::create($validatedData);
+        // Susun data sesuai kolom yang ada di DB, sekaligus mirroring ke field baru
+        $data = [
+            'nama' => $request->input('nama') ?: $request->input('nama_lengkap'),
+            'nama_lengkap' => $request->input('nama_lengkap') ?: $request->input('nama'),
+            'nisn' => $request->input('nisn'),
+            'email' => $request->input('email'),
+            'password' => $request->input('password'), // otomatis di-hash via cast di model
+            'no_tlp' => $request->input('no_tlp'),
+            'phone' => $request->input('no_tlp'), // mirror ke field baru
+            'alamat' => $request->input('alamat'),
+            'jurusan_id' => $request->input('jurusan_id'),
+            'tahun_mulai' => (int) $request->input('tahun_mulai'),
+            'tahun_lulus' => (int) $request->input('tahun_lulus'),
+            'jenis_kelamin' => $request->input('jenis_kelamin'),
+            'tgl_lahir' => $request->input('tgl_lahir'),
+            'tanggal_lahir' => $request->input('tgl_lahir'), // mirror ke field baru
+            'tempat_kerja' => $request->input('tempat_kerja'),
+            'jabatan_kerja' => $request->input('jabatan_kerja'),
+            'tempat_kuliah' => $request->input('tempat_kuliah'),
+            'prodi_kuliah' => $request->input('prodi_kuliah'),
+            'kesesuaian_kerja' => $request->input('kesesuaian_kerja'),
+            'kesesuaian_kuliah' => $request->input('kesesuaian_kuliah'),
+            'pengalaman_kerja' => $request->input('pengalaman_kerja'),
+            'keahlian' => $request->input('keahlian'),
+            'is_verified' => $request->boolean('is_verified'),
+        ];
 
-        return redirect()
-            ->route('admin.alumni.index')
+        Alumni::create($data);
+
+        return redirect()->route('admin.alumni.index')
             ->with('success', 'Data alumni berhasil ditambahkan.');
     }
 
@@ -119,25 +197,51 @@ class AdminAlumniController extends Controller
 
     public function update(Request $request, Alumni $alumni)
     {
-        $validatedData = $request->validate([
+        // Validasi: gunakan field yang tersedia pada form edit + mapping ke kolom DB
+        $request->validate([
             'nama_lengkap' => 'required|string|max:255',
-            'nisn' => 'required|string|max:20|unique:alumni,nisn,' . $alumni->id,
-            'email' => 'required|email|unique:alumni,email,' . $alumni->id,
-            'no_hp' => 'nullable|string|max:20',
+            'nisn' => 'required|string|max:20|unique:alumnis,nisn,' . $alumni->id,
+            'email' => 'required|email|unique:alumnis,email,' . $alumni->id,
+            'no_hp' => 'nullable|string|max:20', // akan dipetakan ke no_tlp
             'alamat' => 'nullable|string',
             'jurusan_id' => 'required|exists:jurusans,id',
             'tahun_lulus' => 'required|integer|min:2000|max:' . (date('Y') + 5),
-            'status_kerja' => 'nullable|in:bekerja,kuliah,wirausaha,menganggur',
-            'perusahaan' => 'nullable|string|max:255',
-            'posisi' => 'nullable|string|max:255',
-            'gaji' => 'nullable|numeric|min:0',
-            'is_verified' => 'boolean',
+            // Field opsional pada form edit
+            'perusahaan' => 'nullable|string|max:255', // dipetakan ke tempat_kerja
+            'posisi' => 'nullable|string|max:255',     // dipetakan ke jabatan_kerja
+            'gaji' => 'nullable|numeric|min:0',        // tidak ada kolom di DB, diabaikan
+            'tempat_kuliah' => 'nullable|string|max:255',
+            'prodi_kuliah' => 'nullable|string|max:255',
+            'is_verified' => 'nullable|boolean',
         ]);
 
-        $alumni->update($validatedData);
+        $data = [
+            'nama_lengkap' => $request->input('nama_lengkap'),
+            // Jangan ubah 'nama' di edit jika tidak ada field; tetap gunakan existing jika kosong
+            'nama' => $alumni->nama ?: $request->input('nama_lengkap'),
+            'nisn' => $request->input('nisn'),
+            'email' => $request->input('email'),
+            'no_tlp' => $request->filled('no_hp') ? $request->input('no_hp') : $alumni->no_tlp,
+            'phone' => $request->filled('no_hp') ? $request->input('no_hp') : $alumni->phone,
+            'alamat' => $request->input('alamat'),
+            'jurusan_id' => $request->input('jurusan_id'),
+            'tahun_lulus' => (int) $request->input('tahun_lulus'),
+            // Pemetaan perusahaan/posisi ke kolom yang ada
+            'tempat_kerja' => $request->input('tempat_kerja') ?: $request->input('perusahaan'),
+            'jabatan_kerja' => $request->input('jabatan_kerja') ?: $request->input('posisi'),
+            'tempat_kuliah' => $request->input('tempat_kuliah'),
+            'prodi_kuliah' => $request->input('prodi_kuliah'),
+            'is_verified' => $request->boolean('is_verified'),
+        ];
 
-        return redirect()
-            ->route('admin.alumni.index')
+        // Hapus key yang nilainya null agar tidak memaksa null pada kolom not-null yang tidak diedit
+        $data = array_filter($data, function ($v) {
+            return !is_null($v);
+        });
+
+        $alumni->update($data);
+
+        return redirect()->route('admin.alumni.index')
             ->with('success', 'Data alumni berhasil diperbarui.');
     }
 
@@ -179,7 +283,7 @@ class AdminAlumniController extends Controller
                                          ->whereYear('created_at', now()->year)
                                          ->count(),
             'alumni_by_jurusan' => Jurusan::withCount('alumni')->get()
-                                         ->pluck('alumni_count', 'nama_jurusan'),
+                                         ->pluck('alumni_count', 'nama'),
             'alumni_by_status_kerja' => Alumni::select('status_kerja', DB::raw('count(*) as total'))
                                              ->whereNotNull('status_kerja')
                                              ->groupBy('status_kerja')
@@ -248,13 +352,10 @@ class AdminAlumniController extends Controller
             $query->where('status_kerja', $request->status_kerja);
         }
 
-        $alumni = $query->get();
+    $alumni = $query->get();
 
-        return response()->json([
-            'success' => true,
-            'data' => $alumni,
-            'message' => 'Data exported successfully'
-        ]);
+    $filename = 'alumni-' . now()->format('Ymd-His') . '.xlsx';
+    return Excel::download(new AlumnisExport($alumni), $filename);
     }
 
     public function bulkAction(Request $request)
@@ -262,7 +363,7 @@ class AdminAlumniController extends Controller
         $request->validate([
             'action' => 'required|in:delete,verify',
             'alumni_ids' => 'required|array',
-            'alumni_ids.*' => 'exists:alumni,id'
+            'alumni_ids.*' => 'exists:alumnis,id'
         ]);
 
         $alumni = Alumni::whereIn('id', $request->alumni_ids);

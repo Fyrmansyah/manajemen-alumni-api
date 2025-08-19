@@ -11,8 +11,9 @@ use App\Http\Controllers\Admin\AdminJobController;
 use App\Http\Controllers\Admin\AdminNewsController;
 use App\Http\Controllers\Admin\AdminCompanyController;
 use App\Http\Controllers\Admin\AdminApplicationController;
-use App\Http\Controllers\Admin\AdminAlumniController;
 use App\Http\Controllers\Alumni\AlumniDashboardController;
+use App\Http\Controllers\Alumni\CVController;
+use App\Http\Controllers\Admin\AdminAlumniController;
 use App\Http\Controllers\Company\CompanyDashboardController;
 use Illuminate\Support\Facades\Auth; 
 
@@ -47,6 +48,10 @@ Route::middleware('guest')->group(function () {
 
 Route::post('/logout', [BaseAuthController::class, 'logout'])->name('logout');
 
+// Alternative logout route using GET method as backup
+Route::get('/logout-alt', [BaseAuthController::class, 'logout'])->name('logout.alt');
+
+
 // Jobs routes
 Route::prefix('jobs')->name('jobs.')->group(function () {
     Route::get('/', [JobController::class, 'indexWeb'])->name('index');
@@ -68,7 +73,6 @@ Route::prefix('news')->name('news.')->group(function () {
 // Admin routes (using admin guard) - RESTORED MIDDLEWARE  
 Route::middleware('auth:admin')->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
-    Route::get('/dashboard/refresh-activities', [AdminDashboardController::class, 'refreshActivities'])->name('dashboard.refresh-activities');
     
     // Job management
     Route::resource('jobs', AdminJobController::class);
@@ -82,23 +86,25 @@ Route::middleware('auth:admin')->prefix('admin')->name('admin.')->group(function
     
     // Company management
     Route::resource('companies', AdminCompanyController::class);
-    Route::post('/companies/{company}/approve', [AdminCompanyController::class, 'approve'])->name('companies.approve');
-    Route::post('/companies/{company}/reject', [AdminCompanyController::class, 'reject'])->name('companies.reject');
-    Route::get('/companies/export', [AdminCompanyController::class, 'export'])->name('companies.export');
-    Route::get('/companies/statistics', [AdminCompanyController::class, 'statistics'])->name('companies.statistics');
-    
-    // Alumni management
-    Route::resource('alumni', AdminAlumniController::class);
-    Route::post('/alumni/{alumni}/verify', [AdminAlumniController::class, 'verify'])->name('alumni.verify');
-    Route::post('/alumni/import', [AdminAlumniController::class, 'import'])->name('alumni.import');
-    Route::get('/alumni/export', [AdminAlumniController::class, 'export'])->name('alumni.export');
-    Route::get('/alumni/statistics', [AdminAlumniController::class, 'statistics'])->name('alumni.statistics');
-    Route::post('/alumni/bulk-action', [AdminAlumniController::class, 'bulkAction'])->name('alumni.bulk-action');
     
     // Application management
     Route::get('/applications', [AdminApplicationController::class, 'index'])->name('applications.index');
     Route::get('/applications/{application}', [AdminApplicationController::class, 'show'])->name('applications.show');
     Route::patch('/applications/{application}/status', [AdminApplicationController::class, 'updateStatus'])->name('applications.updateStatus');
+    
+    // Alumni management (Admin)
+    Route::get('/alumni', [AdminAlumniController::class, 'index'])->name('alumni.index');
+    Route::get('/alumni/create', [AdminAlumniController::class, 'create'])->name('alumni.create');
+    Route::post('/alumni', [AdminAlumniController::class, 'store'])->name('alumni.store');
+    Route::post('/alumni/import', [AdminAlumniController::class, 'import'])->name('alumni.import');
+    Route::get('/alumni/export', [AdminAlumniController::class, 'export'])->name('alumni.export');
+    Route::get('/alumni/statistics', [AdminAlumniController::class, 'statistics'])->name('alumni.statistics');
+    Route::post('/alumni/bulk', [AdminAlumniController::class, 'bulkAction'])->name('alumni.bulk');
+    Route::get('/alumni/{alumni}', [AdminAlumniController::class, 'show'])->name('alumni.show');
+    Route::get('/alumni/{alumni}/edit', [AdminAlumniController::class, 'edit'])->name('alumni.edit');
+    Route::put('/alumni/{alumni}', [AdminAlumniController::class, 'update'])->name('alumni.update');
+    Route::delete('/alumni/{alumni}', [AdminAlumniController::class, 'destroy'])->name('alumni.destroy');
+    Route::post('/alumni/{alumni}/verify', [AdminAlumniController::class, 'verify'])->name('alumni.verify');
 });
 
 // Alumni routes (using alumni guard)
@@ -107,12 +113,21 @@ Route::middleware('auth:alumni')->prefix('alumni')->name('alumni.')->group(funct
     Route::get('/applications', [AlumniDashboardController::class, 'applications'])->name('applications');
     Route::get('/profile', [AlumniDashboardController::class, 'profile'])->name('profile');
     Route::put('/profile', [AlumniDashboardController::class, 'updateProfile'])->name('profile.update');
-    
-    // CV routes
-    Route::resource('cv', \App\Http\Controllers\Alumni\CVController::class);
-    Route::get('/cv/{cv}/preview', [\App\Http\Controllers\Alumni\CVController::class, 'preview'])->name('cv.preview');
-    Route::get('/cv/{cv}/download', [\App\Http\Controllers\Alumni\CVController::class, 'download'])->name('cv.download');
-    Route::patch('/cv/{cv}/default', [\App\Http\Controllers\Alumni\CVController::class, 'setAsDefault'])->name('cv.default');
+
+    // Application detail for web (session-based, used by modal)
+    Route::get('/applications/{id}', [AdminAlumniController::class, 'getApplicationDetail'])->name('applications.detail');
+
+    // CV management routes
+    Route::prefix('cv')->name('cv.')->group(function () {
+        Route::get('/', [CVController::class, 'index'])->name('index');
+        Route::get('/create', [CVController::class, 'create'])->name('create');
+        Route::post('/', [CVController::class, 'store'])->name('store');
+        Route::get('/{id}', [CVController::class, 'show'])->name('show');
+        Route::get('/{id}/preview', [CVController::class, 'preview'])->name('preview');
+        Route::get('/{id}/download', [CVController::class, 'download'])->name('download');
+        Route::delete('/{id}', [CVController::class, 'destroy'])->name('destroy');
+        Route::patch('/{id}/default', [CVController::class, 'setAsDefault'])->name('set-default');
+    });
 });
 
 // Company routes (using company guard)
@@ -139,3 +154,5 @@ Route::middleware('auth:company')->prefix('company')->name('company.')->group(fu
     Route::put('/profile', [CompanyDashboardController::class, 'updateProfile'])->name('profile.update');
     Route::put('/applications/{id}/status', [CompanyDashboardController::class, 'updateApplicationStatus'])->name('applications.update-status');
 });
+
+

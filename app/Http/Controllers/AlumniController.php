@@ -259,4 +259,180 @@ class AlumniController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Show the admin alumni index page.
+     */
+    public function adminIndex(Request $request)
+    {
+        $query = Alumni::with('jurusan');
+
+        // Search functionality
+        if ($request->filled('search')) {
+            $search = $request->get('search');
+            $query->where(function($q) use ($search) {
+                $q->where('nama', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('nisn', 'like', "%{$search}%");
+            });
+        }
+
+        // Filter by jurusan
+        if ($request->filled('jurusan_id')) {
+            $query->where('jurusan_id', $request->get('jurusan_id'));
+        }
+
+        // Filter by tahun lulus (matches UI filter)
+        if ($request->filled('tahun_lulus')) {
+            $query->where('tahun_lulus', $request->get('tahun_lulus'));
+        }
+
+        // Filter by status
+        if ($request->filled('status')) {
+            if ($request->get('status') == 'verified') {
+                $query->where('is_verified', true);
+            } elseif ($request->get('status') == 'unverified') {
+                $query->where('is_verified', false);
+            }
+        }
+
+        // Sort (align with UI options)
+        $sort = $request->get('sort', 'newest');
+        switch ($sort) {
+            case 'oldest':
+                $query->oldest();
+                break;
+            case 'name_asc':
+                $query->orderBy('nama', 'asc');
+                break;
+            case 'name_desc':
+                $query->orderBy('nama', 'desc');
+                break;
+            case 'tahun_lulus':
+                $query->orderBy('tahun_lulus', 'desc');
+                break;
+            default: // 'newest'
+                $query->latest();
+        }
+
+        $alumni = $query->paginate(15)->withQueryString();
+    // Load departments with alumni counts for the statistic cards
+    $jurusans = \App\Models\Jurusan::withCount('alumni')->get();
+        $totalAlumni = Alumni::count();
+
+        return view('admin.alumni.index', compact('alumni', 'jurusans', 'totalAlumni'));
+    }
+
+    /**
+     * Show the form for creating a new alumni (admin).
+     */
+    public function adminCreate()
+    {
+        return view('admin.alumni.create');
+    }
+
+    /**
+     * Store a newly created alumni in storage (admin).
+     */
+    public function adminStore(CreateAlumniRequest $request)
+    {
+        $validatedData = $request->validated();
+        $alumni = Alumni::create($validatedData);
+
+        return redirect()
+            ->route('admin.alumni.index')
+            ->with('success', 'Alumni berhasil ditambahkan.');
+    }
+
+    /**
+     * Show the form for editing the specified alumni (admin).
+     */
+    public function adminEdit(Alumni $alumni)
+    {
+    $jurusans = \App\Models\Jurusan::all();
+    return view('admin.alumni.edit', compact('alumni', 'jurusans'));
+    }
+
+    /**
+     * Update the specified alumni in storage (admin).
+     */
+    public function adminUpdate(UpdateAlumniRequest $request, Alumni $alumni)
+    {
+        $validatedData = $request->validated();
+        $alumni->update($validatedData);
+
+        return redirect()
+            ->route('admin.alumni.index')
+            ->with('success', 'Alumni berhasil diperbarui.');
+    }
+
+    /**
+     * Remove the specified alumni from storage (admin).
+     */
+    public function adminDestroy(Alumni $alumni)
+    {
+        $alumni->delete();
+
+        return redirect()
+            ->route('admin.alumni.index')
+            ->with('success', 'Alumni berhasil dihapus.');
+    }
+
+    /**
+     * Verify an alumni (admin AJAX).
+     */
+    public function adminVerify(Request $request, Alumni $alumni): JsonResponse
+    {
+        try {
+            $shouldVerify = $request->boolean('is_verified', true);
+            $alumni->is_verified = $shouldVerify;
+            $alumni->save();
+
+            return ResponseBuilder::success()
+                ->message($shouldVerify ? 'Alumni berhasil diverifikasi' : 'Status verifikasi alumni diperbarui')
+                ->data([
+                    'id' => $alumni->id,
+                    'is_verified' => (bool) $alumni->is_verified,
+                ])
+                ->build();
+        } catch (\Throwable $e) {
+            return ResponseBuilder::fail()
+                ->message('Gagal memperbarui verifikasi: ' . $e->getMessage())
+                ->build();
+        }
+    }
+
+    /**
+     * Import alumni data from Excel file (admin).
+     */
+    public function adminImport(Request $request)
+    {
+        $request->validate([
+            'excel_file' => 'required|mimes:xlsx,xls|max:2048',
+        ]);
+
+        try {
+            Excel::import(new AlumnisImport, $request->file('excel_file'));
+
+            return redirect()
+                ->route('admin.alumni.index')
+                ->with('success', 'Data alumni berhasil diimport dari Excel.');
+        } catch (\Exception $e) {
+            return redirect()
+                ->route('admin.alumni.index')
+                ->with('error', 'Terjadi kesalahan saat import: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Return alumni detail for admin (used by AJAX modal).
+     */
+    public function adminShow(Alumni $alumni): JsonResponse
+    {
+        $alumni->load('jurusan');
+
+        return ResponseBuilder::success()
+            ->data(AlumniResource::make($alumni))
+            ->build();
+    }
 }

@@ -99,15 +99,25 @@ class AlumniDashboardController extends Controller
             'pengalaman_kerja' => 'nullable|string|max:1000',
             'keahlian' => 'nullable|string|max:1000',
             'whatsapp_notifications' => 'nullable|boolean',
+            'tempat_kuliah' => 'nullable|string|max:255',
+            'prodi_kuliah' => 'nullable|string|max:255',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
         $data = $request->only([
             'nama_lengkap', 'email', 'phone', 'tanggal_lahir', 'jenis_kelamin',
-            'nisn', 'jurusan_id', 'tahun_lulus', 'alamat', 'pengalaman_kerja', 'keahlian'
+            'nisn', 'jurusan_id', 'tahun_lulus', 'alamat', 'pengalaman_kerja', 'keahlian',
+            'tempat_kuliah', 'prodi_kuliah'
         ]);
 
         // Handle WhatsApp notifications checkbox
         $data['whatsapp_notifications'] = $request->has('whatsapp_notifications');
+
+        // Handle photo upload
+        if ($request->hasFile('foto')) {
+            $path = $request->file('foto')->store('alumni_photos', 'public');
+            $data['foto'] = basename($path);
+        }
 
         // Update both new and old field names for compatibility
         $alumni->update($data);

@@ -434,23 +434,18 @@ function submitApplication() {
         method: 'POST',
         headers: {
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
         },
         body: formData
     })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-            throw new Error('Response is not JSON');
-        }
-        
-        return response.json();
-    })
-    .then(data => {
-        if (data.success) {
+    .then(async response => {
+        const contentType = response.headers.get('content-type') || '';
+        const isJson = contentType.includes('application/json');
+        const data = isJson ? await response.json() : null;
+
+        // Handle both success and error responses consistently
+        if (response.ok && data && data.success) {
             // Show success message
             document.getElementById('applyModalBody').innerHTML = `
                 <div class="text-center py-4">
@@ -463,17 +458,40 @@ function submitApplication() {
                 </div>
             `;
         } else {
+            let msg = (data && data.message) ? data.message : '';
+            // Extract first validation error if present
+            if (!msg && data && data.errors) {
+                try {
+                    const firstField = Object.keys(data.errors)[0];
+                    if (firstField && Array.isArray(data.errors[firstField]) && data.errors[firstField].length) {
+                        msg = data.errors[firstField][0];
+                    }
+                } catch (_) { /* ignore */ }
+            }
+            // Detect session/login issues and non-JSON redirects
+            if (!msg) {
+                if (response.status === 419) {
+                    msg = 'Sesi Anda telah berakhir. Muat ulang halaman lalu coba lagi.';
+                } else if (response.status === 401 || response.redirected || (response.url && response.url.includes('/login'))) {
+                    msg = 'Silakan login sebagai alumni untuk melamar.';
+                } else {
+                    msg = 'Terjadi kesalahan saat mengirim lamaran';
+                }
+            }
             // Show error message in modal
             document.getElementById('applyModalBody').innerHTML = `
                 <div class="text-center py-4">
                     <i class="fas fa-exclamation-triangle text-danger fa-3x mb-3"></i>
                     <h5 class="text-danger">Gagal Mengirim Lamaran</h5>
-                    <p class="text-muted">${data.message || 'Terjadi kesalahan saat mengirim lamaran'}</p>
+                    <p class="text-muted">${msg}</p>
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                         Tutup
                     </button>
                 </div>
             `;
+            // Re-enable button for retry
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
         }
     })
     .catch(error => {

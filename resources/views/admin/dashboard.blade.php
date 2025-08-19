@@ -153,6 +153,13 @@
                                 <small class="text-muted">Publikasikan berita terbaru</small>
                             </div>
                         </a>
+                        <a href="{{ route('admin.news.index') }}" class="list-group-item list-group-item-action border-0 d-flex align-items-center">
+                            <i class="fas fa-list-alt text-info me-3"></i>
+                            <div>
+                                <div class="fw-bold">Kelola Berita</div>
+                                <small class="text-muted">Lihat & edit berita</small>
+                            </div>
+                        </a>
                         <a href="{{ route('admin.companies.index') }}" class="list-group-item list-group-item-action border-0 d-flex align-items-center">
                             <i class="fas fa-building text-warning me-3"></i>
                             <div>
@@ -188,7 +195,7 @@
                     </div>
                 </div>
                 <div class="card-body">
-                    <div class="table-responsive">
+                    <div class="activities-scroll table-responsive">
                         <table class="table table-borderless" id="activitiesTable">
                             <tbody>
                                 @forelse($recentActivities as $activity)
@@ -451,6 +458,8 @@ function refreshActivities() {
 
 function updateActivitiesTable(activities) {
     const tbody = document.querySelector('#activitiesTable tbody');
+    const scrollContainer = document.querySelector('.activities-scroll');
+    const prevScrollTop = scrollContainer ? scrollContainer.scrollTop : 0;
     
     if (activities.length === 0) {
         tbody.innerHTML = `
@@ -485,6 +494,10 @@ function updateActivitiesTable(activities) {
     });
     
     tbody.innerHTML = html;
+    // Restore scroll after DOM update
+    if (scrollContainer) {
+        scrollContainer.scrollTop = prevScrollTop;
+    }
     
     // Add animation to new rows
     setTimeout(() => {
@@ -603,6 +616,29 @@ window.refreshActivities = refreshActivities;
     100% {
         transform: rotate(360deg);
     }
+}
+
+/* Scrollable Recent Activities */
+.activities-scroll {
+    max-height: 420px; /* adjust as needed */
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+/* Optional: nicer scrollbars */
+.activities-scroll::-webkit-scrollbar {
+    width: 8px;
+}
+.activities-scroll::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 8px;
+}
+.activities-scroll::-webkit-scrollbar-thumb {
+    background: #c6c6c6;
+    border-radius: 8px;
+}
+.activities-scroll:hover::-webkit-scrollbar-thumb {
+    background: #a8a8a8;
 }
 </style>
 @endsection

@@ -162,12 +162,12 @@
                         <div class="col-md-2">
                             <label class="form-label">Perusahaan</label>
                             <select class="form-select" name="company_id">
-                                <option value="">Semua Perusahaan</option>
-                                @foreach($companies as $company)
-                                    <option value="{{ $company->id }}" {{ request('company_id') == $company->id ? 'selected' : '' }}>
-                                        {{ $company->company_name }}
-                                    </option>
-                                @endforeach
+                                                        <option value="">All Companies</option>
+                        @foreach($companies as $company)
+                            <option value="{{ $company->id }}" {{ request('company_id') == $company->id ? 'selected' : '' }}>
+                                {{ $company->company_name }}
+                            </option>
+                        @endforeach
                             </select>
                         </div>
                         <div class="col-md-2">
@@ -364,17 +364,18 @@
                                                     <form action="{{ route('admin.jobs.reactivate', $job) }}" method="POST" class="d-inline">
                                                         @csrf
                                                         @method('PATCH')
+                                                        <input type="hidden" name="extend_if_expired" value="1">
                                                         <button type="submit" class="btn btn-outline-success btn-sm" 
-                                                                onclick="return confirm('Yakin ingin mengaktifkan kembali lowongan ini?')"
+                                                                onclick="return confirm('Aktifkan kembali lowongan ini? Jika deadline sudah lewat, sistem akan otomatis memperpanjang 30 hari.')"
                                                                 title="Aktifkan Kembali">
                                                             <i class="fas fa-undo"></i>
                                                         </button>
                                                     </form>
                                                 @else
                                                     <button class="btn btn-outline-warning btn-sm" 
-                                                            onclick="archiveJob({{ $job->id }})" 
+                                                            onclick="archiveSingleJob({{ $job->id }})"
                                                             title="Arsipkan Lowongan">
-                                                        <i class="fas fa-archive"></i>
+                                                        <i class="fas fa-archive me-1"></i>
                                                     </button>
                                                 @endif
                                                 
@@ -664,7 +665,7 @@ function updateBulkActionButtons() {
 // Archive functions
 function archiveJob(jobId) {
     const form = document.getElementById('archiveForm');
-    form.action = `/admin/jobs/${jobId}/archive`;
+    form.action = `{{ url('/admin/jobs') }}/${jobId}/archive`;
     
     const modal = new bootstrap.Modal(document.getElementById('archiveModal'));
     modal.show();
@@ -762,7 +763,11 @@ function bulkArchive() {
                              .map(cb => cb.value);
     
     if (selectedIds.length === 0) {
-        alert('Pilih minimal satu lowongan untuk diarsipkan');
+        alert('Pilih minimal satu lowongan untuk diarsipkan.');
+        return;
+    }
+    
+    if (!confirm(`Yakin ingin mengarsipkan ${selectedIds.length} lowongan yang dipilih?`)) {
         return;
     }
     
@@ -784,6 +789,29 @@ function bulkArchive() {
     form.submit();
 }
 
+function archiveSingleJob(jobId) {
+    if (!confirm('Yakin ingin mengarsipkan lowongan ini?')) {
+        return;
+    }
+    
+    const reason = prompt('Masukkan alasan pengarsipan:');
+    if (reason === null) return; // User cancelled
+    
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = `{{ url('/admin/jobs') }}/${jobId}/archive`;
+    
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    form.innerHTML = `
+        <input type="hidden" name="_token" value="${csrfToken}">
+        <input type="hidden" name="_method" value="PATCH">
+        <input type="hidden" name="reason" value="${reason}">
+    `;
+    
+    document.body.appendChild(form);
+    form.submit();
+}
+
 function bulkReactivate() {
     const selectedIds = Array.from(document.querySelectorAll('.row-checkbox:checked'))
                              .map(cb => cb.value);
@@ -793,7 +821,7 @@ function bulkReactivate() {
         return;
     }
     
-    if (confirm(`Apakah Anda yakin ingin mengaktifkan kembali ${selectedIds.length} lowongan?`)) {
+    if (confirm(`Apakah Anda yakin ingin mengaktifkan kembali ${selectedIds.length} lowongan?\n\nCatatan: Jika deadline lowongan sudah lewat, sistem akan otomatis memperpanjang selama 30 hari.`)) {
         const form = document.createElement('form');
         form.method = 'POST';
         form.action = '{{ route("admin.jobs.bulk-reactivate") }}';
@@ -801,6 +829,7 @@ function bulkReactivate() {
         const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
         form.innerHTML = `
             <input type="hidden" name="_token" value="${csrfToken}">
+            <input type="hidden" name="extend_if_expired" value="1">
             ${selectedIds.map(id => `<input type="hidden" name="job_ids[]" value="${id}">`).join('')}
         `;
         
@@ -840,14 +869,21 @@ function stopAutoRefresh() {
 // Notifikasi real-time untuk expired jobs
 function checkForExpiredJobs() {
     // Cek apakah ada job yang status expired tapi belum diarsip
-    const expiredJobs = document.querySelectorAll('span.badge.bg-danger:contains("Kadaluarsa")');
+    const allBadges = document.querySelectorAll('span.badge.bg-danger');
+    const expiredJobs = Array.from(allBadges).filter(badge => 
+        badge.textContent.trim().includes('Kadaluarsa')
+    );
     
     if (expiredJobs.length > 0) {
         // Tampilkan notifikasi bahwa ada job expired
         const notification = document.getElementById('expired-notification');
         if (notification) {
             notification.style.display = 'block';
-            notification.querySelector('.badge').textContent = expiredJobs.length;
+            // Update count if there's a number in the notification text
+            const strongElement = notification.querySelector('strong');
+            if (strongElement) {
+                strongElement.textContent = `${expiredJobs.length} lowongan telah kadaluarsa`;
+            }
         }
     }
 }
@@ -890,7 +926,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Enhanced button interactions with loading states
     document.querySelectorAll('.btn').forEach(button => {
         button.addEventListener('click', function() {
-            if (!this.disabled && this.type !== 'button' && !this.getAttribute('data-bs-toggle')) {
+            // Hanya terapkan loading state pada tombol tipe "button" (bukan submit)
+            // Untuk tombol submit, loading state akan ditangani oleh event submit form
+            if (!this.disabled && this.type === 'button' && !this.getAttribute('data-bs-toggle')) {
                 addLoadingState(this);
             }
         });

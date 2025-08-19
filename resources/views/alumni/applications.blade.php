@@ -242,13 +242,19 @@ function showApplicationDetail(applicationId) {
     
     modal.show();
     
-    // Fetch application details
-    fetch(`/api/alumni/applications/${applicationId}`)
-        .then(response => {
+    // Fetch application details (session-authenticated route)
+    fetch(`/alumni/applications/${applicationId}`, {
+        headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+    })
+        .then(async response => {
+            const contentType = response.headers.get('content-type') || '';
+            const isJson = contentType.includes('application/json');
+            const data = isJson ? await response.json() : null;
             if (!response.ok) {
-                throw new Error('Network response was not ok');
+                const msg = (data && data.message) ? data.message : (response.status === 401 ? 'Silakan login kembali' : 'Gagal memuat detail lamaran');
+                throw new Error(msg);
             }
-            return response.json();
+            return data;
         })
         .then(data => {
             if (data.success) {
@@ -336,7 +342,7 @@ function showApplicationDetail(applicationId) {
             modalContent.innerHTML = `
                 <div class="text-center py-4">
                     <i class="fas fa-exclamation-triangle text-danger mb-3" style="font-size: 2rem;"></i>
-                    <p class="text-muted">Terjadi kesalahan saat memuat data.</p>
+                    <p class="text-muted">${error.message || 'Terjadi kesalahan saat memuat data.'}</p>
                 </div>
             `;
         });

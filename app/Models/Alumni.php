@@ -26,8 +26,10 @@ class Alumni extends Authenticatable
     // -------------------------------------
     protected function casts(): array
     {
+        // Tambahkan cast is_verified agar selalu boolean di JSON
         return [
             'password' => 'hashed',
+            'is_verified' => 'boolean',
         ];
     }
 
@@ -91,7 +93,8 @@ class Alumni extends Authenticatable
 
     public function getPhoneAttribute($value)
     {
-        return $value ?: $this->no_tlp;
+        // Perbaiki fallback ke kolom no_hp (sebelumnya no_tlp menyebabkan selalu null)
+        return $value ?: $this->no_hp;
     }
 
     public function getTanggalLahirAttribute($value)

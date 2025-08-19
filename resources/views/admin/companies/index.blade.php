@@ -213,7 +213,7 @@
                                             </td>
                                             <td>
                                                 @if($company->industry)
-                                                    <span class="badge bg-light text-dark">{{ ucfirst($company->industry) }}</span>
+                                                    <span>{{ ucfirst($company->industry) }}</span>
                                                 @else
                                                     <span class="text-muted">-</span>
                                                 @endif
@@ -227,10 +227,10 @@
                                                     ];
                                                     $status = $statusConfig[$company->status] ?? ['class' => 'secondary', 'text' => ucfirst($company->status)];
                                                 @endphp
-                                                <span class="badge bg-{{ $status['class'] }}">{{ $status['text'] }}</span>
+                                                <span>{{ $status['text'] }}</span>
                                             </td>
                                             <td>
-                                                <span class="badge bg-info">{{ $company->jobs_count ?? 0 }} Lowongan</span>
+                                                <span>{{ $company->jobs_count ?? 0 }} Lowongan</span>
                                             </td>
                                             <td>
                                                 <small class="text-muted">{{ $company->created_at->format('d M Y') }}</small>

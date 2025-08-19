@@ -93,8 +93,8 @@
                 <div class="card-body">
                     @foreach($popularNews as $popular)
                     <div class="d-flex mb-3 {{ !$loop->last ? 'border-bottom pb-3' : '' }}">
-                        @if($popular->image)
-                            <img src="{{ asset('storage/news_images/' . $popular->image) }}" 
+                        @if($popular->featured_image)
+                            <img src="{{ asset('storage/' . $popular->featured_image) }}" 
                                  alt="{{ $popular->title }}" 
                                  class="rounded me-3" 
                                  style="width: 60px; height: 60px; object-fit: cover;">
@@ -140,15 +140,15 @@
             @if($featuredNews && request()->get('page', 1) == 1)
             <div class="card shadow-sm mb-4 featured-news">
                 <div class="row g-0">
-                    @if($featuredNews->image)
+                    @if($featuredNews->featured_image)
                     <div class="col-md-5">
-                        <img src="{{ asset('storage/news_images/' . $featuredNews->image) }}" 
+                        <img src="{{ asset('storage/' . $featuredNews->featured_image) }}" 
                              alt="{{ $featuredNews->title }}" 
                              class="img-fluid rounded-start h-100" 
                              style="object-fit: cover;">
                     </div>
                     @endif
-                    <div class="col-md-{{ $featuredNews->image ? '7' : '12' }}">
+                    <div class="col-md-{{ $featuredNews->featured_image ? '7' : '12' }}">
                         <div class="card-body p-4">
                             <div class="d-flex justify-content-between align-items-start mb-2">
                                 <span class="badge bg-warning text-dark">
@@ -185,8 +185,8 @@
                 @forelse($news as $article)
                     <div class="col-md-6 mb-4">
                         <div class="card shadow-sm h-100 news-card">
-                            @if($article->image)
-                                <img src="{{ asset('storage/news_images/' . $article->image) }}" 
+                            @if($article->featured_image)
+                                <img src="{{ asset('storage/' . $article->featured_image) }}" 
                                      alt="{{ $article->title }}" 
                                      class="card-img-top" 
                                      style="height: 200px; object-fit: cover;">

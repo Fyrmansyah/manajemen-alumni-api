@@ -33,9 +33,9 @@
 
                             <h1 class="h2 mb-3">{{ $news->title }}</h1>
 
-                            @if($news->image)
+                            @if($news->featured_image)
                                 <div class="text-center mb-4">
-                                    <img src="{{ asset('storage/news_images/' . $news->image) }}" alt="{{ $news->title }}"
+                                    <img src="{{ asset('storage/' . $news->featured_image) }}" alt="{{ $news->title }}"
                                         class="img-fluid rounded shadow">
                                 </div>
                             @endif
@@ -121,8 +121,8 @@
                                 @foreach($relatedNews as $related)
                                     <div class="col-md-6 mb-3">
                                         <div class="d-flex">
-                                            @if($related->image)
-                                                <img src="{{ asset('storage/news_images/' . $related->image) }}"
+                                            @if($related->featured_image)
+                                                <img src="{{ asset('storage/' . $related->featured_image) }}"
                                                     alt="{{ $related->title }}" class="rounded me-3"
                                                     style="width: 80px; height: 80px; object-fit: cover;">
                                             @else
@@ -163,8 +163,8 @@
                         <div class="card-body">
                             @foreach($latestNews as $latest)
                                 <div class="d-flex mb-3 {{ !$loop->last ? 'border-bottom pb-3' : '' }}">
-                                    @if($latest->image)
-                                        <img src="{{ asset('storage/news_images/' . $latest->image) }}" alt="{{ $latest->title }}"
+                                    @if($latest->featured_image)
+                                        <img src="{{ asset('storage/' . $latest->featured_image) }}" alt="{{ $latest->title }}"
                                             class="rounded me-3" style="width: 60px; height: 60px; object-fit: cover;">
                                     @else
                                         <div class="bg-light rounded me-3 d-flex align-items-center justify-content-center"

@@ -179,9 +179,17 @@
                                 </div>
                             </div>
                             <div class="text-end">
-                                <span class="badge bg-{{ $application->status === 'pending' ? 'warning' : ($application->status === 'accepted' ? 'success' : 'danger') }}">
-                                    {{ ucfirst($application->status) }}
-                                </span>
+                                @php
+                                    $statusConfig = [
+                                        'submitted' => ['class' => 'warning', 'text' => 'Submitted'],
+                                        'reviewed' => ['class' => 'info', 'text' => 'Reviewed'],
+                                        'interview' => ['class' => 'primary', 'text' => 'Interview'],
+                                        'accepted' => ['class' => 'success', 'text' => 'Accepted'],
+                                        'rejected' => ['class' => 'danger', 'text' => 'Rejected'],
+                                    ];
+                                    $s = $statusConfig[$application->status] ?? ['class' => 'secondary', 'text' => ucfirst($application->status)];
+                                @endphp
+                                <span class="badge bg-{{ $s['class'] }}">{{ $s['text'] }}</span>
                             </div>
                         </div>
                     @empty
