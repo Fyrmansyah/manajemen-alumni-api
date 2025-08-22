@@ -20,6 +20,8 @@ class DatabaseSeeder extends Seeder
             JenisPerusahaanSeeder::class,
             DurasiKerjaSeeder::class,
             RangeGajiSeeder::class,
+            KepemilikanUsahaSeeder::class,
+            RangeLabaSeeder::class,
             AdminSeeder::class,
             JurusanSeeder::class,
             NisnSeeder::class,

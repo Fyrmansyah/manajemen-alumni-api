@@ -13,6 +13,7 @@ use App\Http\Controllers\KepemilikanUsahaController;
 use App\Http\Controllers\MasaTungguKerjaController;
 use App\Http\Controllers\NewsController;
 use App\Http\Controllers\RangeGajiController;
+use App\Http\Controllers\RangeLabaController;
 use App\Http\Controllers\WhatsAppController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -32,6 +33,7 @@ Route::apiResource('jenis-perusahaan', JenisPerusahaanController::class);
 Route::apiResource('durasi-kerja', DurasiKerjaController::class);
 Route::apiResource('range-gaji', RangeGajiController::class);
 Route::apiResource('kepemilikan-usaha', KepemilikanUsahaController::class);
+Route::apiResource('range-laba', RangeLabaController::class);
 
 Route::controller(AlumniController::class)->group(function () {
     Route::get('/alumnis', 'getAll');
