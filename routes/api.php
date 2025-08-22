@@ -9,6 +9,7 @@ use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\DurasiKerjaController;
 use App\Http\Controllers\JalurMasukKuliahController;
 use App\Http\Controllers\JenisPerusahaanController;
+use App\Http\Controllers\KepemilikanUsahaController;
 use App\Http\Controllers\MasaTungguKerjaController;
 use App\Http\Controllers\NewsController;
 use App\Http\Controllers\RangeGajiController;
@@ -30,6 +31,7 @@ Route::apiResource('masa-tunggu-kerja', MasaTungguKerjaController::class);
 Route::apiResource('jenis-perusahaan', JenisPerusahaanController::class);
 Route::apiResource('durasi-kerja', DurasiKerjaController::class);
 Route::apiResource('range-gaji', RangeGajiController::class);
+Route::apiResource('kepemilikan-usaha', KepemilikanUsahaController::class);
 
 Route::controller(AlumniController::class)->group(function () {
     Route::get('/alumnis', 'getAll');
