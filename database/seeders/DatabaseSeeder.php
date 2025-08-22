@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\RangeGaji;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -18,6 +19,7 @@ class DatabaseSeeder extends Seeder
             MasaTungguKerjaSeeder::class,
             JenisPerusahaanSeeder::class,
             DurasiKerjaSeeder::class,
+            RangeGajiSeeder::class,
             AdminSeeder::class,
             JurusanSeeder::class,
             NisnSeeder::class,

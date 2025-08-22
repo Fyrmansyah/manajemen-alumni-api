@@ -11,6 +11,7 @@ use App\Http\Controllers\JalurMasukKuliahController;
 use App\Http\Controllers\JenisPerusahaanController;
 use App\Http\Controllers\MasaTungguKerjaController;
 use App\Http\Controllers\NewsController;
+use App\Http\Controllers\RangeGajiController;
 use App\Http\Controllers\WhatsAppController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -28,6 +29,7 @@ Route::apiResource('jalur-masuk-kuliah', JalurMasukKuliahController::class);
 Route::apiResource('masa-tunggu-kerja', MasaTungguKerjaController::class);
 Route::apiResource('jenis-perusahaan', JenisPerusahaanController::class);
 Route::apiResource('durasi-kerja', DurasiKerjaController::class);
+Route::apiResource('range-gaji', RangeGajiController::class);
 
 Route::controller(AlumniController::class)->group(function () {
     Route::get('/alumnis', 'getAll');
@@ -114,8 +116,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
         // Company settings
         Route::get('/company/settings', 'getCompanySettings')->middleware('auth:company');
         Route::put('/company/settings', 'updateCompanySettings')->middleware('auth:company');
-        
-    // Admin functions
+
+        // Admin functions
         Route::post('/bulk-send', 'sendBulkNotification')->middleware('auth:admin');
         Route::get('/stats', 'getNotificationStats')->middleware('auth:admin');
     });
