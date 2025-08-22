@@ -10,7 +10,7 @@
             <div class="d-flex justify-content-between align-items-center">
                 <div>
                     <h1 class="h3 mb-0">Dashboard Perusahaan</h1>
-                    <p class="text-muted mb-0">Selamat datang, {{ auth()->user()->name }}</p>
+                    <p class="text-muted mb-0">Selamat datang, {{ auth('company')->user()->company_name ?? auth('company')->user()->name ?? 'Perusahaan' }}</p>
                 </div>
                 <div>
                     <span class="badge bg-success">Verified Partner</span>
@@ -203,9 +203,17 @@
                                 </div>
                             </div>
                             <div class="text-end">
-                                <span class="badge bg-{{ $application->status === 'pending' ? 'warning' : ($application->status === 'accepted' ? 'success' : 'danger') }}">
-                                    {{ ucfirst($application->status) }}
-                                </span>
+                                @php
+                                    $statusMap = [
+                                        'submitted' => ['warning','Submitted'],
+                                        'reviewed' => ['info','Reviewed'],
+                                        'interview' => ['primary','Interview'],
+                                        'accepted' => ['success','Accepted'],
+                                        'rejected' => ['danger','Rejected'],
+                                    ];
+                                    $cfg = $statusMap[$application->status] ?? ['secondary', ucfirst($application->status)];
+                                @endphp
+                                <span class="badge bg-{{ $cfg[0] }}">{{ $cfg[1] }}</span>
                                 <div class="mt-1">
                                     <a href="{{ route('company.applications') }}?application={{ $application->id }}" class="btn btn-outline-primary btn-sm">
                                         Review
@@ -274,9 +282,11 @@
                                     <a href="{{ route('jobs.show', $job->id) }}" class="btn btn-outline-primary" target="_blank">
                                         <i class="fas fa-eye"></i>
                                     </a>
-                                    <a href="{{ route('company.jobs') }}?edit={{ $job->id }}" class="btn btn-outline-warning">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
+                                    @if($job->status === 'active')
+                                        <a href="{{ route('company.jobs') }}?edit={{ $job->id }}" class="btn btn-outline-warning">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                    @endif
                                     @if($job->status === 'active')
                                         <button class="btn btn-outline-danger" onclick="closeJob({{ $job->id }}, '{{ $job->title }}')" title="Tutup Lowongan">
                                             <i class="fas fa-times"></i>

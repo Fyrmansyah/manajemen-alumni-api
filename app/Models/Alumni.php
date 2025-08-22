@@ -101,4 +101,10 @@ class Alumni extends Authenticatable
     {
         return $value ?: $this->tgl_lahir;
     }
+
+    public function savedJobs()
+    {
+        return $this->belongsToMany(Job::class, 'saved_jobs', 'alumni_id', 'job_posting_id')
+                    ->withTimestamps();
+    }
 }

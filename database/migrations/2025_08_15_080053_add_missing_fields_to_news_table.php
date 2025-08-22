@@ -12,11 +12,21 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('news', function (Blueprint $table) {
-            $table->text('excerpt')->nullable()->after('content');
-            $table->string('category')->default('info')->after('slug');
-            $table->boolean('is_featured')->default(false)->after('status');
-            $table->text('tags')->nullable()->after('views');
-            $table->string('meta_description', 160)->nullable()->after('tags');
+            if (!Schema::hasColumn('news', 'excerpt')) {
+                $table->text('excerpt')->nullable()->after('content');
+            }
+            if (!Schema::hasColumn('news', 'category')) {
+                $table->string('category')->default('info')->after('slug');
+            }
+            if (!Schema::hasColumn('news', 'is_featured')) {
+                $table->boolean('is_featured')->default(false)->after('status');
+            }
+            if (!Schema::hasColumn('news', 'tags')) {
+                $table->text('tags')->nullable()->after('views');
+            }
+            if (!Schema::hasColumn('news', 'meta_description')) {
+                $table->string('meta_description', 160)->nullable()->after('tags');
+            }
         });
     }
 

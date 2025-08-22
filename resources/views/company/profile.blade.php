@@ -103,6 +103,21 @@
                             </div>
                         </div>
 
+                        <!-- Logo Upload -->
+                        <div class="mb-3">
+                            <label for="logo" class="form-label fw-bold">Logo Perusahaan</label>
+                            <input type="file" class="form-control @error('logo') is-invalid @enderror" id="logo" name="logo" accept="image/*">
+                            <div class="form-text">Format: JPG, PNG, maksimal 1MB.</div>
+                            @error('logo')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                            @if($company->logo)
+                                <div class="mt-2">
+                                    <img src="{{ asset('storage/company_logos/' . $company->logo) }}" alt="Logo Saat Ini" style="height:60px;" class="rounded border">
+                                </div>
+                            @endif
+                        </div>
+
                         <div class="row">
                             <!-- Email -->
                             <div class="col-md-6 mb-3">
@@ -211,8 +226,8 @@
                 <div class="card-body">
                     <div class="text-center mb-3">
                         @if($company->logo)
-                            <img src="{{ asset('storage/' . $company->logo) }}" class="rounded-circle" 
-                                 width="80" height="80" alt="Logo {{ $company->company_name }}">
+                            <img src="{{ asset('storage/company_logos/' . $company->logo) }}" class="rounded-circle" 
+                                 width="80" height="80" alt="Logo {{ $company->company_name }}" style="object-fit:cover;">
                         @else
                             <div class="bg-primary rounded-circle d-inline-flex align-items-center justify-content-center" 
                                  style="width: 80px; height: 80px;">

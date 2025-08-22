@@ -188,7 +188,7 @@
                                     <br><small class="text-muted">Dilamar pada: {{ $application->applied_at->format('d M Y, H:i') }}</small>
                                 @endif
                             </div>
-                            <a href="{{ route('alumni.applications') }}" class="btn btn-outline-primary">
+                            <a href="{{ route('alumni.applications', ['app' => $application?->id]) }}" class="btn btn-outline-primary">
                                 <i class="fas fa-eye me-2"></i>Lihat Detail Lamaran
                             </a>
                         @elseif(auth('alumni')->user()->profile_completion < 80)
@@ -243,9 +243,15 @@
                         <button class="btn btn-outline-secondary" onclick="shareJob()">
                             <i class="fas fa-share-alt me-2"></i>Bagikan
                         </button>
-                        <button class="btn btn-outline-secondary" onclick="saveJob({{ $job->id }})">
+                        @auth('alumni')
+                        <button id="saveBtn" class="btn btn-outline-secondary" onclick="toggleSave({{ $job->id }})" data-saved="{{ $isSaved ? '1':'0' }}">
+                            <i class="fas fa-bookmark me-2"></i><span id="saveBtnText">{{ $isSaved ? 'Tersimpan' : 'Simpan' }}</span>
+                        </button>
+                        @else
+                        <button class="btn btn-outline-secondary" onclick="window.location='{{ route('login') }}'">
                             <i class="fas fa-bookmark me-2"></i>Simpan
                         </button>
+                        @endauth
                     </div>
                 </div>
             </div>
@@ -445,6 +451,10 @@ function submitApplication() {
         const data = isJson ? await response.json() : null;
 
         // Handle both success and error responses consistently
+        if (data && data.redirect) {
+            window.location.href = data.redirect;
+            return;
+        }
         if (response.ok && data && data.success) {
             // Show success message
             document.getElementById('applyModalBody').innerHTML = `
@@ -517,6 +527,41 @@ function submitApplication() {
         submitBtn.disabled = false;
         submitBtn.innerHTML = originalText;
     });
+}
+
+// Toggle save job
+function toggleSave(jobId){
+    const btn = document.getElementById('saveBtn');
+    if(!btn) return;
+    const saved = btn.getAttribute('data-saved') === '1';
+    const method = saved ? 'DELETE' : 'POST';
+    fetch(`/jobs/${jobId}/save`, {
+        method: method,
+        headers: {
+            'X-CSRF-TOKEN': window.csrfToken || document.querySelector('meta[name="csrf-token"]').content,
+            'Accept': 'application/json'
+        }
+    })
+    .then(r=> r.ok ? r.json() : Promise.reject(r))
+    .then(d=>{
+        if(d.status==='success'){
+            const textEl = document.getElementById('saveBtnText');
+            if(saved){
+                textEl.innerText = 'Simpan';
+                btn.setAttribute('data-saved','0');
+                btn.classList.remove('btn-success');
+                btn.classList.add('btn-outline-secondary');
+            } else {
+                textEl.innerText = 'Tersimpan';
+                btn.setAttribute('data-saved','1');
+                btn.classList.remove('btn-outline-secondary');
+                btn.classList.add('btn-success');
+            }
+        } else {
+            alert(d.message || 'Gagal menyimpan');
+        }
+    })
+    .catch(()=> alert('Gagal menyimpan'));
 }
 
 // Update character count

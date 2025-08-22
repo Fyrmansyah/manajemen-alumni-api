@@ -9,6 +9,7 @@ use App\Notifications\WhatsAppJobApplicationNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Gate;
 
 class JobController extends Controller
 {
@@ -193,6 +194,21 @@ class JobController extends Controller
     {
         $query = Job::with('company')->where('status', 'active');
 
+        // Count total applications for display
+        $query->withCount('applications');
+
+        // If alumni logged in, include whether they applied
+        if (Auth::guard('alumni')->check()) {
+            $alumniId = Auth::guard('alumni')->id();
+            $query->with(['applications' => function($q) use ($alumniId) {
+                $q->where('alumni_id', $alumniId)
+                  ->select('id', 'job_posting_id', 'alumni_id', 'status', 'applied_at');
+            }]);
+            $query->withCount(['applications as applied_by_me' => function($q) use ($alumniId) {
+                $q->where('alumni_id', $alumniId);
+            }]);
+        }
+
         // Search filter
         if ($request->filled('search')) {
             $search = $request->get('search');
@@ -274,14 +290,55 @@ class JobController extends Controller
 
         // Check if current user has applied
         $hasApplied = false;
+        $isSaved = false;
         if (auth('alumni')->check()) {
             $alumniId = auth('alumni')->id();
             $hasApplied = $job->applications()
                 ->where('alumni_id', $alumniId)
                 ->exists();
+            $isSaved = auth('alumni')->user()->savedJobs()->where('job_posting_id', $job->id)->exists();
         }
 
-        return view('jobs.show', compact('job', 'relatedJobs', 'hasApplied'));
+        return view('jobs.show', compact('job', 'relatedJobs', 'hasApplied', 'isSaved'));
+    }
+
+    // Save job (bookmark) for alumni
+    public function save(Job $job)
+    {
+        $alumni = request()->user('alumni');
+        if (!$alumni) {
+            return response()->json(['status' => 'error', 'message' => 'Unauthorized'], 401);
+        }
+        $alumni->savedJobs()->syncWithoutDetaching([$job->id]);
+        return response()->json(['status' => 'success', 'message' => 'Lowongan disimpan']);
+    }
+
+    // Unsave job
+    public function unsave(Job $job)
+    {
+        $alumni = request()->user('alumni');
+        if (!$alumni) {
+            return response()->json(['status' => 'error', 'message' => 'Unauthorized'], 401);
+        }
+        $alumni->savedJobs()->detach($job->id);
+        return response()->json(['status' => 'success', 'message' => 'Lowongan dihapus dari tersimpan']);
+    }
+
+    // API style endpoints (fallback if web route not used)
+    public function saveWeb($id)
+    {
+        if(!auth('alumni')->check()) return response()->json(['status'=>'error','message'=>'Unauthorized'],401);
+        $job = Job::findOrFail($id);
+        auth('alumni')->user()->savedJobs()->syncWithoutDetaching([$job->id]);
+        return response()->json(['status'=>'success']);
+    }
+
+    public function unsaveWeb($id)
+    {
+        if(!auth('alumni')->check()) return response()->json(['status'=>'error','message'=>'Unauthorized'],401);
+        $job = Job::findOrFail($id);
+        auth('alumni')->user()->savedJobs()->detach($job->id);
+        return response()->json(['status'=>'success']);
     }
 
     /**
@@ -316,7 +373,7 @@ class JobController extends Controller
             ->where('job_posting_id', $job->getKey())
             ->first();
 
-        if ($existingApplication) {
+    if ($existingApplication) {
             $statusText = match($existingApplication->status) {
                 'submitted' => 'menunggu review',
                 'reviewed' => 'sedang direview',
@@ -327,9 +384,10 @@ class JobController extends Controller
             };
             
             return response()->json([
-                'success' => false,
-                'message' => 'Anda sudah melamar untuk posisi ini. Status lamaran: ' . $statusText
-            ], 422);
+        'success' => false,
+        'message' => 'Anda sudah melamar untuk posisi ini. Status lamaran: ' . $statusText,
+        'redirect' => route('alumni.applications', ['app' => $existingApplication->id])
+        ], 200);
         }
 
         // Check if job is still available
@@ -365,7 +423,7 @@ class JobController extends Controller
             $applicationData['cv_file'] = $filename;
         }
 
-        Application::create($applicationData);
+    $created = Application::create($applicationData);
 
         // Send WhatsApp notification to company about new job application
         try {

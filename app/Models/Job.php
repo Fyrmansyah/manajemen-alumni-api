@@ -199,6 +199,13 @@ class Job extends Model
             ->count();
     }
 
+    // Alumni who saved this job
+    public function savedBy()
+    {
+        return $this->belongsToMany(Alumni::class, 'saved_jobs', 'job_posting_id', 'alumni_id')
+                    ->withTimestamps();
+    }
+
     /**
      * Get real-time status including auto-expired jobs
      */

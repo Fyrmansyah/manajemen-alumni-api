@@ -500,14 +500,14 @@ function viewAlumni(alumniId) {
                         ${a.keahlian ? `<h6 class=\"text-primary mb-3 mt-4\">Keahlian</h6><div class=\"card bg-light border-0\"><div class=\"card-body\"><p class=\"mb-0\">${a.keahlian}</p></div></div>` : ''}
                     </div>
                     <div class="col-md-4">
-                        ${a.foto ? `<div class=\"text-center mb-4\"><img src=\"/storage/${a.foto}\" class=\"img-thumbnail rounded-circle\" style=\"width:120px;height:120px;object-fit:cover;\"></div>` : ''}
+                        ${a.photo_url ? `<div class=\"text-center mb-4\"><img src=\"${a.photo_url}\" class=\"img-thumbnail rounded-circle\" style=\"width:120px;height:120px;object-fit:cover;\"></div>` : ''}
                         <h6 class="text-primary mb-3">Status Verifikasi</h6>
                         <div class="text-center">
                             <div class="mb-3">${a.is_verified ? '<span class=\"text-success\"><i class=\"fas fa-check me-2\"></i>Terverifikasi</span>' : '<span class=\"text-warning\"><i class=\"fas fa-clock me-2\"></i>Pending</span>'}</div>
                             ${!a.is_verified ? `<button class=\"btn btn-success btn-sm\" onclick=\"verifyAlumni(${a.id}, true)\"><i class=\"fas fa-check me-1\"></i>Verifikasi Sekarang</button>` : '<p class=\"text-muted small\">Alumni sudah terverifikasi</p>'}
                         </div>
                         <div class="mt-4"><h6 class="text-primary mb-3">Notifikasi WhatsApp</h6><p class="small"><i class="fab fa-whatsapp me-1 text-success"></i>${a.whatsapp_notifications ? 'Aktif' : 'Nonaktif'}</p></div>
-                        <div class="mt-4"><h6 class="text-primary mb-3">CV & Dokumen</h6>${a.cv_path ? `<a href=\"/alumni/cv/${a.id}/preview\" target=\"_blank\" class=\"btn btn-outline-primary btn-sm w-100 mb-2\"><i class=\"fas fa-file-pdf me-1\"></i>Lihat CV</a>` : '<p class="text-muted small">CV belum diupload</p>'}</div>
+                        <div class=\"mt-4\"><h6 class=\"text-primary mb-3\">CV & Dokumen</h6>${a.cv_exists ? `<a href=\"${a.cv_url}\" target=\"_blank\" class=\"btn btn-outline-primary btn-sm w-100 mb-2\"><i class=\"fas fa-file-pdf me-1\"></i>Lihat CV</a>` : '<p class=\"text-muted small\">CV belum diupload</p>'}</div>
                         <div class="mt-3"><small class="text-muted"><i class="fas fa-calendar me-1"></i>Terdaftar: ${a.created_at ? new Date(a.created_at).toLocaleDateString('id-ID') : '-'}</small></div>
                     </div>
                 </div>`;

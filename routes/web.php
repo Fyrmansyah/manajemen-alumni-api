@@ -60,6 +60,8 @@ Route::prefix('jobs')->name('jobs.')->group(function () {
     // Apply job route for authenticated alumni
     Route::middleware(['auth:alumni'])->group(function () {
         Route::post('/{id}/apply', [JobController::class, 'applyWeb'])->name('apply');
+    Route::post('/{job}/save', [JobController::class, 'save'])->name('save');
+    Route::delete('/{job}/save', [JobController::class, 'unsave'])->name('unsave');
     });
 });
 
@@ -111,11 +113,12 @@ Route::middleware('auth:admin')->prefix('admin')->name('admin.')->group(function
 Route::middleware('auth:alumni')->prefix('alumni')->name('alumni.')->group(function () {
     Route::get('/dashboard', [AlumniDashboardController::class, 'index'])->name('dashboard');
     Route::get('/applications', [AlumniDashboardController::class, 'applications'])->name('applications');
+    Route::get('/saved-jobs', [\App\Http\Controllers\Alumni\AlumniSavedJobController::class, 'index'])->name('saved-jobs');
     Route::get('/profile', [AlumniDashboardController::class, 'profile'])->name('profile');
     Route::put('/profile', [AlumniDashboardController::class, 'updateProfile'])->name('profile.update');
 
     // Application detail for web (session-based, used by modal)
-    Route::get('/applications/{id}', [AdminAlumniController::class, 'getApplicationDetail'])->name('applications.detail');
+    Route::get('/applications/{id}', [\App\Http\Controllers\AlumniController::class, 'getApplicationDetail'])->name('applications.detail');
 
     // CV management routes
     Route::prefix('cv')->name('cv.')->group(function () {
@@ -150,6 +153,7 @@ Route::middleware('auth:company')->prefix('company')->name('company.')->group(fu
     Route::delete('/jobs/{id}', [CompanyDashboardController::class, 'deleteJob'])->name('jobs.delete');
     Route::patch('/jobs/{id}/close', [CompanyDashboardController::class, 'closeJob'])->name('jobs.close');
     Route::get('/applications', [CompanyDashboardController::class, 'applications'])->name('applications');
+    Route::get('/applications/{id}/detail', [CompanyDashboardController::class, 'getApplicationDetail'])->name('applications.detail');
     Route::get('/profile', [CompanyDashboardController::class, 'profile'])->name('profile');
     Route::put('/profile', [CompanyDashboardController::class, 'updateProfile'])->name('profile.update');
     Route::put('/applications/{id}/status', [CompanyDashboardController::class, 'updateApplicationStatus'])->name('applications.update-status');

@@ -286,7 +286,7 @@
                 <div class="card-body text-center">
                     <div class="mb-3">
                         @if(auth('alumni')->user()->foto)
-                            <img src="{{ asset('storage/alumni_photos/' . auth('alumni')->user()->foto) }}" 
+                            <img src="{{ asset('storage/' . (\Illuminate\Support\Str::startsWith(auth('alumni')->user()->foto, 'alumni_photos/') ? auth('alumni')->user()->foto : ('alumni_photos/' . ltrim(auth('alumni')->user()->foto, '/'))) ) }}" 
                                  alt="Foto Profil" class="rounded-circle" style="width: 120px; height: 120px; object-fit: cover;">
                         @else
                             <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center" 

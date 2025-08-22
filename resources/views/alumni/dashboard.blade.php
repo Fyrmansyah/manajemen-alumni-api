@@ -10,7 +10,7 @@
             <div class="d-flex justify-content-between align-items-center">
                 <div>
                     <h1 class="h3 mb-0">Dashboard Alumni</h1>
-                    <p class="text-muted mb-0">Selamat datang, {{ auth('alumni')->user() ? auth('alumni')->user()->nama : 'Alumni' }}</p>
+                    <p class="text-muted mb-0">Selamat datang, {{ auth('alumni')->user()->nama ?? auth('alumni')->user()->nama_lengkap ?? 'Alumni' }}</p>
                 </div>
                 <div>
                     <span class="badge bg-success">Alumni Aktif</span>
@@ -134,6 +134,13 @@
                                 <small class="text-muted">Buat dan kelola CV Anda</small>
                             </div>
                         </a>
+                        <a href="{{ route('alumni.saved-jobs') }}" class="list-group-item list-group-item-action border-0 d-flex align-items-center">
+                            <i class="fas fa-bookmark text-danger me-3"></i>
+                            <div>
+                                <div class="fw-bold">Lowongan Tersimpan</div>
+                                <small class="text-muted">Lihat lowongan yang Anda simpan</small>
+                            </div>
+                        </a>
                         <a href="{{ route('news.index') }}" class="list-group-item list-group-item-action border-0 d-flex align-items-center">
                             <i class="fas fa-newspaper text-success me-3"></i>
                             <div>
@@ -155,7 +162,8 @@
                     </h6>
                     <a href="{{ route('alumni.applications') }}" class="btn btn-sm btn-outline-primary">Lihat Semua</a>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-0">
+                    <div class="py-3 px-3" style="max-height: 420px; overflow-y: auto;">
                     @forelse($recentApplications as $application)
                         <div class="d-flex align-items-start mb-3 {{ !$loop->last ? 'border-bottom pb-3' : '' }}">
                             <div class="me-3">
@@ -202,6 +210,7 @@
                             </a>
                         </div>
                     @endforelse
+                    </div>
                 </div>
             </div>
         </div>

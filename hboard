@@ -1,0 +1,357 @@
+[1mdiff --git a/app/Exports/AlumnisExport.php b/app/Exports/AlumnisExport.php[m
+[1mnew file mode 100644[m
+[1mindex 0000000..34baee2[m
+[1m--- /dev/null[m
+[1m+++ b/app/Exports/AlumnisExport.php[m
+[36m@@ -0,0 +1,87 @@[m
+[32m+[m[32m<?php[m
+[32m+[m
+[32m+[m[32mnamespace App\Exports;[m
+[32m+[m
+[32m+[m[32muse App\Models\Alumni;[m
+[32m+[m[32muse Illuminate\Support\Collection;[m
+[32m+[m[32muse Maatwebsite\Excel\Concerns\Exportable;[m
+[32m+[m[32muse Maatwebsite\Excel\Concerns\FromCollection;[m
+[32m+[m[32muse Maatwebsite\Excel\Concerns\ShouldAutoSize;[m
+[32m+[m[32muse Maatwebsite\Excel\Concerns\WithHeadings;[m
+[32m+[m[32muse Maatwebsite\Excel\Concerns\WithMapping;[m
+[32m+[m
+[32m+[m[32mclass AlumnisExport implements FromCollection, WithHeadings, WithMapping, ShouldAutoSize[m
+[32m+[m[32m{[m
+[32m+[m[32m    use Exportable;[m
+[32m+[m
+[32m+[m[32m    /** @var \Illuminate\Support\Collection<int, Alumni> */[m
+[32m+[m[32m    protected Collection $alumni;[m
+[32m+[m
+[32m+[m[32m    /**[m
+[32m+[m[32m     * @param Collection<int, Alumni> $alumni[m
+[32m+[m[32m     */[m
+[32m+[m[32m    public function __construct(Collection $alumni)[m
+[32m+[m[32m    {[m
+[32m+[m[32m        // Ensure jurusan relation loaded to avoid N+1[m
+[32m+[m[32m        $this->alumni = $alumni->loadMissing('jurusan');[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    public function collection()[m
+[32m+[m[32m    {[m
+[32m+[m[32m        return $this->alumni;[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    public function headings(): array[m
+[32m+[m[32m    {[m
+[32m+[m[32m        return [[m
+[32m+[m[32m            'ID',[m
+[32m+[m[32m            'NISN',[m
+[32m+[m[32m            'Nama',[m
+[32m+[m[32m            'Email',[m
+[32m+[m[32m            'Telepon',[m
+[32m+[m[32m            'Jenis Kelamin',[m
+[32m+[m[32m            'Tanggal Lahir',[m
+[32m+[m[32m            'Jurusan',[m
+[32m+[m[32m            'Tahun Lulus',[m
+[32m+[m[32m            'Status Kerja',[m
+[32m+[m[32m            'Tempat Kerja',[m
+[32m+[m[32m            'Jabatan Kerja',[m
+[32m+[m[32m            'Tempat Kuliah',[m
+[32m+[m[32m            'Prodi Kuliah',[m
+[32m+[m[32m            'Alamat',[m
+[32m+[m[32m            'Terverifikasi',[m
+[32m+[m[32m            'Dibuat',[m
+[32m+[m[32m        ];[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    /**[m
+[32m+[m[32m     * @param Alumni $alumni[m
+[32m+[m[32m     */[m
+[32m+[m[32m    public function map($alumni): array[m
+[32m+[m[32m    {[m
+[32m+[m[32m        $phone = $alumni->phone ?: ($alumni->no_hp ?: $alumni->no_tlp);[m
+[32m+[m[32m        $nama = $alumni->nama_lengkap ?: $alumni->nama;[m
+[32m+[m[32m        $jenisKelamin = $alumni->jenis_kelamin === 'L' ? 'Laki-laki' : ($alumni->jenis_kelamin === 'P' ? 'Perempuan' : '');[m
+[32m+[m[32m        $tglLahir = $alumni->tanggal_lahir ?: $alumni->tgl_lahir;[m
+[32m+[m
+[32m+[m[32m        return [[m
+[32m+[m[32m            $alumni->id,[m
+[32m+[m[32m            $alumni->nisn,[m
+[32m+[m[32m            $nama,[m
+[32m+[m[32m            $alumni->email,[m
+[32m+[m[32m            $phone,[m
+[32m+[m[32m            $jenisKelamin,[m
+[32m+[m[32m            $tglLahir,[m
+[32m+[m[32m            optional($alumni->jurusan)->nama,[m
+[32m+[m[32m            $alumni->tahun_lulus,[m
+[32m+[m[32m            $alumni->status_kerja,[m
+[32m+[m[32m            $alumni->tempat_kerja ?: $alumni->perusahaan,[m
+[32m+[m[32m            $alumni->jabatan_kerja ?: $alumni->posisi,[m
+[32m+[m[32m            $alumni->tempat_kuliah,[m
+[32m+[m[32m            $alumni->prodi_kuliah,[m
+[32m+[m[32m            $alumni->alamat,[m
+[32m+[m[32m            $alumni->is_verified ? 'Ya' : 'Tidak',[m
+[32m+[m[32m            optional($alumni->created_at)->format('Y-m-d H:i:s'),[m
+[32m+[m[32m        ];[m
+[32m+[m[32m    }[m
+[32m+[m[32m}[m
+[1mdiff --git a/app/Http/Controllers/Admin/AdminAlumniController.php b/app/Http/Controllers/Admin/AdminAlumniController.php[m
+[1mindex 58dfbd5..0eee5c4 100644[m
+[1m--- a/app/Http/Controllers/Admin/AdminAlumniController.php[m
+[1m+++ b/app/Http/Controllers/Admin/AdminAlumniController.php[m
+[36m@@ -8,6 +8,8 @@[m
+ use Illuminate\Http\Request;[m
+ use Illuminate\Support\Facades\DB;[m
+ use Illuminate\Support\Facades\Storage;[m
+[32m+[m[32muse Maatwebsite\Excel\Facades\Excel;[m
+[32m+[m[32muse App\Exports\AlumnisExport;[m
+ [m
+ class AdminAlumniController extends Controller[m
+ {[m
+[36m@@ -72,9 +74,48 @@[m [mpublic function show(Alumni $alumni)[m
+         $alumni->load(['jurusan']);[m
+ [m
+         if (request()->ajax()) {[m
+[32m+[m[32m            // Normalisasi data agar front-end tidak mendapatkan null untuk field alternatif[m
+[32m+[m[32m            $normalized = [[m
+[32m+[m[32m                'id' => $alumni->id,[m
+[32m+[m[32m                'nama' => $alumni->nama,[m
+[32m+[m[32m                'nama_lengkap' => $alumni->nama_lengkap ?? $alumni->nama,[m
+[32m+[m[32m                'nisn' => $alumni->nisn,[m
+[32m+[m[32m                'email' => $alumni->email,[m
+[32m+[m[32m                'phone' => $alumni->phone ?? $alumni->no_hp ?? $alumni->no_tlp,[m
+[32m+[m[32m                'no_hp' => $alumni->no_hp ?? $alumni->no_tlp,[m
+[32m+[m[32m                'no_tlp' => $alumni->no_tlp,[m
+[32m+[m[32m                'alamat' => $alumni->alamat,[m
+[32m+[m[32m                'tanggal_lahir' => $alumni->tanggal_lahir ?? $alumni->tgl_lahir,[m
+[32m+[m[32m                'tgl_lahir' => $alumni->tgl_lahir,[m
+[32m+[m[32m                'jenis_kelamin' => $alumni->jenis_kelamin,[m
+[32m+[m[32m                'tahun_lulus' => $alumni->tahun_lulus,[m
+[32m+[m[32m                'jurusan' => $alumni->jurusan ? [[m
+[32m+[m[32m                    'id' => $alumni->jurusan->id,[m
+[32m+[m[32m                    'nama' => $alumni->jurusan->nama,[m
+[32m+[m[32m                ] : null,[m
+[32m+[m[32m                'status_kerja' => $alumni->status_kerja,[m
+[32m+[m[32m                'perusahaan' => $alumni->perusahaan,[m
+[32m+[m[32m                'posisi' => $alumni->posisi,[m
+[32m+[m[32m                'gaji' => $alumni->gaji,[m
+[32m+[m[32m                'is_verified' => (bool) $alumni->is_verified,[m
+[32m+[m[32m                'whatsapp_notifications' => (bool) $alumni->whatsapp_notifications,[m
+[32m+[m[32m                'cv_path' => $alumni->cv_path,[m
+[32m+[m[32m                'foto' => $alumni->foto,[m
+[32m+[m[32m                'created_at' => $alumni->created_at,[m
+[32m+[m[32m                // Field pekerjaan/kuliah tambahan jika ada di tabel[m
+[32m+[m[32m                'tempat_kerja' => $alumni->tempat_kerja ?? $alumni->perusahaan,[m
+[32m+[m[32m                'jabatan_kerja' => $alumni->jabatan_kerja ?? $alumni->posisi,[m
+[32m+[m[32m                'kesesuaian_kerja' => $alumni->kesesuaian_kerja,[m
+[32m+[m[32m                'tempat_kuliah' => $alumni->tempat_kuliah,[m
+[32m+[m[32m                'prodi_kuliah' => $alumni->prodi_kuliah,[m
+[32m+[m[32m                'kesesuaian_kuliah' => $alumni->kesesuaian_kuliah,[m
+[32m+[m[32m                'pengalaman_kerja' => $alumni->pengalaman_kerja,[m
+[32m+[m[32m                'keahlian' => $alumni->keahlian,[m
+[32m+[m[32m            ];[m
+[32m+[m
+             return response()->json([[m
+                 'success' => true,[m
+[31m-                'data' => $alumni[m
+[32m+[m[32m                'data' => $normalized,[m
+             ]);[m
+         }[m
+ [m
+[36m@@ -89,25 +130,62 @@[m [mpublic function create()[m
+ [m
+     public function store(Request $request)[m
+     {[m
+[31m-        $validatedData = $request->validate([[m
+[31m-            'nama_lengkap' => 'required|string|max:255',[m
+[31m-            'nisn' => 'required|string|unique:alumni|max:20',[m
+[31m-            'email' => 'required|email|unique:alumni',[m
+[31m-            'no_hp' => 'nullable|string|max:20',[m
+[31m-            'alamat' => 'nullable|string',[m
+[32m+[m[32m        // Validasi menyesuaikan kolom wajib pada tabel alumnis (legacy + baru)[m
+[32m+[m[32m        $request->validate([[m
+[32m+[m[32m            'nama' => 'required|string|max:255',[m
+[32m+[m[32m            'nama_lengkap' => 'nullable|string|max:255',[m
+[32m+[m[32m            'nisn' => 'required|string|max:20|unique:alumnis,nisn',[m
+[32m+[m[32m            'email' => 'required|email|unique:alumnis,email',[m
+[32m+[m[32m            'no_tlp' => 'required|string|max:20',[m
+[32m+[m[32m            'alamat' => 'required|string',[m
+             'jurusan_id' => 'required|exists:jurusans,id',[m
+[32m+[m[32m            'tahun_mulai' => 'required|integer|min:2000|max:' . (date('Y') + 5),[m
+             'tahun_lulus' => 'required|integer|min:2000|max:' . (date('Y') + 5),[m
+[31m-            'status_kerja' => 'nullable|in:bekerja,kuliah,wirausaha,menganggur',[m
+[31m-            'perusahaan' => 'nullable|string|max:255',[m
+[31m-            'posisi' => 'nullable|string|max:255',[m
+[31m-            'gaji' => 'nullable|numeric|min:0',[m
+[31m-            'is_verified' => 'boolean',[m
+[32m+[m[32m            'jenis_kelamin' => 'required|in:L,P',[m
+[32m+[m[32m            'tgl_lahir' => 'required|date',[m
+[32m+[m[32m            'password' => 'required|string|min:6',[m
+[32m+[m[32m            // Opsional[m
+[32m+[m[32m            'tempat_kerja' => 'nullable|string|max:255',[m
+[32m+[m[32m            'jabatan_kerja' => 'nullable|string|max:255',[m
+[32m+[m[32m            'tempat_kuliah' => 'nullable|string|max:255',[m
+[32m+[m[32m            'prodi_kuliah' => 'nullable|string|max:255',[m
+[32m+[m[32m            'kesesuaian_kerja' => 'nullable|in:0,1',[m
+[32m+[m[32m            'kesesuaian_kuliah' => 'nullable|in:0,1',[m
+[32m+[m[32m            'pengalaman_kerja' => 'nullable|string',[m
+[32m+[m[32m            'keahlian' => 'nullable|string',[m
+[32m+[m[32m            'is_verified' => 'nullable|boolean',[m
+         ]);[m
+ [m
+[31m-        $alumni = Alumni::create($validatedData);[m
+[32m+[m[32m        // Susun data sesuai kolom yang ada di DB, sekaligus mirroring ke field baru[m
+[32m+[m[32m        $data = [[m
+[32m+[m[32m            'nama' => $request->input('nama') ?: $request->input('nama_lengkap'),[m
+[32m+[m[32m            'nama_lengkap' => $request->input('nama_lengkap') ?: $request->input('nama'),[m
+[32m+[m[32m            'nisn' => $request->input('nisn'),[m
+[32m+[m[32m            'email' => $request->input('email'),[m
+[32m+[m[32m            'password' => $request->input('password'), // otomatis di-hash via cast di model[m
+[32m+[m[32m            'no_tlp' => $request->input('no_tlp'),[m
+[32m+[m[32m            'phone' => $request->input('no_tlp'), // mirror ke field baru[m
+[32m+[m[32m            'alamat' => $request->input('alamat'),[m
+[32m+[m[32m            'jurusan_id' => $request->input('jurusan_id'),[m
+[32m+[m[32m            'tahun_mulai' => (int) $request->input('tahun_mulai'),[m
+[32m+[m[32m            'tahun_lulus' => (int) $request->input('tahun_lulus'),[m
+[32m+[m[32m            'jenis_kelamin' => $request->input('jenis_kelamin'),[m
+[32m+[m[32m            'tgl_lahir' => $request->input('tgl_lahir'),[m
+[32m+[m[32m            'tanggal_lahir' => $request->input('tgl_lahir'), // mirror ke field baru[m
+[32m+[m[32m            'tempat_kerja' => $request->input('tempat_kerja'),[m
+[32m+[m[32m            'jabatan_kerja' => $request->input('jabatan_kerja'),[m
+[32m+[m[32m            'tempat_kuliah' => $request->input('tempat_kuliah'),[m
+[32m+[m[32m            'prodi_kuliah' => $request->input('prodi_kuliah'),[m
+[32m+[m[32m            'kesesuaian_kerja' => $request->input('kesesuaian_kerja'),[m
+[32m+[m[32m            'kesesuaian_kuliah' => $request->input('kesesuaian_kuliah'),[m
+[32m+[m[32m            'pengalaman_kerja' => $request->input('pengalaman_kerja'),[m
+[32m+[m[32m            'keahlian' => $request->input('keahlian'),[m
+[32m+[m[32m            'is_verified' => $request->boolean('is_verified'),[m
+[32m+[m[32m        ];[m
+[32m+[m
+[32m+[m[32m        Alumni::create($data);[m
+ [m
+[31m-        return redirect()[m
+[31m-            ->route('admin.alumni.index')[m
+[32m+[m[32m        return redirect()->route('admin.alumni.index')[m
+             ->with('success', 'Data alumni berhasil ditambahkan.');[m
+     }[m
+ [m
+[36m@@ -119,25 +197,51 @@[m [mpublic function edit(Alumni $alumni)[m
+ [m
+     public function update(Request $request, Alumni $alumni)[m
+     {[m
+[31m-        $validatedData = $request->validate([[m
+[32m+[m[32m        // Validasi: gunakan field yang tersedia pada form edit + mapping ke kolom DB[m
+[32m+[m[32m        $request->validate([[m
+             'nama_lengkap' => 'required|string|max:255',[m
+[31m-            'nisn' => 'required|string|max:20|unique:alumni,nisn,' . $alumni->id,[m
+[31m-            'email' => 'required|email|unique:alumni,email,' . $alumni->id,[m
+[31m-            'no_hp' => 'nullable|string|max:20',[m
+[32m+[m[32m            'nisn' => 'required|string|max:20|unique:alumnis,nisn,' . $alumni->id,[m
+[32m+[m[32m            'email' => 'required|email|unique:alumnis,email,' . $alumni->id,[m
+[32m+[m[32m            'no_hp' => 'nullable|string|max:20', // akan dipetakan ke no_tlp[m
+             'alamat' => 'nullable|string',[m
+             'jurusan_id' => 'required|exists:jurusans,id',[m
+             'tahun_lulus' => 'required|integer|min:2000|max:' . (date('Y') + 5),[m
+[31m-            'status_kerja' => 'nullable|in:bekerja,kuliah,wirausaha,menganggur',[m
+[31m-            'perusahaan' => 'nullable|string|max:255',[m
+[31m-            'posisi' => 'nullable|string|max:255',[m
+[31m-            'gaji' => 'nullable|numeric|min:0',[m
+[31m-            'is_verified' => 'boolean',[m
+[32m+[m[32m            // Field opsional pada form edit[m
+[32m+[m[32m            'perusahaan' => 'nullable|string|max:255', // dipetakan ke tempat_kerja[m
+[32m+[m[32m            'posisi' => 'nullable|string|max:255',     // dipetakan ke jabatan_kerja[m
+[32m+[m[32m            'gaji' => 'nullable|numeric|min:0',        // tidak ada kolom di DB, diabaikan[m
+[32m+[m[32m            'tempat_kuliah' => 'nullable|string|max:255',[m
+[32m+[m[32m            'prodi_kuliah' => 'nullable|string|max:255',[m
+[32m+[m[32m            'is_verified' => 'nullable|boolean',[m
+         ]);[m
+ [m
+[31m-        $alumni->update($validatedData);[m
+[32m+[m[32m        $data = [[m
+[32m+[m[32m            'nama_lengkap' => $request->input('nama_lengkap'),[m
+[32m+[m[32m            // Jangan ubah 'nama' di edit jika tidak ada field; tetap gunakan existing jika kosong[m
+[32m+[m[32m            'nama' => $alumni->nama ?: $request->input('nama_lengkap'),[m
+[32m+[m[32m            'nisn' => $request->input('nisn'),[m
+[32m+[m[32m            'email' => $request->input('email'),[m
+[32m+[m[32m            'no_tlp' => $request->filled('no_hp') ? $request->input('no_hp') : $alumni->no_tlp,[m
+[32m+[m[32m            'phone' => $request->filled('no_hp') ? $request->input('no_hp') : $alumni->phone,[m
+[32m+[m[32m            'alamat' => $request->input('alamat'),[m
+[32m+[m[32m            'jurusan_id' => $request->input('jurusan_id'),[m
+[32m+[m[32m            'tahun_lulus' => (int) $request->input('tahun_lulus'),[m
+[32m+[m[32m            // Pemetaan perusahaan/posisi ke kolom yang ada[m
+[32m+[m[32m            'tempat_kerja' => $request->input('tempat_kerja') ?: $request->input('perusahaan'),[m
+[32m+[m[32m            'jabatan_kerja' => $request->input('jabatan_kerja') ?: $request->input('posisi'),[m
+[32m+[m[32m            'tempat_kuliah' => $request->input('tempat_kuliah'),[m
+[32m+[m[32m            'prodi_kuliah' => $request->input('prodi_kuliah'),[m
+[32m+[m[32m            'is_verified' => $request->boolean('is_verified'),[m
+[32m+[m[32m        ];[m
+[32m+[m
+[32m+[m[32m        // Hapus key yang nilainya null agar tidak memaksa null pada kolom not-null yang tidak diedit[m
+[32m+[m[32m        $data = array_filter($data, function ($v) {[m
+[32m+[m[32m            return !is_null($v);[m
+[32m+[m[32m        });[m
+[32m+[m
+[32m+[m[32m        $alumni->update($data);[m
+ [m
+[31m-        return redirect()[m
+[31m-            ->route('admin.alumni.index')[m
+[32m+[m[32m        return redirect()->route('admin.alumni.index')[m
+             ->with('success', 'Data alumni berhasil diperbarui.');[m
+     }[m
+ [m
+[36m@@ -179,7 +283,7 @@[m [mpublic function statistics()[m
+                                          ->whereYear('created_at', now()->year)[m
+                                          ->count(),[m
+             'alumni_by_jurusan' => Jurusan::withCount('alumni')->get()[m
+[31m-                                         ->pluck('alumni_count', 'nama_jurusan'),[m
+[32m+[m[32m                                         ->pluck('alumni_count', 'nama'),[m
+             'alumni_by_status_kerja' => Alumni::select('status_kerja', DB::raw('count(*) as total'))[m
+                                              ->whereNotNull('status_kerja')[m
+                                              ->groupBy('status_kerja')[m
+[36m@@ -248,13 +352,10 @@[m [mpublic function export(Request $request)[m
+             $query->where('status_kerja', $request->status_kerja);[m
+         }[m
+ [m
+[31m-        $alumni = $query->get();[m
+[32m+[m[32m    $alumni = $query->get();[m
+ [m
+[31m-        return response()->json([[m
+[31m-            'success' => true,[m
+[31m-            'data' => $alumni,[m
+[31m-            'message' => 'Data exported successfully'[m
+[31m-        ]);[m
+[32m+[m[32m    $filename = 'alumni-' . now()->format('Ymd-His') . '.xlsx';[m
+[32m+[m[32m    return Excel::download(new AlumnisExport($alumni), $filename);[m
+     }[m
+ [m
+     public function bulkAction(Request $request)[m
+[36m@@ -262,7 +363,7 @@[m [mpublic function bulkAction(Request $request)[m
+         $request->validate([[m
+             'action' => 'required|in:delete,verify',[m
+             'alumni_ids' => 'required|array',[m
+[31m-            'alumni_ids.*' => 'exists:alumni,id'[m
+[32m+[m[32m            'alumni_ids.*' => 'exists:alumnis,id'[m
+         ]);[m
+ [m
+         $alumni = Alumni::whereIn('id', $request->alumni_ids);[m
+[1mdiff --git a/app/Http/Controllers/Admin/AdminDashboardController.php b/app/Http/Controllers/Admin/AdminDashboardController.php[m
+[1mindex 3d0045c..469575e 100644[m
+[1m--- a/app/Http/Controllers/Admin/AdminDashboardController.php[m
+[1m+++ b/app/Http/Controllers/Admin/AdminDashboardController.php[m
+[36m@@ -188,7 +188,7 @@[m [mprivate function getRecentActivities()[m
+             $createdAt = Carbon::parse($alumni->created_at)->setTimezone('Asia/Jakarta');[m
+             $activities->push([[m
+                 'title' => 'Alumni Baru Terdaftar',[m
+[31m-                'description' => $alumni->nama_lengkap . ' dari jurusan ' . ($alumni->jurusan->nama_jurusan ?? 'Tidak diketahui'),[m
+[32m+[m[32m                'description' => $alumni->nama_lengkap . ' dari jurusan ' . ($alumni->jurusan->nama ?? 'Tidak diketahui'),[m
+                 'time' => $createdAt->diffForHumans() . ' WIB',[m
+                 'icon' => 'user-graduate',[m
+                 'color' => 'info',[m
+[1mdiff --git a/app/Http/Controllers/Admin/AdminJobController.php b/app/Http/Controllers/Admin/AdminJobController.php[m
+[1mindex 45534b7..d9693f1 100644[m
+[1m--- a/app/Http/Controllers/Admin/AdminJobController.php[m
+[1m+++ b/app/Http/Controllers/Admin/AdminJobController.php[m
+[36m@@ -187,10 +187,18 @@[m [mpublic function update(Request $request, Job $job)[m
+     public function destroy(Job $job)[m
+     {[m
+         try {[m
+[31m-            $job->delete();[m
+[32m+[m[32m            // Gunakan pengarsipan sebagai penghapusan yang aman (soft delete via archive)[m
+[32m+[m[32m            if ($job->isArchived()) {[m
+[32m+[m[32m                // Jika sudah diarsip, tidak perlu mengha

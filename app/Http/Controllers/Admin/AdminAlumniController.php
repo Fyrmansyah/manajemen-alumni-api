@@ -74,6 +74,21 @@ class AdminAlumniController extends Controller
         $alumni->load(['jurusan']);
 
         if (request()->ajax()) {
+            // Determine latest/default CV for preview/download
+            $cv = $alumni->cvs()
+                ->when(true, function ($q) { $q->orderByDesc('is_default')->latest(); })
+                ->first();
+
+            // Build photo URL using public storage if available
+            $photoUrl = null;
+            if (!empty($alumni->foto)) {
+                // If only filename stored, prefix with alumni_photos/
+                $relative = (strpos($alumni->foto, 'alumni_photos/') === 0)
+                    ? $alumni->foto
+                    : ('alumni_photos/' . ltrim($alumni->foto, '/'));
+                $photoUrl = asset('storage/' . $relative);
+            }
+
             // Normalisasi data agar front-end tidak mendapatkan null untuk field alternatif
             $normalized = [
                 'id' => $alumni->id,
@@ -99,8 +114,13 @@ class AdminAlumniController extends Controller
                 'gaji' => $alumni->gaji,
                 'is_verified' => (bool) $alumni->is_verified,
                 'whatsapp_notifications' => (bool) $alumni->whatsapp_notifications,
-                'cv_path' => $alumni->cv_path,
+                // Backward compat fields
+                'cv_path' => $cv ? $cv->filename : null,
                 'foto' => $alumni->foto,
+                // New helper fields for UI
+                'photo_url' => $photoUrl,
+                'cv_exists' => (bool) $cv,
+                'cv_url' => $cv ? asset('storage/cvs/' . $cv->filename) : null,
                 'created_at' => $alumni->created_at,
                 // Field pekerjaan/kuliah tambahan jika ada di tabel
                 'tempat_kerja' => $alumni->tempat_kerja ?? $alumni->perusahaan,

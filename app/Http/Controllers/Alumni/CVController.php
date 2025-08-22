@@ -452,18 +452,59 @@ class CVController extends Controller
 
     private function generateHTML($data, $template)
     {
-        // Use public_path for DomPDF compatibility
-        // Main watermark
-        $watermarkPath = public_path('assets/images/watermark-smkn1.png');
+    // Use public_path for DomPDF compatibility
+        // Main watermark (SMKN 1 logo centered on page)
         $watermarkBase64 = '';
-        if (file_exists($watermarkPath)) {
-            $watermarkBase64 = 'data:image/png;base64,' . base64_encode(file_get_contents($watermarkPath));
+        $watermarkCandidates = [
+            public_path('assets/images/watermark-smkn1.png'),
+            public_path('assets/images/SMKN1.png'),
+            public_path('assets/images/smkn1.png'),
+            public_path('assets/images/smkn1-logo.png'),
+            public_path('assets/images/smkn1_logo.png'),
+            public_path('assets/images/logo-smkn1.png'),
+            public_path('assets/images/logo_smkn1.png'),
+        ];
+        foreach ($watermarkCandidates as $candidate) {
+            if (file_exists($candidate)) {
+                $mime = function_exists('mime_content_type') ? mime_content_type($candidate) : 'image/png';
+                $watermarkBase64 = 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($candidate));
+                break;
+            }
         }
-        // BKK logo watermark
-        $bkkLogoPath = public_path('assets/images/logo BKK.png');
+        // BKK logo (header on every page)
         $bkkLogoBase64 = '';
-        if (file_exists($bkkLogoPath)) {
-            $bkkLogoBase64 = 'data:image/png;base64,' . base64_encode(file_get_contents($bkkLogoPath));
+        $bkkLogoCandidates = [
+            public_path('assets/images/logo BKK.png'),
+            public_path('assets/images/logo-bkk.png'),
+            public_path('assets/images/logo_bkk.png'),
+            public_path('assets/images/bkk.png'),
+            public_path('assets/images/BKK.png'),
+        ];
+        foreach ($bkkLogoCandidates as $candidate) {
+            if (file_exists($candidate)) {
+                $mime = function_exists('mime_content_type') ? mime_content_type($candidate) : 'image/png';
+                $bkkLogoBase64 = 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($candidate));
+                break;
+            }
+        }
+
+        // SMKN 1 crest/logo (to show in header)
+        $schoolLogoBase64 = '';
+        $schoolLogoCandidates = [
+            public_path('assets/images/SMK NEGERI 1 Surabaya Crest.png'),
+            public_path('assets/images/smkn1-logo.png'),
+            public_path('assets/images/smkn1_logo.png'),
+            public_path('assets/images/logo-smkn1.png'),
+            public_path('assets/images/logo_smkn1.png'),
+            public_path('assets/images/SMKN1.png'),
+            public_path('assets/images/smkn1.png'),
+        ];
+        foreach ($schoolLogoCandidates as $candidate) {
+            if (file_exists($candidate)) {
+                $mime = function_exists('mime_content_type') ? mime_content_type($candidate) : 'image/png';
+                $schoolLogoBase64 = 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($candidate));
+                break;
+            }
         }
         
     $initials = $this->getInitials($data['name'] ?? '');
@@ -473,11 +514,14 @@ class CVController extends Controller
         <head>
             <meta charset="utf-8">
             <title>CV - ' . htmlspecialchars($data['name']) . '</title>
-            <style>
+        <style>
+                @page {
+            margin: 25px; /* uniform margins, no header */
+                }
                 body {
                     font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
                     margin: 0;
-                    padding: 15px;
+                    padding: 0;
                     background: #fff;
                     position: relative;
                     color: #333;
@@ -485,8 +529,8 @@ class CVController extends Controller
                     font-size: 14px;
                 }
                 .watermark {
-                    position: absolute;
-                    top: 35%;
+                    position: fixed;
+                    top: 50%;
                     left: 50%;
                     width: 400px;
                     height: auto;
@@ -495,12 +539,12 @@ class CVController extends Controller
                     transform: translate(-50%, -50%);
                 }
                 .bkk-watermark {
-                    position: absolute;
-                    bottom: 40px;
-                    right: 40px;
+                    position: fixed;
+                    bottom: 30px;
+                    right: 30px;
                     width: 120px;
                     height: auto;
-                    opacity: 0.12;
+                    opacity: 0.12; /* light, similar to other watermark */
                     z-index: 0;
                 }
                 .cv-container {
@@ -525,6 +569,12 @@ class CVController extends Controller
                     width: 120px;
                     vertical-align: top;
                     padding-right: 25px;
+                }
+                .school-logo {
+                    width: 60px;
+                    height: auto;
+                    display: block;
+                    margin-bottom: 8px;
                 }
                 .personal-photo {
                     width: 100px;
@@ -667,6 +717,10 @@ class CVController extends Controller
             <div class="cv-container">
                 <div class="personal-info">
                     <div class="photo-section">';
+
+        if (!empty($schoolLogoBase64)) {
+            $html .= '<img class="school-logo" src="' . htmlspecialchars($schoolLogoBase64) . '" alt="SMK Negeri 1 Surabaya">';
+        }
 
         if (!empty($data['photo'])) {
             $html .= '<img class="personal-photo" src="' . htmlspecialchars($data['photo']) . '" alt="Foto Profil">';

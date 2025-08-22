@@ -195,21 +195,13 @@
                                         </a>
                                         @auth('alumni')
                                             @php
-                                                $hasApplied = false; // You can implement this check
-                                                $canApply = $job->status === 'active' && !$job->isExpired();
+                                                $hasApplied = isset($job->applied_by_me) ? $job->applied_by_me > 0 : (isset($job->applications) && $job->applications->count() > 0);
+                                                $myApp = ($hasApplied && isset($job->applications)) ? $job->applications->first() : null;
                                             @endphp
-                                            @if($hasApplied)
-                                                <button class="btn btn-secondary btn-sm ms-2" disabled>
-                                                    <i class="fas fa-check me-1"></i>Sudah Melamar
-                                                </button>
-                                            @elseif($canApply)
-                                                <button class="btn btn-primary btn-sm ms-2" onclick="applyJob({{ $job->id }})">
-                                                    <i class="fas fa-paper-plane me-1"></i>Lamar
-                                                </button>
-                                            @else
-                                                <button class="btn btn-secondary btn-sm ms-2" disabled>
-                                                    <i class="fas fa-times me-1"></i>Tidak Tersedia
-                                                </button>
+                                            @if($hasApplied && $myApp)
+                                                <a href="{{ route('alumni.applications', ['app' => $myApp->id]) }}" class="btn btn-success btn-sm ms-2">
+                                                    <i class="fas fa-eye me-1"></i>Lihat Lamaran
+                                                </a>
                                             @endif
                                         @else
                                             <a href="{{ route('login') }}" class="btn btn-primary btn-sm ms-2">
@@ -282,6 +274,10 @@ function applyJob(jobId) {
         })
         .then(response => response.json())
         .then(data => {
+            if (data.redirect) {
+                window.location.href = data.redirect;
+                return;
+            }
             if (data.success) {
                 alert('Lamaran berhasil dikirim!');
                 location.reload();

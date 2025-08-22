@@ -18,11 +18,16 @@ class Application extends Model
         'notes',
         'applied_at',
         'reviewed_at',
+    'interview_at',
+    'interview_location',
+    'interview_details',
+    'interview_media',
     ];
 
     protected $casts = [
         'applied_at' => 'datetime',
         'reviewed_at' => 'datetime',
+    'interview_at' => 'datetime',
     ];
 
     const STATUSES = [
@@ -104,6 +109,18 @@ class Application extends Model
             'status' => 'rejected',
             'notes' => $notes,
             'reviewed_at' => now(),
+        ]);
+    }
+
+    public function scheduleInterview($at, ?string $location = null, ?string $details = null)
+    {
+        $this->update([
+            'status' => 'interview',
+            'interview_at' => $at,
+            'interview_location' => $location,
+            'interview_details' => $details,
+            'interview_media' => $this->interview_media, // keep existing unless updated elsewhere
+            'reviewed_at' => $this->reviewed_at ?? now(),
         ]);
     }
 }

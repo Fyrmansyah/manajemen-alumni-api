@@ -118,13 +118,13 @@
                                             </td>
                                             <td>
                                                 <div>
-                                                    <span class="fw-medium">{{ $application->job->company->name }}</span>
+                                                    <span class="fw-medium">{{ $application->job->company->company_name ?? $application->job->company->name }}</span>
                                                     <br>
                                                     <small class="text-muted">{{ $application->job->location }}</small>
                                                 </div>
                                             </td>
                                             <td>
-                                                <span class="text-muted">{{ $application->applied_at->format('d/m/Y H:i') }}</span>
+                                                <span class="text-muted">{{ $application->applied_at?->format('d/m/Y H:i') ?? $application->created_at->format('d/m/Y H:i') }}</span>
                                             </td>
                                             <td>
                                                 @if($application->status == 'submitted')
@@ -146,7 +146,7 @@
                                                             data-bs-toggle="dropdown">
                                                         Aksi
                                                     </button>
-                                                    <ul class="dropdown-menu">
+                                                    <ul class="dropdown-menu dropdown-menu-end">
                                                         <li>
                                                             <a class="dropdown-item" href="{{ route('admin.applications.show', $application) }}">
                                                                 <i class="fas fa-eye me-2"></i>Detail
@@ -154,24 +154,21 @@
                                                         </li>
                                                         <li><hr class="dropdown-divider"></li>
                                                         <li>
-                                                            <form action="{{ route('admin.applications.updateStatus', $application) }}" method="POST" class="d-inline">
-                                                                @csrf
-                                                                @method('PATCH')
-                                                                <input type="hidden" name="status" value="reviewed">
-                                                                <button type="submit" class="dropdown-item text-warning">
-                                                                    <i class="fas fa-eye me-2"></i>Mark as Reviewed
-                                                                </button>
-                                                            </form>
+                                                            <button type="button" class="dropdown-item text-warning" 
+                                                                    data-bs-toggle="modal" data-bs-target="#reviewModal"
+                                                                    data-id="{{ $application->id }}">
+                                                                <i class="fas fa-eye me-2"></i>Mark as Reviewed
+                                                            </button>
                                                         </li>
                                                         <li>
-                                                            <form action="{{ route('admin.applications.updateStatus', $application) }}" method="POST" class="d-inline">
-                                                                @csrf
-                                                                @method('PATCH')
-                                                                <input type="hidden" name="status" value="interview">
-                                                                <button type="submit" class="dropdown-item text-primary">
-                                                                    <i class="fas fa-calendar me-2"></i>Schedule Interview
-                                                                </button>
-                                                            </form>
+                                                            <button type="button" class="dropdown-item text-primary"
+                                                                    data-bs-toggle="modal" data-bs-target="#scheduleInterviewModal"
+                                                                    data-id="{{ $application->id }}"
+                                                                    data-at="{{ $application->interview_at ? $application->interview_at->format('Y-m-d\TH:i') : '' }}"
+                                                                    data-location="{{ $application->interview_location }}"
+                                                                    data-details="{{ $application->interview_details }}">
+                                                                <i class="fas fa-calendar me-2"></i>Schedule Interview
+                                                            </button>
                                                         </li>
                                                         <li>
                                                             <form action="{{ route('admin.applications.updateStatus', $application) }}" method="POST" class="d-inline">
@@ -257,6 +254,68 @@
         </div>
     </div>
 </div>
+
+<!-- Review Modal -->
+<div class="modal fade" id="reviewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Mark as Reviewed</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" id="reviewForm">
+                @csrf
+                @method('PATCH')
+                <div class="modal-body">
+                    <input type="hidden" name="status" value="reviewed">
+                    <div class="mb-3">
+                        <label class="form-label">Catatan (opsional)</label>
+                        <textarea class="form-control" name="notes" rows="3" placeholder="Tambahkan catatan untuk alumni"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-warning">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    </div>
+
+<!-- Schedule Interview Modal -->
+<div class="modal fade" id="scheduleInterviewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Schedule Interview</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" id="scheduleForm">
+                @csrf
+                @method('PATCH')
+                <div class="modal-body">
+                    <input type="hidden" name="status" value="interview">
+                    <div class="mb-3">
+                        <label class="form-label">Tanggal & Waktu</label>
+                        <input type="datetime-local" class="form-control" name="interview_at" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Lokasi/Media</label>
+                        <input type="text" class="form-control" name="interview_location" placeholder="Kantor, Zoom, Google Meet, dll">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Detail</label>
+                        <textarea class="form-control" name="interview_details" rows="3" placeholder="Instruksi tambahan, PIC, link meeting, dsb"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary">Simpan Jadwal</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 @endsection
 
 @push('scripts')
@@ -278,6 +337,29 @@ document.querySelectorAll('#status, #sort').forEach(element => {
         this.closest('form').submit();
     });
 });
+
+// Populate modals with application-specific data
+const reviewModal = document.getElementById('reviewModal');
+reviewModal?.addEventListener('show.bs.modal', event => {
+    const button = event.relatedTarget;
+    const id = button.getAttribute('data-id');
+    const form = document.getElementById('reviewForm');
+    form.action = `/admin/applications/${id}/status`;
+});
+
+const scheduleModal = document.getElementById('scheduleInterviewModal');
+scheduleModal?.addEventListener('show.bs.modal', event => {
+    const button = event.relatedTarget;
+    const id = button.getAttribute('data-id');
+    const at = button.getAttribute('data-at') || '';
+    const location = button.getAttribute('data-location') || '';
+    const details = button.getAttribute('data-details') || '';
+    const form = document.getElementById('scheduleForm');
+    form.action = `/admin/applications/${id}/status`;
+    form.querySelector('[name="interview_at"]').value = at;
+    form.querySelector('[name="interview_location"]').value = location;
+    form.querySelector('[name="interview_details"]').value = details;
+});
 </script>
 @endpush
 
@@ -297,5 +379,8 @@ document.querySelectorAll('#status, #sort').forEach(element => {
 .badge {
     font-size: 0.75rem;
 }
+/* Ensure dropdown isn't clipped inside responsive containers */
+.table-responsive { overflow: visible; }
+.dropdown-menu { max-height: 300px; overflow-y: auto; }
 </style>
 @endpush

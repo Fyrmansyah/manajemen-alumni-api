@@ -52,6 +52,7 @@ class CompanyDashboardController extends Controller
             $recentJobs = collect();
             try {
                 $recentJobs = Job::where('company_id', $company->getKey())
+                    ->withCount('applications')
                     ->latest()
                     ->take(5)
                     ->get();
@@ -257,12 +258,24 @@ class CompanyDashboardController extends Controller
             'description' => 'nullable|string',
             'contact_person' => 'required|string|max:255',
             'contact_position' => 'required|string|max:255',
+            'logo' => 'sometimes|nullable|image|mimes:jpg,jpeg,png|max:1024',
         ]);
 
-        $company->update($request->only([
+        $data = $request->only([
             'company_name', 'phone', 'address', 'website',
             'industry', 'description', 'contact_person', 'contact_position'
-        ]));
+        ]);
+
+        if ($request->hasFile('logo')) {
+            try {
+                $path = $request->file('logo')->store('company_logos', 'public');
+                $data['logo'] = basename($path); // store only filename
+            } catch (\Exception $e) {
+                return back()->with('error', 'Gagal mengunggah logo: ' . $e->getMessage());
+            }
+        }
+
+        $company->update($data);
 
         return back()->with('success', 'Profil perusahaan berhasil diperbarui!');
     }
@@ -385,6 +398,10 @@ class CompanyDashboardController extends Controller
         $request->validate([
             'status' => 'required|in:reviewed,interview,accepted,rejected',
             'notes' => 'nullable|string|max:1000',
+            'interview_at' => 'nullable|date',
+            'interview_location' => 'nullable|string|max:255',
+            'interview_details' => 'nullable|string|max:2000',
+            'interview_media' => 'nullable|string|max:100', // e.g., Zoom, Google Meet, Offline
         ]);
 
         try {
@@ -392,15 +409,43 @@ class CompanyDashboardController extends Controller
                 $query->where('company_id', $company->id);
             })->findOrFail($id);
 
-            $application->update([
-                'status' => $request->status,
-                'notes' => $request->notes,
-                'reviewed_at' => now(),
-            ]);
+            switch ($request->status) {
+                case 'reviewed':
+                    $application->markAsReviewed();
+                    if ($request->filled('notes')) {
+                        $application->notes = $request->notes;
+                        $application->save();
+                    }
+                    break;
+                case 'interview':
+                    $application->interview_media = $request->interview_media;
+                    $application->scheduleInterview(
+                        $request->interview_at ?? now()->addDays(1),
+                        $request->interview_location,
+                        $request->interview_details
+                    );
+                    if ($request->filled('notes')) {
+                        $application->notes = $request->notes;
+                        $application->save();
+                    }
+                    break;
+                case 'accepted':
+                    $application->accept($request->notes);
+                    break;
+                case 'rejected':
+                    $application->reject($request->notes);
+                    break;
+            }
 
             return response()->json([
                 'success' => true,
-                'message' => 'Status lamaran berhasil diperbarui'
+                'message' => 'Status lamaran berhasil diperbarui',
+                'data' => [
+                    'status' => $application->status,
+                    'interview_at' => $application->interview_at?->format('d M Y H:i'),
+                    'interview_location' => $application->interview_location,
+                    'interview_media' => $application->interview_media,
+                ]
             ]);
 
         } catch (\Exception $e) {
@@ -433,9 +478,13 @@ class CompanyDashboardController extends Controller
                     'status' => $application->status,
                     'applied_at' => $application->created_at->format('d M Y H:i'),
                     'cover_letter' => $application->cover_letter,
-                    'cv_path' => $application->cv_path,
+                    'cv_file' => $application->cv_file,
                     'notes' => $application->notes,
                     'reviewed_at' => $application->reviewed_at ? $application->reviewed_at->format('d M Y H:i') : null,
+                    'interview_at' => $application->interview_at ? $application->interview_at->format('d M Y H:i') : null,
+                    'interview_location' => $application->interview_location,
+                    'interview_details' => $application->interview_details,
+                    'interview_media' => $application->interview_media,
                     'alumni' => [
                         'id' => $application->alumni->id,
                         'name' => $application->alumni->nama,

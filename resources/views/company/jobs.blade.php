@@ -211,12 +211,12 @@
                                                    title="Lihat Detail">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
-                                                <a href="{{ route('company.jobs.edit', $job->id) }}" 
-                                                   class="btn btn-sm btn-outline-warning" 
-                                                   title="Edit">
-                                                    <i class="fas fa-edit"></i>
-                                                </a>
                                                 @if($job->status === 'active')
+                                                    <a href="{{ route('company.jobs.edit', $job->id) }}" 
+                                                       class="btn btn-sm btn-outline-warning" 
+                                                       title="Edit">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
                                                     <button type="button" 
                                                             class="btn btn-sm btn-outline-secondary" 
                                                             title="Tutup Lowongan"

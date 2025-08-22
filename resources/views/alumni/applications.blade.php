@@ -36,10 +36,10 @@
                             <select name="status" id="status" class="form-select">
                                 <option value="">Semua Status</option>
                                 <option value="submitted" {{ request('status') == 'submitted' ? 'selected' : '' }}>
-                                    <i class="fas fa-clock text-warning"></i> Diajukan
+                                    <i class="fas fa-clock text-warning"></i> Submitted
                                 </option>
                                 <option value="reviewed" {{ request('status') == 'reviewed' ? 'selected' : '' }}>
-                                    <i class="fas fa-eye text-info"></i> Ditinjau
+                                    <i class="fas fa-eye text-info"></i> Reviewed
                                 </option>
                                 <option value="interview" {{ request('status') == 'interview' ? 'selected' : '' }}>
                                     <i class="fas fa-comments text-primary"></i> Interview
@@ -89,8 +89,8 @@
                                         </h6>
                                         @php
                                             $statusConfig = [
-                                                'submitted' => ['class' => 'warning', 'icon' => 'clock', 'text' => 'Diajukan'],
-                                                'reviewed' => ['class' => 'info', 'icon' => 'eye', 'text' => 'Ditinjau'],
+                                                'submitted' => ['class' => 'warning', 'icon' => 'clock', 'text' => 'Submitted'],
+                                                'reviewed' => ['class' => 'info', 'icon' => 'eye', 'text' => 'Reviewed'],
                                                 'interview' => ['class' => 'primary', 'icon' => 'comments', 'text' => 'Interview'],
                                                 'accepted' => ['class' => 'success', 'icon' => 'check-circle', 'text' => 'Diterima'],
                                                 'rejected' => ['class' => 'danger', 'icon' => 'times-circle', 'text' => 'Ditolak'],
@@ -260,8 +260,8 @@ function showApplicationDetail(applicationId) {
             if (data.success) {
                 const app = data.data;
                 const statusConfig = {
-                    'submitted': { class: 'warning', icon: 'clock', text: 'Diajukan' },
-                    'reviewed': { class: 'info', icon: 'eye', text: 'Ditinjau' },
+                    'submitted': { class: 'warning', icon: 'clock', text: 'Submitted' },
+                    'reviewed': { class: 'info', icon: 'eye', text: 'Reviewed' },
                     'interview': { class: 'primary', icon: 'comments', text: 'Interview' },
                     'accepted': { class: 'success', icon: 'check-circle', text: 'Diterima' },
                     'rejected': { class: 'danger', icon: 'times-circle', text: 'Ditolak' }
@@ -317,6 +317,17 @@ function showApplicationDetail(applicationId) {
                         </div>
                     </div>
                     ` : ''}
+
+                    ${(app.interview_at || app.interview_location || app.interview_details) ? `
+                    <div class="mb-3">
+                        <h6 class="fw-bold">Jadwal Interview</h6>
+                        <div class="p-3 bg-success bg-opacity-10 rounded">
+                            ${app.interview_at ? `<p class="mb-1"><i class=\"fas fa-calendar me-2\"></i>${app.interview_at}</p>` : ''}
+                            ${app.interview_location ? `<p class="mb-1"><i class=\"fas fa-map-marker-alt me-2\"></i>${app.interview_location}</p>` : ''}
+                            ${app.interview_details ? `<p class="mb-0"><i class=\"fas fa-info-circle me-2\"></i>${app.interview_details}</p>` : ''}
+                        </div>
+                    </div>
+                    ` : ''}
                     
                     ${app.cv_path ? `
                     <div class="mb-3">
@@ -347,6 +358,19 @@ function showApplicationDetail(applicationId) {
             `;
         });
 }
+
+// Auto-open detail if query parameter ?app={id} is present
+document.addEventListener('DOMContentLoaded', function() {
+    try {
+        const params = new URLSearchParams(window.location.search);
+        const appId = params.get('app');
+        if (appId) {
+            showApplicationDetail(appId);
+        }
+    } catch (e) {
+        console.warn('Cannot parse URL params', e);
+    }
+});
 </script>
 @endpush
 

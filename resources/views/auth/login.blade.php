@@ -56,21 +56,20 @@
                     <form method="POST" action="{{ route('login') }}" class="needs-validation" novalidate>
                         @csrf
                         <div class="mb-3">
-                            <label for="email" class="form-label">Email / Username</label>
+                            <label for="login" class="form-label">NISN (Alumni) / Email (Perusahaan & Admin)</label>
                             <div class="input-group">
                                 <span class="input-group-text">
                                     <i class="fas fa-user"></i>
                                 </span>
-                                <input type="text" 
-                                       class="form-control @error('email') is-invalid @enderror" 
-                                       id="email" 
-                                       name="email" 
-                                       value="{{ old('email') }}" 
-                                       required 
-                                       autocomplete="email" 
-                                       autofocus
-                                       placeholder="Masukkan email atau username">
-                                @error('email')
+                    <input type="text" 
+                        class="form-control @error('login') is-invalid @enderror" 
+                        id="login" 
+                        name="login" 
+                        value="{{ old('login') }}" 
+                        required 
+                        autofocus
+                        placeholder="Masukkan NISN (Alumni) atau Email (Company/Admin)">
+                    @error('login')
                                     <div class="invalid-feedback">
                                         {{ $message }}
                                     </div>
@@ -147,14 +146,14 @@
                             <div class="text-center mb-3">
                                 <i class="fas fa-user-graduate fa-2x text-primary mb-2"></i>
                                 <h6>Alumni</h6>
-                                <p class="small text-muted">Gunakan NISN atau username yang terdaftar</p>
+                                <p class="small text-muted">Gunakan NISN terdaftar (tanpa spasi)</p>
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="text-center mb-3">
                                 <i class="fas fa-building fa-2x text-success mb-2"></i>
                                 <h6>Perusahaan</h6>
-                                <p class="small text-muted">Gunakan username perusahaan yang telah disetujui</p>
+                                <p class="small text-muted">Gunakan email perusahaan terdaftar</p>
                                 <a href="{{ route('company.register') }}" class="btn btn-sm btn-outline-success">
                                     <i class="fas fa-plus me-1"></i>Daftar Perusahaan
                                 </a>

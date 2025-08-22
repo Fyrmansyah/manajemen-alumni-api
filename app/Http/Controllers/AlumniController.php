@@ -245,6 +245,9 @@ class AlumniController extends Controller
                     'cv_path' => $application->cv_file,
                     'notes' => $application->notes,
                     'reviewed_at' => $application->reviewed_at ? $application->reviewed_at->format('d M Y H:i') : null,
+                    'interview_at' => $application->interview_at ? $application->interview_at->format('d M Y H:i') : null,
+                    'interview_location' => $application->interview_location,
+                    'interview_details' => $application->interview_details,
                     'job' => [
                         'id' => $application->job->id,
                         'title' => $application->job->title,

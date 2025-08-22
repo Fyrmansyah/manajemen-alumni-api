@@ -634,6 +634,7 @@
                 window.location.href = '{{ route("login") }}';
             }
         }
+    window.csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
     </script>
 
     @stack('scripts')

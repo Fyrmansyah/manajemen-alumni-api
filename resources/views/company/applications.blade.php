@@ -211,6 +211,8 @@
             <div class="modal-body" id="applicationModalBody">
                 <!-- Application details will be loaded here -->
             </div>
+            <!-- Footer with schedule interview button removed per latest requirement -->
+            <div class="modal-footer d-none" id="applicationInterviewFooter" style="display:none !important;"></div>
         </div>
     </div>
 </div>
@@ -235,6 +237,33 @@
                             <option value="accepted">Diterima</option>
                             <option value="rejected">Ditolak</option>
                         </select>
+                    </div>
+                    <div class="mb-3 d-none interview-fields" id="interviewFields">
+                        <label class="form-label">Detail Interview</label>
+                        <div class="mb-2">
+                            <label class="form-label small mb-1" for="interview_at">Tanggal & Waktu</label>
+                            <input type="datetime-local" class="form-control" id="interview_at" name="interview_at">
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small mb-1" for="interview_media">Media</label>
+                            <select class="form-select" id="interview_media" name="interview_media">
+                                <option value="">Pilih Media</option>
+                                <option value="Offline">Offline / Onsite</option>
+                                <option value="Zoom">Zoom</option>
+                                <option value="Google Meet">Google Meet</option>
+                                <option value="Microsoft Teams">Microsoft Teams</option>
+                                <option value="Telepon">Telepon</option>
+                                <option value="Lainnya">Lainnya</option>
+                            </select>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small mb-1" for="interview_location">Lokasi / Link</label>
+                            <input type="text" class="form-control" id="interview_location" name="interview_location" placeholder="Alamat atau URL meeting">
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small mb-1" for="interview_details">Catatan Interview</label>
+                            <textarea class="form-control" id="interview_details" name="interview_details" rows="2" placeholder="Instruksi tambahan..."></textarea>
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label for="notes" class="form-label">Catatan (Opsional)</label>
@@ -277,89 +306,102 @@
 @push('scripts')
 <script>
 function viewApplication(applicationId) {
-    fetch(`/api/applications/${applicationId}`)
-        .then(response => response.json())
+    fetch(`/company/applications/${applicationId}/detail`)
+        .then(r => r.json())
         .then(data => {
-            if (data.success) {
-                const app = data.data;
-                const modalBody = document.getElementById('applicationModalBody');
-                
-                modalBody.innerHTML = `
-                    <div class="row">
-                        <div class="col-md-6">
-                            <h6>Informasi Alumni</h6>
-                            <p><strong>Nama:</strong> ${app.alumni.nama || app.alumni.nama_lengkap || 'Tidak tersedia'}</p>
-                            <p><strong>Email:</strong> ${app.alumni.email}</p>
-                            <p><strong>No. Telepon:</strong> ${app.alumni.phone || app.alumni.no_tlp || 'Tidak tersedia'}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <h6>Informasi Lamaran</h6>
-                            <p><strong>Posisi:</strong> ${app.job.title}</p>
-                            <p><strong>Tanggal Melamar:</strong> ${new Date(app.applied_at).toLocaleDateString('id-ID')}</p>
-                            <p><strong>Status:</strong> <span class="badge bg-primary">${app.status}</span></p>
-                        </div>
+            if (!data.success) return alert('Gagal memuat detail lamaran');
+            const app = data.data;
+            const b = document.getElementById('applicationModalBody');
+            b.innerHTML = `
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Informasi Alumni</h6>
+                        <p><strong>Nama:</strong> ${app.alumni.name || app.alumni.nama || 'Tidak tersedia'}</p>
+                        <p><strong>Email:</strong> ${app.alumni.email}</p>
+                        <p><strong>No. Telepon:</strong> ${app.alumni.phone || app.alumni.no_tlp || 'Tidak tersedia'}</p>
                     </div>
-                    <hr>
-                    <h6>Cover Letter</h6>
-                    <p style="white-space: pre-wrap;">${app.cover_letter}</p>
-                    ${app.cv_file ? `
-                    <hr>
-                    <h6>CV</h6>
-                    <a href="/storage/cvs/${app.cv_file}" target="_blank" class="btn btn-primary">
-                        <i class="fas fa-file-pdf me-2"></i>Lihat CV
-                    </a>
-                    ` : ''}
-                `;
-                
-                const modal = new bootstrap.Modal(document.getElementById('applicationModal'));
-                modal.show();
-            } else {
-                alert('Gagal memuat detail lamaran');
-            }
+                    <div class="col-md-6">
+                        <h6>Informasi Lamaran</h6>
+                        <p><strong>Posisi:</strong> ${app.job.title}</p>
+                        <p><strong>Tanggal Melamar:</strong> ${app.applied_at}</p>
+                        <p><strong>Status:</strong> <span class="badge bg-primary text-uppercase">${app.status}</span></p>
+                        ${app.interview_at ? `<p><strong>Interview:</strong> ${app.interview_at}${app.interview_media ? ' ('+app.interview_media+')':''}</p>`:''}
+                    </div>
+                </div>
+                <hr>
+                <h6>Cover Letter</h6>
+                <p style="white-space: pre-wrap;">${app.cover_letter || '-'}</p>
+                ${app.cv_file ? `
+                <hr>
+                <h6>CV</h6>
+                <a href="/storage/cvs/${app.cv_file}" target="_blank" class="btn btn-primary">
+                    <i class="fas fa-file-pdf me-2"></i>Lihat CV
+                </a>`:''}
+                ${app.interview_at ? `
+                <hr>
+                <h6>Detail Interview</h6>
+                <p><strong>Waktu:</strong> ${app.interview_at}</p>
+                ${app.interview_media ? `<p><strong>Media:</strong> ${app.interview_media}</p>`:''}
+                ${app.interview_location ? `<p><strong>Lokasi/Link:</strong> ${app.interview_location}</p>`:''}
+                ${app.interview_details ? `<p><strong>Catatan:</strong> ${app.interview_details}</p>`:''}
+                `:''}
+            `;
+            new bootstrap.Modal(document.getElementById('applicationModal')).show();
         })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Terjadi kesalahan saat memuat detail lamaran');
-        });
+        .catch(err => { console.error(err); alert('Terjadi kesalahan saat memuat detail lamaran'); });
 }
 
 function updateStatus(applicationId, status) {
     document.getElementById('applicationId').value = applicationId;
     document.getElementById('newStatus').value = status;
-    
-    const modal = new bootstrap.Modal(document.getElementById('statusModal'));
-    modal.show();
+    toggleInterviewFields(status === 'interview');
+    new bootstrap.Modal(document.getElementById('statusModal')).show();
 }
 
-document.getElementById('statusForm').addEventListener('submit', function(e) {
+document.getElementById('statusForm').addEventListener('submit', function(e){
     e.preventDefault();
-    
-    const applicationId = document.getElementById('applicationId').value;
-    const formData = new FormData(this);
-    
-    fetch(`/company/applications/${applicationId}/status`, {
-        method: 'PUT',
-        headers: {
+    const id = document.getElementById('applicationId').value;
+    const fd = new FormData(this);
+    fetch(`/company/applications/${id}/status`, {
+        method:'PUT',
+        headers:{
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-            'Content-Type': 'application/json',
+            'Content-Type':'application/json'
         },
         body: JSON.stringify({
-            status: formData.get('status'),
-            notes: formData.get('notes')
+            status: fd.get('status'),
+            notes: fd.get('notes'),
+            interview_at: fd.get('interview_at'),
+            interview_location: fd.get('interview_location'),
+            interview_details: fd.get('interview_details'),
+            interview_media: fd.get('interview_media'),
         })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            location.reload();
-        } else {
-            alert('Gagal mengupdate status: ' + data.message);
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Terjadi kesalahan saat mengupdate status');
-    });
+    }).then(r=>r.json()).then(data=>{
+        if(data.success){ location.reload(); } else { alert('Gagal: '+data.message); }
+    }).catch(err=>{ console.error(err); alert('Terjadi kesalahan saat mengupdate status'); });
 });
+
+document.getElementById('newStatus').addEventListener('change', function(){
+    toggleInterviewFields(this.value === 'interview');
+});
+
+function toggleInterviewFields(show){
+    const el = document.getElementById('interviewFields');
+    if(show){
+        el.classList.remove('d-none');
+        if(!document.getElementById('interview_at').value){
+            const d = new Date(); d.setDate(d.getDate()+2); d.setHours(9,0,0,0);
+            document.getElementById('interview_at').value = d.toISOString().slice(0,16);
+        }
+    } else { el.classList.add('d-none'); }
+}
+
+// Removed prefillInterviewFromDetail functionality along with schedule button
+
+// Auto open via ?application=ID
+(function(){
+    const p = new URLSearchParams(window.location.search);
+    if(p.has('application')){ viewApplication(p.get('application')); }
+})();
 </script>
 @endpush

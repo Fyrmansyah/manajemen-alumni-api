@@ -20,11 +20,23 @@
                         <a href="{{ route('jobs.index') }}" class="btn btn-warning btn-lg me-3">
                             <i class="fas fa-search me-2"></i>Cari Lowongan
                         </a>
-                        @guest
+                        @if(auth('alumni')->check())
+                            <a href="{{ route('alumni.dashboard') }}" class="btn btn-outline-light btn-lg">
+                                <i class="fas fa-user me-2"></i>Dashboard Alumni
+                            </a>
+                        @elseif(auth('company')->check())
+                            <a href="{{ route('company.dashboard') }}" class="btn btn-outline-light btn-lg">
+                                <i class="fas fa-building me-2"></i>Dashboard Perusahaan
+                            </a>
+                        @elseif(auth('admin')->check())
+                            <a href="{{ route('admin.dashboard') }}" class="btn btn-outline-light btn-lg">
+                                <i class="fas fa-tools me-2"></i>Dashboard Admin
+                            </a>
+                        @else
                             <a href="{{ route('register') }}" class="btn btn-outline-light btn-lg">
                                 <i class="fas fa-user-plus me-2"></i>Daftar Alumni
                             </a>
-                        @endguest
+                        @endif
                     </div>
                 </div>
             </div>

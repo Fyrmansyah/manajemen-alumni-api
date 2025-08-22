@@ -12,7 +12,8 @@ class AlumniLoginRequest extends ApiFormRequest
     public function rules(): array
     {
         return [
-            'email' => 'required',
+            // Now using NISN for alumni login instead of email
+            'nisn' => 'required|digits_between:8,15',
             'password' => 'required'
         ];
     }

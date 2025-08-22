@@ -38,7 +38,11 @@ class AuthController extends Controller
     }
     function loginAlumni(AlumniLoginRequest $request)
     {
-        $isSuccessLogin = Auth::guard('alumni')->attempt($request->validated());
+        $credentials = [
+            'nisn' => $request->validated()['nisn'],
+            'password' => $request->validated()['password'],
+        ];
+        $isSuccessLogin = Auth::guard('alumni')->attempt($credentials);
 
         if (!$isSuccessLogin) {
             return ResponseBuilder::fail()
@@ -66,7 +70,7 @@ class AuthController extends Controller
     public function login(\Illuminate\Http\Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'email' => 'required|string',
+            'login' => 'required|string',
             'password' => 'required|string',
         ]);
 
@@ -74,7 +78,7 @@ class AuthController extends Controller
             return back()->withErrors($validator)->withInput();
         }
 
-        $loginField = $request->input('email');
+    $loginField = $request->input('login');
         $password = $request->input('password');
         $remember = $request->filled('remember');
 
@@ -83,8 +87,8 @@ class AuthController extends Controller
             return redirect()->intended('/admin/dashboard');
         }
 
-        // Try alumni login (email)
-        if (Auth::guard('alumni')->attempt(['email' => $loginField, 'password' => $password], $remember)) {
+    // Try alumni login (NISN)
+    if (Auth::guard('alumni')->attempt(['nisn' => $loginField, 'password' => $password], $remember)) {
             return redirect()->intended('/alumni/dashboard');
         }
 
@@ -94,8 +98,8 @@ class AuthController extends Controller
         }
 
         return back()->withErrors([
-            'email' => 'Kredensial tidak valid.',
-        ])->onlyInput('email');
+            'login' => 'Kredensial tidak valid.',
+        ])->onlyInput('login');
     }
 
     /**
