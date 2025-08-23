@@ -21,9 +21,9 @@ class AdminAlumniController extends Controller
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
-                $q->where('nama_lengkap', 'like', "%{$search}%")
-                  ->orWhere('nisn', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
+                                $q->where('nama_lengkap', 'like', "%{$search}%")
+                                    ->orWhereHas('nisnNumber', function($qq) use ($search) { $qq->where('number','like', "%{$search}%"); })
+                                    ->orWhere('email', 'like', "%{$search}%");
             });
         }
 
@@ -154,7 +154,7 @@ class AdminAlumniController extends Controller
         $request->validate([
             'nama' => 'required|string|max:255',
             'nama_lengkap' => 'nullable|string|max:255',
-            'nisn' => 'required|string|max:20|unique:alumnis,nisn',
+            'nisn' => 'required|digits:10|unique:nisns,number',
             'email' => 'required|email|unique:alumnis,email',
             'no_tlp' => 'required|string|max:20',
             'alamat' => 'required|string',
@@ -180,7 +180,8 @@ class AdminAlumniController extends Controller
         $data = [
             'nama' => $request->input('nama') ?: $request->input('nama_lengkap'),
             'nama_lengkap' => $request->input('nama_lengkap') ?: $request->input('nama'),
-            'nisn' => $request->input('nisn'),
+            // Map / create nisn master record
+            'nisn_id' => \App\Models\Nisn::firstOrCreate(['number' => $request->input('nisn')])->id,
             'email' => $request->input('email'),
             'password' => $request->input('password'), // otomatis di-hash via cast di model
             'no_tlp' => $request->input('no_tlp'),
@@ -220,7 +221,7 @@ class AdminAlumniController extends Controller
         // Validasi: gunakan field yang tersedia pada form edit + mapping ke kolom DB
         $request->validate([
             'nama_lengkap' => 'required|string|max:255',
-            'nisn' => 'required|string|max:20|unique:alumnis,nisn,' . $alumni->id,
+            'nisn' => 'required|digits:10|unique:nisns,number,' . $alumni->nisn_id . ',id',
             'email' => 'required|email|unique:alumnis,email,' . $alumni->id,
             'no_hp' => 'nullable|string|max:20', // akan dipetakan ke no_tlp
             'alamat' => 'nullable|string',
@@ -239,7 +240,7 @@ class AdminAlumniController extends Controller
             'nama_lengkap' => $request->input('nama_lengkap'),
             // Jangan ubah 'nama' di edit jika tidak ada field; tetap gunakan existing jika kosong
             'nama' => $alumni->nama ?: $request->input('nama_lengkap'),
-            'nisn' => $request->input('nisn'),
+            'nisn_id' => \App\Models\Nisn::firstOrCreate(['number' => $request->input('nisn')])->id,
             'email' => $request->input('email'),
             'no_tlp' => $request->filled('no_hp') ? $request->input('no_hp') : $alumni->no_tlp,
             'phone' => $request->filled('no_hp') ? $request->input('no_hp') : $alumni->phone,
@@ -354,9 +355,9 @@ class AdminAlumniController extends Controller
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
-                $q->where('nama_lengkap', 'like', "%{$search}%")
-                  ->orWhere('nisn', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
+                                $q->where('nama_lengkap', 'like', "%{$search}%")
+                                    ->orWhereHas('nisnNumber', function($qq) use ($search){ $qq->where('number','like', "%{$search}%"); })
+                                    ->orWhere('email', 'like', "%{$search}%");
             });
         }
 

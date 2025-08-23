@@ -274,9 +274,9 @@ class AlumniController extends Controller
         if ($request->filled('search')) {
             $search = $request->get('search');
             $query->where(function($q) use ($search) {
-                $q->where('nama', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhere('nisn', 'like', "%{$search}%");
+                                $q->where('nama', 'like', "%{$search}%")
+                                    ->orWhere('email', 'like', "%{$search}%")
+                                    ->orWhereHas('nisnNumber', function($qq) use ($search){ $qq->where('number','like', "%{$search}%"); });
             });
         }
 

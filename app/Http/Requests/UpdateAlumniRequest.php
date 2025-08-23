@@ -24,7 +24,7 @@ class UpdateAlumniRequest extends FormRequest
         $alumniId = $this->route('alumni')->id ?? $this->alumni;
         
         return [
-            'nisn' => 'required|string|max:20|unique:alumnis,nisn,' . $alumniId,
+            'nisn' => 'required|digits:10|unique:nisns,number,' . $alumniId . ',id',
             'nama' => 'required|string|max:255',
             'nama_lengkap' => 'nullable|string|max:255',
             'jenis_kelamin' => 'required|in:L,P',

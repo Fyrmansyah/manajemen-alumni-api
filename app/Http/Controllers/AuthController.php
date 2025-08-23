@@ -38,11 +38,16 @@ class AuthController extends Controller
     }
     function loginAlumni(AlumniLoginRequest $request)
     {
-        $credentials = [
-            'nisn' => $request->validated()['nisn'],
-            'password' => $request->validated()['password'],
-        ];
-        $isSuccessLogin = Auth::guard('alumni')->attempt($credentials);
+        // Transform nisn input into underlying nisn_id credential since column 'nisn' no longer exists
+        $nisnInput = $request->validated()['nisn'];
+        $nisnModel = \App\Models\Nisn::where('number', $nisnInput)->first();
+        $isSuccessLogin = false;
+        if ($nisnModel) {
+            $isSuccessLogin = Auth::guard('alumni')->attempt([
+                'nisn_id' => $nisnModel->id,
+                'password' => $request->validated()['password'],
+            ]);
+        }
 
         if (!$isSuccessLogin) {
             return ResponseBuilder::fail()
@@ -88,7 +93,8 @@ class AuthController extends Controller
         }
 
     // Try alumni login (NISN)
-    if (Auth::guard('alumni')->attempt(['nisn' => $loginField, 'password' => $password], $remember)) {
+    $nisnModel = \App\Models\Nisn::where('number', $loginField)->first();
+    if ($nisnModel && Auth::guard('alumni')->attempt(['nisn_id' => $nisnModel->id, 'password' => $password], $remember)) {
             return redirect()->intended('/alumni/dashboard');
         }
 
@@ -151,7 +157,7 @@ class AuthController extends Controller
     public function register(\Illuminate\Http\Request $request)
     {
         $request->validate([
-            'nisn' => 'required|string|size:10|unique:alumnis',
+            'nisn' => 'required|digits:10|unique:nisns,number',
             'nama' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:alumnis',
             'password' => 'required|string|min:8|confirmed',
@@ -164,8 +170,9 @@ class AuthController extends Controller
             'jurusan_id' => 'required|exists:jurusans,id',
         ]);
 
+        $nisnModel = \App\Models\Nisn::firstOrCreate(['number' => $request->input('nisn')]);
         $alumni = \App\Models\Alumni::create([
-            'nisn' => $request->input('nisn'),
+            'nisn_id' => $nisnModel->id,
             'nama' => $request->input('nama'),
             'email' => $request->input('email'),
             'password' => $request->input('password'), // Will be auto-hashed by model
@@ -258,7 +265,7 @@ class AuthController extends Controller
 
                 $user->save();
 
-                \Illuminate\Auth\Events\PasswordReset::dispatch($user);
+                event(new \Illuminate\Auth\Events\PasswordReset($user));
             }
         );
 

@@ -15,6 +15,15 @@ class Alumni extends Authenticatable
     protected $guarded = ['id'];
     protected $hidden = ['password'];
 
+    // Allow mass-assignment for nisn_id during auth credential mapping
+    protected $fillable = ['nisn_id'];
+
+    public function username(): string
+    {
+        // In case guard asks for identifier field name
+        return 'nisn_id';
+    }
+
 
     // -------------------------------------
     //          MODEL METHODS
@@ -55,6 +64,17 @@ class Alumni extends Authenticatable
     public function cvs()
     {
         return $this->hasMany(CV::class);
+    }
+
+    public function nisnNumber(): BelongsTo
+    {
+        return $this->belongsTo(Nisn::class, 'nisn_id');
+    }
+
+    public function getNisnAttribute(): ?string
+    {
+        // Virtual attribute to keep existing code working
+        return $this->nisnNumber?->number;
     }
 
     public function appliedJobs()

@@ -22,7 +22,8 @@ class CreateAlumniRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nisn' => 'required|string|max:20|unique:alumnis,nisn',
+            // NISN now divalidasi langsung unik di tabel nisns; akan auto dibuat bila belum ada
+            'nisn' => 'required|digits:10|unique:nisns,number',
             'nama' => 'required|string|max:255',
             'nama_lengkap' => 'nullable|string|max:255',
             'jenis_kelamin' => 'required|in:L,P',
