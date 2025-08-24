@@ -21,6 +21,22 @@
             </div>
 
             <div class="row g-3">
+                <div class="col-12 mb-2">
+                    <div class="d-flex align-items-center gap-3">
+                        @php $pf=$application->alumni->foto; if($pf){ $rel=str_starts_with($pf,'alumni_photos/')?$pf:'alumni_photos/'.ltrim($pf,'/'); $pfUrl=asset('storage/'.$rel);} @endphp
+                        <div class="rounded-circle bg-light d-flex align-items-center justify-content-center overflow-hidden" style="width:70px;height:70px;">
+                            @if(!empty($pfUrl))
+                                <img src="{{ $pfUrl }}" alt="Foto" style="width:100%;height:100%;object-fit:cover;">
+                            @else
+                                <i class="fas fa-user text-muted fa-2x"></i>
+                            @endif
+                        </div>
+                        <div>
+                            <h5 class="mb-1">{{ $application->alumni->nama }}</h5>
+                            <small class="text-muted">{{ $application->alumni->email }} &bull; {{ $application->alumni->phone }}</small>
+                        </div>
+                    </div>
+                </div>
                 <div class="col-lg-8">
                     <div class="card border-0 shadow-sm mb-3">
                         <div class="card-body">

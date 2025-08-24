@@ -12,11 +12,9 @@ class Alumni extends Authenticatable
 {
     use HasFactory, HasApiTokens, Notifiable;
 
+    // Allow mass assignment for all columns except id so profile updates & foto work
     protected $guarded = ['id'];
     protected $hidden = ['password'];
-
-    // Allow mass-assignment for nisn_id during auth credential mapping
-    protected $fillable = ['nisn_id'];
 
     public function username(): string
     {
@@ -109,6 +107,23 @@ class Alumni extends Authenticatable
     public function getNamaLengkapAttribute($value)
     {
         return $value ?: $this->nama;
+    }
+
+    /**
+     * Build a public URL for the stored profile photo (foto) if available.
+     * Handles cases where DB stores just the filename or already a relative path alumni_photos/filename.
+     */
+    public function getPhotoUrlAttribute(): ?string
+    {
+        if (empty($this->foto)) {
+            return null;
+        }
+
+        $relative = str_starts_with($this->foto, 'alumni_photos/')
+            ? $this->foto
+            : ('alumni_photos/' . ltrim($this->foto, '/'));
+
+        return asset('storage/' . $relative);
     }
 
     public function getPhoneAttribute($value)

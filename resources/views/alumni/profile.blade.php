@@ -62,11 +62,29 @@
                                 <h6 class="text-primary mb-3">Informasi Pribadi</h6>
                                 <div class="mb-3">
                                     <label for="foto" class="form-label">Foto Profil</label>
-                                    <input type="file" class="form-control @error('foto') is-invalid @enderror" id="foto" name="foto" accept="image/*">
-                                    @error('foto')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                    <small class="text-muted">Format: JPG/PNG, maks 2MB.</small>
+                                    <div class="d-flex align-items-center gap-3 mb-2">
+                                        <div id="photoPreviewWrapper" class="rounded-circle bg-light d-flex align-items-center justify-content-center" style="width:110px;height:110px;overflow:hidden;">
+                                            @php
+                                                $foto = auth('alumni')->user()->foto;
+                                                if ($foto) {
+                                                    $relative = Str::startsWith($foto, 'alumni_photos/') ? $foto : 'alumni_photos/' . ltrim($foto,'/');
+                                                    $currentPhotoUrl = asset('storage/' . $relative);
+                                                }
+                                            @endphp
+                                            @if(!empty($currentPhotoUrl))
+                                                <img id="photoPreview" src="{{ $currentPhotoUrl }}" alt="Preview" style="width:100%;height:100%;object-fit:cover;">
+                                            @else
+                                                <span class="text-muted"><i class="fas fa-user"></i></span>
+                                            @endif
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <input type="file" class="form-control @error('foto') is-invalid @enderror" id="foto" name="foto" accept="image/*">
+                                            @error('foto')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                            <small class="text-muted">Disarankan ukuran 400x400px (square). Format: JPG/PNG, maks 2MB. Tampilan akan otomatis dicrop (object-fit:cover).</small>
+                                        </div>
+                                    </div>
                                 </div>
                                 
                                 <div class="mb-3">
@@ -432,6 +450,33 @@ document.addEventListener('DOMContentLoaded', function() {
             bsAlert.close();
         });
     }, 5000);
+});
+
+// Live photo preview
+document.addEventListener('DOMContentLoaded', function(){
+    const input = document.getElementById('foto');
+    if(!input) return;
+    input.addEventListener('change', function(e){
+        const file = e.target.files && e.target.files[0];
+        if(!file) return;
+        if(!file.type.startsWith('image/')) return;
+        const reader = new FileReader();
+        reader.onload = function(ev){
+            let img = document.getElementById('photoPreview');
+            if(!img){
+                img = document.createElement('img');
+                img.id = 'photoPreview';
+                img.style.width='100%';
+                img.style.height='100%';
+                img.style.objectFit='cover';
+                const wrap = document.getElementById('photoPreviewWrapper');
+                wrap.innerHTML='';
+                wrap.appendChild(img);
+            }
+            img.src = ev.target.result;
+        };
+        reader.readAsDataURL(file);
+    });
 });
 
 // Form validation

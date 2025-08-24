@@ -148,3 +148,10 @@
         });
     });
 </script>
+
+<script>
+    function performLogout(formId){
+        const form = document.getElementById(formId);
+        if(form){ form.submit(); }
+    }
+</script>

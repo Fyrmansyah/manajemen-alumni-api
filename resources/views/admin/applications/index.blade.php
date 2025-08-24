@@ -104,8 +104,13 @@
                                         <tr>
                                             <td>
                                                 <div class="d-flex align-items-center">
-                                                    <div class="avatar-sm rounded-circle bg-primary text-white me-3 d-flex align-items-center justify-content-center">
-                                                        {{ strtoupper(substr($application->alumni->nama, 0, 1)) }}
+                                                    <div class="avatar-sm rounded-circle bg-primary text-white me-3 d-flex align-items-center justify-content-center overflow-hidden" style="width:38px;height:38px;">
+                                                        @php $pf=$application->alumni->foto; if($pf){ $rel=str_starts_with($pf,'alumni_photos/')?$pf:'alumni_photos/'.ltrim($pf,'/'); $pfUrl=asset('storage/'.$rel);} @endphp
+                                                        @if(!empty($pfUrl))
+                                                            <img src="{{ $pfUrl }}" alt="Foto" style="width:100%;height:100%;object-fit:cover;display:block;">
+                                                        @else
+                                                            {{ strtoupper(substr($application->alumni->nama, 0, 1)) }}
+                                                        @endif
                                                     </div>
                                                     <div>
                                                         <h6 class="mb-0">{{ $application->alumni->nama }}</h6>

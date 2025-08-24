@@ -473,12 +473,14 @@ class CompanyDashboardController extends Controller
 
             return response()->json([
                 'success' => true,
-                'data' => [
+                'application' => [
                     'id' => $application->id,
                     'status' => $application->status,
+                    'created_at' => $application->created_at->format('d M Y H:i'),
                     'applied_at' => $application->created_at->format('d M Y H:i'),
                     'cover_letter' => $application->cover_letter,
                     'cv_file' => $application->cv_file,
+                    'cv_url' => $application->cv_file ? asset('storage/cvs/' . $application->cv_file) : null,
                     'notes' => $application->notes,
                     'reviewed_at' => $application->reviewed_at ? $application->reviewed_at->format('d M Y H:i') : null,
                     'interview_at' => $application->interview_at ? $application->interview_at->format('d M Y H:i') : null,
@@ -487,11 +489,14 @@ class CompanyDashboardController extends Controller
                     'interview_media' => $application->interview_media,
                     'alumni' => [
                         'id' => $application->alumni->id,
-                        'name' => $application->alumni->nama,
+                        'nama' => $application->alumni->nama,
                         'email' => $application->alumni->email,
                         'phone' => $application->alumni->phone,
-                        'jurusan' => $application->alumni->jurusan->nama ?? 'Tidak diketahui',
+                        'foto' => $application->alumni->foto,
+                        'jurusan' => [ 'nama' => $application->alumni->jurusan->nama ?? null ],
                         'tahun_lulus' => $application->alumni->tahun_lulus,
+                        // gunakan accessor getNisnAttribute -> nisn
+                        'nisn' => $application->alumni->nisn,
                     ],
                     'job' => [
                         'id' => $application->job->id,

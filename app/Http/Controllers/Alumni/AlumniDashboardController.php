@@ -7,6 +7,7 @@ use App\Models\Application;
 use App\Models\Job;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class AlumniDashboardController extends Controller
 {
@@ -92,7 +93,8 @@ class AlumniDashboardController extends Controller
             'phone' => 'required|string|max:20',
             'tanggal_lahir' => 'required|date',
             'jenis_kelamin' => 'required|in:L,P',
-            'nisn' => 'required|string|max:20|unique:alumnis,nisn,' . $alumni->id,
+            // Validasi NISN terhadap tabel master nisns.number; abaikan NISN sekarang (nisn_id) milik user
+            'nisn' => 'required|digits:10|unique:nisns,number,' . $alumni->nisn_id,
             'jurusan_id' => 'required|exists:jurusans,id',
             'tahun_lulus' => 'required|integer|min:2015|max:' . (date('Y') + 1),
             'alamat' => 'required|string|max:500',
@@ -106,29 +108,50 @@ class AlumniDashboardController extends Controller
 
         $data = $request->only([
             'nama_lengkap', 'email', 'phone', 'tanggal_lahir', 'jenis_kelamin',
-            'nisn', 'jurusan_id', 'tahun_lulus', 'alamat', 'pengalaman_kerja', 'keahlian',
+            'jurusan_id', 'tahun_lulus', 'alamat', 'pengalaman_kerja', 'keahlian',
             'tempat_kuliah', 'prodi_kuliah'
         ]);
+
+        // Map / upsert NISN ke master tabel lalu set foreign key
+        if ($request->filled('nisn')) {
+            $nisnModel = \App\Models\Nisn::firstOrCreate(['number' => $request->input('nisn')]);
+            $data['nisn_id'] = $nisnModel->id;
+        }
 
         // Handle WhatsApp notifications checkbox
         $data['whatsapp_notifications'] = $request->has('whatsapp_notifications');
 
-        // Handle photo upload
+        // Handle photo upload (replace & delete old)
         if ($request->hasFile('foto')) {
-            $path = $request->file('foto')->store('alumni_photos', 'public');
-            $data['foto'] = basename($path);
+            try {
+                $old = $alumni->foto;
+                $path = $request->file('foto')->store('alumni_photos', 'public');
+                $data['foto'] = basename($path);
+                if ($old && $old !== $data['foto']) {
+                    $oldRelative = str_starts_with($old, 'alumni_photos/') ? $old : 'alumni_photos/' . ltrim($old,'/');
+                    if (Storage::disk('public')->exists($oldRelative)) {
+                        Storage::disk('public')->delete($oldRelative);
+                    }
+                }
+            } catch (\Throwable $e) {
+                return back()->with('error', 'Gagal mengunggah foto: ' . $e->getMessage());
+            }
         }
 
         // Update both new and old field names for compatibility
         $alumni->update($data);
-        
-        // Also update old field names for backward compatibility
+
+        // Sinkronisasi field lama untuk kompatibilitas
         $alumni->update([
             'nama' => $data['nama_lengkap'],
             'no_tlp' => $data['phone'],
             'tgl_lahir' => $data['tanggal_lahir'],
         ]);
 
-        return back()->with('success', 'Profil berhasil diperbarui!');
+    // Refresh instance (dan guard user) agar foto & timestamp terbaru langsung muncul setelah redirect
+    $alumni->refresh();
+    Auth::guard('alumni')->setUser($alumni);
+
+    return back()->with('success', 'Profil berhasil diperbarui!');
     }
 }

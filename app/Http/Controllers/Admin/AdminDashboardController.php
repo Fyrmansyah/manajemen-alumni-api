@@ -19,7 +19,8 @@ class AdminDashboardController extends Controller
         $stats = [
             'total_alumni' => Alumni::count(),
             'total_companies' => Company::where('status', 'active')->count(),
-            'active_jobs' => Job::where('status', 'published')->count(),
+            // Align with Job model statuses (active/draft/closed)
+            'active_jobs' => Job::where('status', 'active')->count(),
             'total_applications' => Application::count(),
         ];
 
@@ -30,8 +31,8 @@ class AdminDashboardController extends Controller
         $chartData = $this->getApplicationsChartData();
 
         // Get top companies by job count
-        $topCompanies = Company::withCount(['jobs' => function($query) {
-                $query->where('status', 'published');
+    $topCompanies = Company::withCount(['jobs' => function($query) {
+        $query->where('status', 'active');
             }])
             ->where('status', 'active')
             ->orderBy('jobs_count', 'desc')
@@ -40,7 +41,7 @@ class AdminDashboardController extends Controller
 
         // Get recent jobs
         $recentJobs = Job::with('company')
-            ->where('status', 'published')
+            ->where('status', 'active')
             ->latest()
             ->take(5)
             ->get();

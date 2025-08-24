@@ -14,6 +14,13 @@ class AlumniResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        return parent::toArray($request);
+        $data = parent::toArray($request);
+
+        // Append computed photo_url for clients (if model has accessor)
+        if (method_exists($this->resource, 'getPhotoUrlAttribute')) {
+            $data['photo_url'] = $this->resource->photo_url;
+        }
+
+        return $data;
     }
 }

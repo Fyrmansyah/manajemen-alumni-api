@@ -103,8 +103,19 @@
                                         <tr>
                                             <td>
                                                 <div class="d-flex align-items-center">
-                                                    <div class="avatar-sm rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-3">
-                                                        {{ strtoupper(substr($application->alumni->nama ?? $application->alumni->nama_lengkap ?? 'A', 0, 1)) }}
+                                                    <div class="avatar-sm rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-3 overflow-hidden" style="width:40px;height:40px;">
+                                                        @php
+                                                            $foto=$application->alumni->foto??null;
+                                                            if($foto){
+                                                                $rel = str_starts_with($foto,'alumni_photos/') ? $foto : 'alumni_photos/' . ltrim($foto,'/');
+                                                                $fotoUrl = asset('storage/'.$rel);
+                                                            }
+                                                        @endphp
+                                                        @if(!empty($fotoUrl))
+                                                            <img src="{{ $fotoUrl }}" alt="Foto" style="width:100%;height:100%;object-fit:cover;">
+                                                        @else
+                                                            {{ strtoupper(substr($application->alumni->nama ?? $application->alumni->nama_lengkap ?? 'A', 0, 1)) }}
+                                                        @endif
                                                     </div>
                                                     <div>
                                                         <h6 class="mb-0">{{ $application->alumni->nama ?? $application->alumni->nama_lengkap ?? 'Nama tidak tersedia' }}</h6>
@@ -156,26 +167,17 @@
                                                 @endif
                                             </td>
                                             <td>
-                                                <div class="btn-group" role="group">
-                                                    <button type="button" 
-                                                            class="btn btn-sm btn-outline-primary" 
-                                                            onclick="viewApplication({{ $application->id }})">
-                                                        <i class="fas fa-eye"></i>
-                                                    </button>
-                                                    
-                                                    @if($application->status !== 'accepted' && $application->status !== 'rejected')
-                                                        <button type="button" 
-                                                                class="btn btn-sm btn-outline-success" 
-                                                                onclick="updateStatus({{ $application->id }}, 'accepted')">
-                                                            <i class="fas fa-check"></i>
-                                                        </button>
-                                                        <button type="button" 
-                                                                class="btn btn-sm btn-outline-danger" 
-                                                                onclick="updateStatus({{ $application->id }}, 'rejected')">
-                                                            <i class="fas fa-times"></i>
-                                                        </button>
-                                                    @endif
-                                                </div>
+                                                @if($application->status === 'accepted')
+                                                    <span class="badge bg-success">Diterima</span>
+                                                @elseif($application->status === 'rejected')
+                                                    <span class="badge bg-danger">Ditolak</span>
+                                                @else
+                                                    <div class="btn-group" role="group">
+                                                        <button type="button" class="btn btn-sm btn-outline-primary" title="Detail" onclick="viewApplication({{ $application->id }})"><i class="fas fa-eye"></i></button>
+                                                        <button type="button" class="btn btn-sm btn-outline-success" title="Ubah Status" onclick="openStatusModal({{ $application->id }})"><i class="fas fa-check"></i></button>
+                                                        <button type="button" class="btn btn-sm btn-outline-danger" title="Tolak" onclick="rejectQuick({{ $application->id }})"><i class="fas fa-times"></i></button>
+                                                    </div>
+                                                @endif
                                             </td>
                                         </tr>
                                     @endforeach
@@ -303,89 +305,205 @@
 </style>
 @endpush
 
+@push('head-scripts')
+<script>
+// Awal stub agar onclick tidak error sebelum script utama termuat
+window.viewApplication = window.viewApplication || function(id){ console.warn('Memuat skrip...'); };
+window.updateStatus = window.updateStatus || function(){ console.warn('Memuat skrip...'); };
+window.toggleInterviewFields = window.toggleInterviewFields || function(){};
+</script>
+@endpush
+
 @push('scripts')
 <script>
-function viewApplication(applicationId) {
-    fetch(`/company/applications/${applicationId}/detail`)
-        .then(r => r.json())
-        .then(data => {
-            if (!data.success) return alert('Gagal memuat detail lamaran');
-            const app = data.data;
+console.log('applications.blade main script start');
+(function(){
+    // Helper to build HTML safely
+    function escapeHtml(str){
+        return (str||'').toString()
+            .replace(/&/g,'&amp;')
+            .replace(/</g,'&lt;')
+            .replace(/>/g,'&gt;');
+    }
+
+    window.viewApplication = function(applicationId) {
+        fetch(`/company/applications/${applicationId}/detail`, {
+            method: 'GET',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Accept': 'application/json'
+            }
+        })
+        .then(r=>{ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+        .then(data=>{
+            if(!data.success || !data.application) throw new Error(data.message||'Gagal memuat detail');
+            const app = data.application;
+            let foto = app.alumni.foto || '';
+            if(foto && !foto.startsWith('alumni_photos/')) foto = 'alumni_photos/' + foto.replace(/^\//,'');
+            const photoTag = foto ? '<img src="/storage/'+foto+'" alt="Foto" style="width:100%;height:100%;object-fit:cover;">' : "<i class='fas fa-user text-muted fa-2x'></i>";
+            const jurusanNama = (app.alumni.jurusan && app.alumni.jurusan.nama) ? app.alumni.jurusan.nama : '-';
+            let interviewBlock = '';
+            if(app.interview_at){
+                interviewBlock = '<hr><h6>Detail Interview</h6>'+
+                    '<p class="mb-1"><strong>Waktu:</strong> '+escapeHtml(app.interview_at)+'</p>'+
+                    (app.interview_media ? '<p class="mb-1"><strong>Media:</strong> '+escapeHtml(app.interview_media)+'</p>':'')+
+                    (app.interview_location ? '<p class="mb-1"><strong>Lokasi/Link:</strong> '+escapeHtml(app.interview_location)+'</p>':'')+
+                    (app.interview_details ? '<p class="mb-1"><strong>Catatan:</strong> '+escapeHtml(app.interview_details)+'</p>':'');
+            }
+            const cvBlock = app.cv_url ? '<h6>CV</h6><a href="'+app.cv_url+'" target="_blank" class="btn btn-outline-primary mb-3"><i class="fas fa-file-pdf me-2"></i>Lihat CV</a>' : '';
             const b = document.getElementById('applicationModalBody');
-            b.innerHTML = `
-                <div class="row">
-                    <div class="col-md-6">
-                        <h6>Informasi Alumni</h6>
-                        <p><strong>Nama:</strong> ${app.alumni.name || app.alumni.nama || 'Tidak tersedia'}</p>
-                        <p><strong>Email:</strong> ${app.alumni.email}</p>
-                        <p><strong>No. Telepon:</strong> ${app.alumni.phone || app.alumni.no_tlp || 'Tidak tersedia'}</p>
-                    </div>
-                    <div class="col-md-6">
-                        <h6>Informasi Lamaran</h6>
-                        <p><strong>Posisi:</strong> ${app.job.title}</p>
-                        <p><strong>Tanggal Melamar:</strong> ${app.applied_at}</p>
-                        <p><strong>Status:</strong> <span class="badge bg-primary text-uppercase">${app.status}</span></p>
-                        ${app.interview_at ? `<p><strong>Interview:</strong> ${app.interview_at}${app.interview_media ? ' ('+app.interview_media+')':''}</p>`:''}
-                    </div>
-                </div>
-                <hr>
-                <h6>Cover Letter</h6>
-                <p style="white-space: pre-wrap;">${app.cover_letter || '-'}</p>
-                ${app.cv_file ? `
-                <hr>
-                <h6>CV</h6>
-                <a href="/storage/cvs/${app.cv_file}" target="_blank" class="btn btn-primary">
-                    <i class="fas fa-file-pdf me-2"></i>Lihat CV
-                </a>`:''}
-                ${app.interview_at ? `
-                <hr>
-                <h6>Detail Interview</h6>
-                <p><strong>Waktu:</strong> ${app.interview_at}</p>
-                ${app.interview_media ? `<p><strong>Media:</strong> ${app.interview_media}</p>`:''}
-                ${app.interview_location ? `<p><strong>Lokasi/Link:</strong> ${app.interview_location}</p>`:''}
-                ${app.interview_details ? `<p><strong>Catatan:</strong> ${app.interview_details}</p>`:''}
-                `:''}
-            `;
+            b.innerHTML = ''+
+                '<div class="d-flex align-items-center gap-3 mb-3">'+
+                    '<div class="rounded-circle bg-light overflow-hidden d-flex align-items-center justify-content-center" style="width:80px;height:80px;">'+photoTag+'</div>'+
+                    '<div>'+
+                        '<h5 class="mb-1">'+escapeHtml(app.alumni.nama || app.alumni.name || 'Tidak tersedia')+'</h5>'+
+                        '<div class="text-muted small">'+escapeHtml(app.alumni.email)+' • '+escapeHtml(app.alumni.phone||'')+'</div>'+
+                    '</div>'+
+                '</div>'+
+                '<div class="row">'+
+                    '<div class="col-md-6">'+
+                        '<h6>Informasi Alumni</h6>'+
+                        '<p class="mb-1"><strong>Nama:</strong> '+escapeHtml(app.alumni.nama || app.alumni.name || 'Tidak tersedia')+'</p>'+
+                        '<p class="mb-1"><strong>Email:</strong> '+escapeHtml(app.alumni.email)+'</p>'+
+                        '<p class="mb-1"><strong>No. Telepon:</strong> '+escapeHtml(app.alumni.phone||'Tidak tersedia')+'</p>'+
+                        '<p class="mb-1"><strong>Jurusan:</strong> '+escapeHtml(jurusanNama)+'</p>'+
+                        '<p class="mb-1"><strong>Tahun Lulus:</strong> '+escapeHtml(app.alumni.tahun_lulus || '-')+'</p>'+
+                        '<p class="mb-1"><strong>NISN:</strong> '+escapeHtml(app.alumni.nisn || '-')+'</p>'+
+                    '</div>'+ // close first column
+                    '<div class="col-md-6">'+
+                        '<h6>Informasi Lamaran</h6>'+
+                        '<p class="mb-1"><strong>Posisi:</strong> '+escapeHtml(app.job.title)+'</p>'+
+                        '<p class="mb-1"><strong>Tanggal Melamar:</strong> '+escapeHtml(app.applied_at || app.created_at)+'</p>'+
+                        '<p class="mb-1"><strong>Status:</strong> <span class="badge bg-primary text-uppercase">'+escapeHtml(app.status)+'</span></p>'+
+                        (app.interview_at ? '<p class="mb-1"><strong>Interview:</strong> '+escapeHtml(app.interview_at)+(app.interview_media ? ' ('+escapeHtml(app.interview_media)+')':'')+'</p>' : '')+
+                    '</div>'+
+                '</div>'+
+                '<hr>'+
+                '<h6>Cover Letter</h6>'+
+                '<div class="border rounded p-3 mb-3" style="white-space:pre-wrap;">'+escapeHtml(app.cover_letter || '-')+'</div>'+
+                cvBlock +
+                interviewBlock;
+
             new bootstrap.Modal(document.getElementById('applicationModal')).show();
         })
-        .catch(err => { console.error(err); alert('Terjadi kesalahan saat memuat detail lamaran'); });
-}
+        .catch(err=>{
+            console.error('Error loading application detail:', err);
+            alert('Terjadi kesalahan saat memuat detail lamaran: '+err.message);
+        });
+    };
+})();
+console.log('applications.blade main script loaded');
 
-function updateStatus(applicationId, status) {
-    document.getElementById('applicationId').value = applicationId;
-    document.getElementById('newStatus').value = status;
-    toggleInterviewFields(status === 'interview');
+window.updateStatus = function(applicationId, status) {
+    // For quick accept/reject, directly call the API
+    if (status === 'accepted' || status === 'rejected') {
+        if (!confirm(`Apakah Anda yakin ingin ${status === 'accepted' ? 'menerima' : 'menolak'} lamaran ini?`)) {
+            return;
+        }
+        
+        fetch(`/company/applications/${applicationId}/status`, {
+            method: 'PUT',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                status: status,
+                notes: null
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Gagal: ' + (data.message || 'Terjadi kesalahan'));
+            }
+        })
+        .catch(err => {
+            console.error('Error:', err);
+            alert('Terjadi kesalahan saat mengupdate status');
+        });
+    } else {
+        // For other statuses, open the modal
+        document.getElementById('applicationId').value = applicationId;
+        document.getElementById('newStatus').value = status;
+        window.toggleInterviewFields(status === 'interview');
+        new bootstrap.Modal(document.getElementById('statusModal')).show();
+    }
+};
+
+// Buka modal status (check button)
+function openStatusModal(id){
+    document.getElementById('applicationId').value = id;
+    document.getElementById('newStatus').value = '';
+    toggleInterviewFields(false);
     new bootstrap.Modal(document.getElementById('statusModal')).show();
 }
 
-document.getElementById('statusForm').addEventListener('submit', function(e){
-    e.preventDefault();
-    const id = document.getElementById('applicationId').value;
-    const fd = new FormData(this);
+// Tolak cepat (ikon X)
+function rejectQuick(id){
+    if(!confirm('Tolak lamaran ini?')) return;
     fetch(`/company/applications/${id}/status`, {
         method:'PUT',
         headers:{
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
             'Content-Type':'application/json'
         },
-        body: JSON.stringify({
-            status: fd.get('status'),
-            notes: fd.get('notes'),
-            interview_at: fd.get('interview_at'),
-            interview_location: fd.get('interview_location'),
-            interview_details: fd.get('interview_details'),
-            interview_media: fd.get('interview_media'),
-        })
-    }).then(r=>r.json()).then(data=>{
-        if(data.success){ location.reload(); } else { alert('Gagal: '+data.message); }
-    }).catch(err=>{ console.error(err); alert('Terjadi kesalahan saat mengupdate status'); });
+        body: JSON.stringify({ status:'rejected' })
+    }).then(r=>r.json()).then(d=>{
+        if(d.success){ location.reload(); } else { alert('Gagal: '+(d.message||'Tidak diketahui')); }
+    }).catch(e=>{ console.error(e); alert('Kesalahan jaringan'); });
+}
+
+document.getElementById('statusForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    const id = document.getElementById('applicationId').value;
+    const fd = new FormData(this);
+    
+    const requestData = {
+        status: fd.get('status'),
+        notes: fd.get('notes')
+    };
+    
+    // Add interview fields if status is interview
+    if (fd.get('status') === 'interview') {
+        requestData.interview_at = fd.get('interview_at');
+        requestData.interview_location = fd.get('interview_location');
+        requestData.interview_details = fd.get('interview_details');
+        requestData.interview_media = fd.get('interview_media');
+    }
+    
+    fetch(`/company/applications/${id}/status`, {
+        method: 'PUT',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify(requestData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            bootstrap.Modal.getInstance(document.getElementById('statusModal')).hide();
+            location.reload();
+        } else {
+            alert('Gagal: ' + (data.message || 'Terjadi kesalahan'));
+        }
+    })
+    .catch(err => {
+        console.error('Error:', err);
+        alert('Terjadi kesalahan saat mengupdate status');
+    });
 });
 
 document.getElementById('newStatus').addEventListener('change', function(){
-    toggleInterviewFields(this.value === 'interview');
+    window.toggleInterviewFields(this.value === 'interview');
 });
 
-function toggleInterviewFields(show){
+window.toggleInterviewFields = function(show){
     const el = document.getElementById('interviewFields');
     if(show){
         el.classList.remove('d-none');
@@ -394,14 +512,14 @@ function toggleInterviewFields(show){
             document.getElementById('interview_at').value = d.toISOString().slice(0,16);
         }
     } else { el.classList.add('d-none'); }
-}
+};
 
 // Removed prefillInterviewFromDetail functionality along with schedule button
 
 // Auto open via ?application=ID
 (function(){
     const p = new URLSearchParams(window.location.search);
-    if(p.has('application')){ viewApplication(p.get('application')); }
+    if(p.has('application')){ window.viewApplication(p.get('application')); }
 })();
 </script>
 @endpush
