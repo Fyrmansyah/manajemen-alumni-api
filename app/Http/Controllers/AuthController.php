@@ -157,7 +157,7 @@ class AuthController extends Controller
     public function register(\Illuminate\Http\Request $request)
     {
         $request->validate([
-            'nisn' => 'required|digits:10|unique:nisns,number',
+            'nisn' => 'required|digits:10|exists:nisns,number',
             'nama' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:alumnis',
             'password' => 'required|string|min:8|confirmed',
@@ -170,7 +170,15 @@ class AuthController extends Controller
             'jurusan_id' => 'required|exists:jurusans,id',
         ]);
 
-        $nisnModel = \App\Models\Nisn::firstOrCreate(['number' => $request->input('nisn')]);
+        // Ambil NISN dari master; tidak boleh membuat baru
+        $nisnModel = \App\Models\Nisn::where('number', $request->input('nisn'))->first();
+        if (!$nisnModel) {
+            return back()->withErrors(['nisn' => 'NISN tidak ditemukan di data master'])->withInput();
+        }
+        // Pastikan belum dipakai alumni lain
+        if (\App\Models\Alumni::where('nisn_id', $nisnModel->id)->exists()) {
+            return back()->withErrors(['nisn' => 'NISN sudah terdaftar'])->withInput();
+        }
         $alumni = \App\Models\Alumni::create([
             'nisn_id' => $nisnModel->id,
             'nama' => $request->input('nama'),

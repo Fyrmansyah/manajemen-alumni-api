@@ -93,8 +93,8 @@ class AlumniDashboardController extends Controller
             'phone' => 'required|string|max:20',
             'tanggal_lahir' => 'required|date',
             'jenis_kelamin' => 'required|in:L,P',
-            // Validasi NISN terhadap tabel master nisns.number; abaikan NISN sekarang (nisn_id) milik user
-            'nisn' => 'required|digits:10|unique:nisns,number,' . $alumni->nisn_id,
+            // NISN harus ada di tabel master (exists) bukan membuat baru
+            'nisn' => 'required|digits:10|exists:nisns,number',
             'jurusan_id' => 'required|exists:jurusans,id',
             'tahun_lulus' => 'required|integer|min:2015|max:' . (date('Y') + 1),
             'alamat' => 'required|string|max:500',
@@ -112,9 +112,17 @@ class AlumniDashboardController extends Controller
             'tempat_kuliah', 'prodi_kuliah'
         ]);
 
-        // Map / upsert NISN ke master tabel lalu set foreign key
+        // Map NISN -> nisn_id tanpa membuat data baru; pastikan tidak dipakai alumni lain
         if ($request->filled('nisn')) {
-            $nisnModel = \App\Models\Nisn::firstOrCreate(['number' => $request->input('nisn')]);
+            $nisnNumber = $request->input('nisn');
+            $nisnModel = \App\Models\Nisn::where('number', $nisnNumber)->first();
+            if (!$nisnModel) {
+                return back()->withErrors(['nisn' => 'NISN tidak ditemukan dalam data master.'])->withInput();
+            }
+            $isUsed = \App\Models\Alumni::where('nisn_id', $nisnModel->id)->where('id', '!=', $alumni->id)->exists();
+            if ($isUsed) {
+                return back()->withErrors(['nisn' => 'NISN sudah digunakan oleh alumni lain.'])->withInput();
+            }
             $data['nisn_id'] = $nisnModel->id;
         }
 

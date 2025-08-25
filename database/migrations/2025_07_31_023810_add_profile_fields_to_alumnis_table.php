@@ -25,9 +25,7 @@ return new class extends Migration
             if (!Schema::hasColumn('alumnis', 'jenis_kelamin')) {
                 $table->enum('jenis_kelamin', ['L', 'P'])->nullable()->after('tanggal_lahir');
             }
-            if (!Schema::hasColumn('alumnis', 'nisn')) {
-                $table->string('nisn')->nullable()->after('jenis_kelamin');
-            }
+            // Jangan tambah ulang kolom 'nisn' lama karena sudah digantikan oleh 'nisn_id'
             if (!Schema::hasColumn('alumnis', 'pengalaman_kerja')) {
                 $table->text('pengalaman_kerja')->nullable()->after('alamat');
             }
@@ -54,7 +52,6 @@ return new class extends Migration
                 'phone', 
                 'tanggal_lahir',
                 'jenis_kelamin',
-                'nisn',
                 'pengalaman_kerja',
                 'keahlian',
                 'whatsapp_notifications',
