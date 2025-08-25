@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\AdminJobController;
 use App\Http\Controllers\Admin\AdminNewsController;
 use App\Http\Controllers\Admin\AdminCompanyController;
 use App\Http\Controllers\Admin\AdminApplicationController;
+use App\Http\Controllers\Admin\NisnImportController;
 use App\Http\Controllers\Alumni\AlumniDashboardController;
 use App\Http\Controllers\Alumni\CVController;
 use App\Http\Controllers\Admin\AdminAlumniController;
@@ -75,6 +76,9 @@ Route::prefix('news')->name('news.')->group(function () {
 // Admin routes (using admin guard) - RESTORED MIDDLEWARE  
 Route::middleware('auth:admin')->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+    // NISN import
+    Route::get('/nisn/import', [NisnImportController::class, 'form'])->name('nisn.import');
+    Route::post('/nisn/import', [NisnImportController::class, 'upload'])->name('nisn.upload');
     
     // Job management
     Route::resource('jobs', AdminJobController::class);

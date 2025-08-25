@@ -174,6 +174,13 @@
                                 <small class="text-muted">Manajemen data alumni</small>
                             </div>
                         </a>
+                        <a href="{{ route('admin.nisn.import') }}" class="list-group-item list-group-item-action border-0 d-flex align-items-center">
+                            <i class="fas fa-file-upload text-secondary me-3"></i>
+                            <div>
+                                <div class="fw-bold">Import NISN</div>
+                                <small class="text-muted">Unggah data NISN (CSV)</small>
+                            </div>
+                        </a>
                     </div>
                 </div>
             </div>
@@ -354,9 +361,17 @@
                             <div class="text-muted small">{{ $application->job->company->company_name }}</div>
                         </div>
                         <div class="text-end">
-                            <span class="badge bg-{{ $application->status === 'pending' ? 'warning' : ($application->status === 'accepted' ? 'success' : 'danger') }}">
-                                {{ ucfirst($application->status) }}
-                            </span>
+                            @php
+                                $statusMap = [
+                                    'pending' => 'warning',
+                                    'accepted' => 'success',
+                                    'rejected' => 'danger',
+                                    'interview' => 'info', // new explicit mapping
+                                ];
+                                $badgeColor = $statusMap[$application->status] ?? 'secondary';
+                                $label = $application->status === 'interview' ? 'Interview' : ucfirst($application->status);
+                            @endphp
+                            <span class="badge bg-{{ $badgeColor }}">{{ $label }}</span>
                             <div class="text-muted small mt-1">{{ $application->created_at->diffForHumans() }}</div>
                         </div>
                     </div>

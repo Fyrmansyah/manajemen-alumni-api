@@ -4,16 +4,48 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Application;
+use App\Models\Job;
 use Illuminate\Http\Request;
 
 class AdminApplicationController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $applications = Application::with(['alumni', 'job.company'])
-            ->latest()
-            ->paginate(15);
-        return view('admin.applications.index', compact('applications'));
+        $query = Application::with(['alumni', 'job.company']);
+
+        // Filtering
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+        if ($request->filled('job_id')) {
+            $query->where('job_id', $request->job_id);
+        }
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('alumni', function ($qa) use ($search) {
+                    $qa->where('nama', 'like', "%{$search}%")
+                        ->orWhere('nama_lengkap', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%");
+                })->orWhereHas('job', function ($qj) use ($search) {
+                    $qj->where('title', 'like', "%{$search}%");
+                })->orWhereHas('job.company', function ($qc) use ($search) {
+                    $qc->where('name', 'like', "%{$search}%");
+                });
+            });
+        }
+
+        // Sorting (default newest by applied_at / created_at)
+        if ($request->get('sort') === 'oldest') {
+            $query->orderBy('created_at', 'asc');
+        } else {
+            $query->orderBy('created_at', 'desc');
+        }
+
+        $applications = $query->paginate(15)->appends($request->query());
+        $jobs = Job::orderBy('title')->get(['id', 'title']);
+
+        return view('admin.applications.index', compact('applications', 'jobs'));
     }
 
     public function show(Application $application)
