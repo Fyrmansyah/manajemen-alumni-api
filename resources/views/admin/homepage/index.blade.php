@@ -81,8 +81,6 @@
                         <div class="slide-card card h-100 shadow-sm {{ $slide->is_active ? 'is-active' : 'is-inactive' }}">
                             <div class="ratio ratio-4x3 slide-thumb-wrapper">
                                 <img src="{{ asset('storage/'.$slide->image) }}" class="slide-thumb" alt="thumb">
-                                <span class="badge position-absolute top-0 start-0 m-2 bg-{{ $slide->is_active? 'success':'secondary' }}">{{ $slide->is_active? 'Aktif':'Nonaktif' }}</span>
-                                <span class="badge position-absolute top-0 end-0 m-2 bg-primary">#{{ $slide->sort_order }}</span>
                             </div>
                             <div class="card-body d-flex flex-column">
                                 <h6 class="mb-1 text-truncate" title="{{ $slide->title }}">{{ $slide->title ?: '—' }}</h6>
@@ -228,5 +226,10 @@
 .line-clamp-3{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
 .ratio-4x3{--bs-aspect-ratio:75%;}
 .modal .form-label{font-weight:500;}
+/* Remove blue overlay covering slide images (force show original photo) */
+.slide-thumb-wrapper{background:transparent !important;}
+.slide-thumb{position:relative;z-index:1;}
+.slide-thumb-wrapper::before,
+.slide-thumb-wrapper::after{display:none !important;background:transparent !important;}
 </style>
 @endpush
