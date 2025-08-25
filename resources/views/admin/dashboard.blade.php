@@ -181,6 +181,13 @@
                                 <small class="text-muted">Unggah data NISN (CSV)</small>
                             </div>
                         </a>
+                        <a href="{{ route('admin.homepage.index') }}" class="list-group-item list-group-item-action border-0 d-flex align-items-center">
+                            <i class="fas fa-sliders-h text-danger me-3"></i>
+                            <div>
+                                <div class="fw-bold">Kelola Slider & Hero</div>
+                                <small class="text-muted">Atur slide & judul homepage</small>
+                            </div>
+                        </a>
                     </div>
                 </div>
             </div>

@@ -3,54 +3,67 @@
 @section('title', 'BKK SMKN 1 Surabaya - Portal Karir Alumni')
 
 @section('content')
-<!-- Hero Section -->
-<section class="hero-section">
-    <div class="container">
-        <div class="row align-items-center min-vh-75">
-            <div class="col-lg-6">
-                <div class="hero-content">
-                    <h1 class="hero-title">
-                        Portal Karir Alumni<br>
-                        <span class="text-warning">SMK Negeri 1 Surabaya</span>
-                    </h1>
-                    <p class="hero-subtitle">
-                        Jembatan menuju karir impian Anda. Temukan lowongan kerja terbaik dari perusahaan-perusahaan terpercaya yang sesuai dengan keahlian Anda.
-                    </p>
-                    <div class="hero-buttons">
-                        <a href="{{ route('jobs.index') }}" class="btn btn-warning btn-lg me-3">
-                            <i class="fas fa-search me-2"></i>Cari Lowongan
-                        </a>
-                        @if(auth('alumni')->check())
-                            <a href="{{ route('alumni.dashboard') }}" class="btn btn-outline-light btn-lg">
-                                <i class="fas fa-user me-2"></i>Dashboard Alumni
-                            </a>
-                        @elseif(auth('company')->check())
-                            <a href="{{ route('company.dashboard') }}" class="btn btn-outline-light btn-lg">
-                                <i class="fas fa-building me-2"></i>Dashboard Perusahaan
-                            </a>
-                        @elseif(auth('admin')->check())
-                            <a href="{{ route('admin.dashboard') }}" class="btn btn-outline-light btn-lg">
-                                <i class="fas fa-tools me-2"></i>Dashboard Admin
-                            </a>
-                        @else
-                            <a href="{{ route('register') }}" class="btn btn-outline-light btn-lg">
-                                <i class="fas fa-user-plus me-2"></i>Daftar Alumni
-                            </a>
-                        @endif
-                    </div>
-                </div>
+
+<!-- Slider Section (Custom Slides) -->
+@if($setting?->show_slider ?? true)
+<section class="main-slide" style="background-color:#012340;overflow:hidden;">
+    <div class="container py-4">
+        <div id="homeCustomCarousel" class="carousel slide modern-carousel" data-bs-ride="carousel" data-bs-interval="6000" data-bs-touch="true" data-bs-pause="hover">
+            <div class="carousel-indicators modern-indicators">
+                @if(($homepage_slides ?? collect())->isNotEmpty())
+                    @foreach($homepage_slides as $i => $slide)
+                        <button type="button" data-bs-target="#homeCustomCarousel" data-bs-slide-to="{{ $i }}" class="{{ $i==0?'active':'' }}" aria-current="{{ $i==0?'true':'false' }}" aria-label="Slide {{ $i+1 }}"></button>
+                    @endforeach
+                @else
+                    <button type="button" class="active" aria-current="true" aria-label="Slide 1"></button>
+                @endif
             </div>
-            <div class="col-lg-6">
-                <div class="hero-image text-center">
-                    <div class="logo-container">
-                        <img src="{{ asset('assets/images/logo BKK.png') }}" alt="SMK Negeri 1 Surabaya" class="hero-logo">   
+            <div class="carousel-inner">
+                @if(($homepage_slides ?? collect())->isNotEmpty())
+                    @foreach($homepage_slides as $i => $slide)
+                        <div class="carousel-item {{ $i==0?'active':'' }}">
+                            <div class="slide-item-wrapper modern-slide d-flex align-items-stretch">
+                                <div class="slide-text flex-column px-4 px-lg-5 py-5">
+                                    @if($slide->title)
+                                        <h2 class="slide-title display-slide-title mb-4">{{ $slide->title }}</h2>
+                                    @endif
+                                    @if($slide->caption)
+                                    <div class="slide-excerpt lead mb-5">
+                                        <p class="mb-0">{{ $slide->caption }}</p>
+                                    </div>
+                                    @endif
+                                    @if($slide->button_text && $slide->button_link)
+                                    <div class="slide-btn-group">
+                                        <a href="{{ $slide->button_link }}" class="btn btn-slide-primary btn-lg px-4" target="_blank" rel="noopener">{{ $slide->button_text }}</a>
+                                    </div>
+                                    @endif
+                                </div>
+                                <div class="slide-image p-0 d-flex align-items-center justify-content-center">
+                                    <img src="{{ asset('storage/'.$slide->image) }}" class="slide-image-el" alt="{{ $slide->title }}">
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                @else
+                    <div class="carousel-item active">
+                        <div class="slide-item-wrapper modern-slide d-flex align-items-center justify-content-center" style="min-height:420px;">
+                            <div class="text-center px-4">
+                                <h2 class="slide-title display-slide-title mb-3">Belum Ada Slide</h2>
+                                <p class="lead mb-4">Tambahkan slide melalui menu Admin &gt; Kelola Slider & Hero.</p>
+                                @if(auth('admin')->check())
+                                    <a href="{{ route('admin.homepage.index') }}" class="btn btn-slide-primary btn-lg"><i class="fas fa-plus me-2"></i>Tambah Slide</a>
+                                @endif
+                            </div>
+                        </div>
                     </div>
-                </div>
+                @endif
             </div>
         </div>
     </div>
-                                                                                                                                            
 </section>
+@endif
+
+<!-- Hero section removed as requested -->
 
 <!-- Statistics Section -->
 <section class="stats-section">
@@ -238,6 +251,77 @@
 
 @section('styles')
 <style>
+/* Slider */
+.main-slide .carousel-indicators [data-bs-target]{
+    width:10px;height:10px;border-radius:50%;background:#ffffff50;border:0;margin:0 5px;transition:all .35s;position:relative;
+}
+.main-slide .carousel-indicators .active{background:#fff;width:34px;border-radius:16px;}
+.modern-indicators{position:absolute;left:0;bottom:48px;display:flex;justify-content:flex-start;margin:0;gap:10px;padding:0 3.5rem;width:50%;}
+@media (max-width:992px){.modern-indicators{position:relative;bottom:0;padding:1rem 0;width:100%;justify-content:center;}}
+
+/* Adapted animation styles (original snippet was for Owl Carousel) */
+.main-slide .carousel-item .slide-text h2,
+.main-slide .carousel-item .slide-text .slide-excerpt,
+.main-slide .carousel-item .slide-text .btn { 
+    opacity:0; 
+    transform:translateY(50px); 
+    transition:all .6s ease; 
+}
+.main-slide .carousel-item .slide-text .btn {transition-duration:.5s;}
+.main-slide .carousel-item.active .slide-text h2 { 
+    opacity:1; 
+    transform:translateY(0); 
+    transition-delay:.4s; 
+}
+.main-slide .carousel-item.active .slide-text .slide-excerpt { 
+    opacity:1; 
+    transform:translateY(0); 
+    transition-delay:.8s; 
+}
+.main-slide .carousel-item.active .slide-text .btn { 
+    opacity:1; 
+    transform:translateY(0); 
+    transition-delay:1.1s; 
+}
+.main-slide .carousel-item .slide-image img { 
+    opacity:0; 
+    transform:translateX(60px); 
+    transition:all 1s ease .2s; 
+}
+.main-slide .carousel-item.active .slide-image img { 
+    opacity:1; 
+    transform:translateX(0); 
+}
+/* Base typography inside slide */
+.main-slide .slide-title{color:#fff;font-weight:bold;word-wrap:break-word;}
+/* Title style as requested */
+.display-slide-title{width:600px;max-width:100%;margin:0;font-size:30px;line-height:40px;font-weight:bold;opacity:0;transform:translate(0,50px);transition:all .3s ease .1s;}
+.main-slide .carousel-item.active .display-slide-title{opacity:1;transform:translate(0,0);}
+/* Caption style as requested */
+.main-slide .slide-excerpt p{width:600px;max-width:100%;font-size:20px;line-height:1.4;margin:0;color:#fff  ;word-wrap:break-word;opacity:0;transform:translate(0,50px);transition:all .3s ease .2s;}
+.main-slide .carousel-item.active .slide-excerpt p{opacity:1;transform:translate(0,0);}
+.modern-slide{width:100%;min-height:560px;color:#fff;}
+.modern-slide .slide-text{flex:1;max-width:760px;display:flex;justify-content:center;align-self:center;}
+.modern-slide .slide-image{flex:1;max-width:52%;position:relative;overflow:hidden;}
+.modern-slide .slide-image-el{max-width:100%;vertical-align:middle;border:0;width:552px;height:507px;object-fit:cover;object-position:center;}
+@media (max-width:1200px){.modern-slide .slide-image-el{width:100%;height:507px;}}
+@media (max-width:992px){.modern-slide .slide-image-el{width:100%;height:400px;}}
+@media (max-width:768px){.modern-slide .slide-image-el{width:100%;height:320px;}}
+@media (max-width:992px){
+    .modern-slide{flex-direction:column;min-height:auto;}
+    .modern-slide .slide-image{max-width:100%;}
+    .modern-slide .slide-image-el{min-height:340px;}
+    .modern-slide .slide-text{max-width:100%;}
+}
+.btn-slide-primary{background:#36a4f5;border:none;color:#fff;font-weight:600;border-radius:6px;transition:.3s;}
+.btn-slide-primary:hover{background:#1d8cd9;color:#fff;transform:translateY(-2px);box-shadow:0 8px 24px -6px rgba(54,164,245,.45);} 
+@media (max-width:768px){
+    .main-slide .slide-title{font-size:24px;line-height:32px;}
+    .main-slide .slide-excerpt p{font-size:15px;}
+    .main-slide .slide-image img{min-height:260px;}
+}
+/* Utility for object-fit in older browsers fallback */
+.object-fit-cover{object-fit:cover;}
 /* Hero Section */
 .hero-section {
     background: linear-gradient(135deg, #012340 0%, #012340 50%, #012340 100%);

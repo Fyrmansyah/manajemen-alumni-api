@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\AdminNewsController;
 use App\Http\Controllers\Admin\AdminCompanyController;
 use App\Http\Controllers\Admin\AdminApplicationController;
 use App\Http\Controllers\Admin\NisnImportController;
+use App\Http\Controllers\Admin\AdminHomepageController;
 use App\Http\Controllers\Alumni\AlumniDashboardController;
 use App\Http\Controllers\Alumni\CVController;
 use App\Http\Controllers\Admin\AdminAlumniController;
@@ -111,6 +112,13 @@ Route::middleware('auth:admin')->prefix('admin')->name('admin.')->group(function
     Route::put('/alumni/{alumni}', [AdminAlumniController::class, 'update'])->name('alumni.update');
     Route::delete('/alumni/{alumni}', [AdminAlumniController::class, 'destroy'])->name('alumni.destroy');
     Route::post('/alumni/{alumni}/verify', [AdminAlumniController::class, 'verify'])->name('alumni.verify');
+    
+    // Homepage management
+    Route::get('/homepage', [AdminHomepageController::class, 'index'])->name('homepage.index');
+    Route::put('/homepage/settings', [AdminHomepageController::class, 'updateSettings'])->name('homepage.settings.update');
+    Route::post('/homepage/slides', [AdminHomepageController::class, 'storeSlide'])->name('homepage.slides.store');
+    Route::put('/homepage/slides/{slide}', [AdminHomepageController::class, 'updateSlide'])->name('homepage.slides.update');
+    Route::delete('/homepage/slides/{slide}', [AdminHomepageController::class, 'deleteSlide'])->name('homepage.slides.delete');
 });
 
 // Alumni routes (using alumni guard)

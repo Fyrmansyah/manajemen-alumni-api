@@ -7,15 +7,17 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
-        if (Schema::hasTable('alumnis') && Schema::hasColumn('alumnis', 'nisn_id')) {
-            // Tambahkan unique index jika belum ada
-            $sm = Schema::getConnection()->getDoctrineSchemaManager();
-            $indexes = $sm->listTableIndexes('alumnis');
-            if (!array_key_exists('alumnis_nisn_id_unique', $indexes)) {
-                Schema::table('alumnis', function (Blueprint $table) {
-                    $table->unique('nisn_id', 'alumnis_nisn_id_unique');
-                });
-            }
+        if (!Schema::hasTable('alumnis') || !Schema::hasColumn('alumnis', 'nisn_id')) {
+            return;
+        }
+
+        // Coba tambahkan index; abaikan jika sudah ada
+        try {
+            Schema::table('alumnis', function (Blueprint $table) {
+                $table->unique('nisn_id', 'alumnis_nisn_id_unique');
+            });
+        } catch (Throwable $e) {
+            // Kemungkinan index sudah ada; diamkan
         }
     }
 

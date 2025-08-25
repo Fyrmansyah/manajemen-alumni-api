@@ -7,6 +7,8 @@ use App\Models\News;
 use App\Models\Alumni;
 use App\Models\Company;
 use App\Models\Application;
+use App\Models\HomepageSetting;
+use App\Models\HomepageSlide;
 use Illuminate\Http\Request;
 
 class HomeController extends Controller
@@ -34,6 +36,8 @@ class HomeController extends Controller
             ->take(6)
             ->get();
 
-        return view('home', compact('stats', 'latest_jobs', 'latest_news'));
+    $setting = HomepageSetting::first();
+    $homepage_slides = HomepageSlide::where('is_active', true)->orderBy('sort_order')->get();
+    return view('home', compact('stats', 'latest_jobs', 'latest_news','setting','homepage_slides'));
     }
 }
