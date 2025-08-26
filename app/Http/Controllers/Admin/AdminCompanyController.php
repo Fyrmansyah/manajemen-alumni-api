@@ -60,15 +60,20 @@ class AdminCompanyController extends Controller
 
     public function show(Company $company)
     {
+        // Eager load latest jobs
         $company->load(['jobs' => function($query) {
-            $query->latest()->take(5);
+            $query->latest()->take(5)->withCount('applications');
         }]);
 
-        $company->loadCount(['jobs', 'applications' => function($query) {
-            $query->whereHas('job', function($q) {
-                $q->where('company_id', request()->route('company')->id);
-            });
-        }]);
+        // Count total jobs & applications (applications via jobs relationship)
+        $jobsCount = $company->jobs()->count();
+        $applicationsCount = Application::whereHas('job', function($q) use ($company) {
+            $q->where('company_id', $company->id);
+        })->count();
+
+        // Append dynamic attributes for JSON/view
+        $company->setAttribute('jobs_count', $jobsCount);
+        $company->setAttribute('applications_count', $applicationsCount);
 
         if (request()->ajax()) {
             return response()->json([

@@ -184,8 +184,14 @@
                                             </td>
                                             <td>
                                                 <div class="d-flex align-items-center">
-                                                    <div class="avatar-sm rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-3">
-                                                        {{ strtoupper(substr($company->company_name, 0, 2)) }}
+                                                    <div class="avatar-sm rounded-circle d-flex align-items-center justify-content-center me-3 overflow-hidden position-relative" style="width:46px;height:46px;">
+                                                        @if(!empty($company->logo) && file_exists(storage_path('app/public/company_logos/'.$company->logo)))
+                                                            <img src="{{ asset('storage/company_logos/'.$company->logo) }}" alt="Logo {{ $company->company_name }}" class="w-100 h-100 object-fit-cover">
+                                                        @else
+                                                            <div class="w-100 h-100 bg-primary text-white d-flex align-items-center justify-content-center fw-semibold">
+                                                                {{ strtoupper(substr($company->company_name, 0, 2)) }}
+                                                            </div>
+                                                        @endif
                                                     </div>
                                                     <div>
                                                         <h6 class="mb-0">{{ $company->company_name }}</h6>
@@ -331,12 +337,8 @@
 
 @push('styles')
 <style>
-.avatar-sm {
-    width: 40px;
-    height: 40px;
-    font-size: 14px;
-    font-weight: bold;
-}
+.avatar-sm {width:46px;height:46px;font-size:14px;font-weight:bold;}
+.object-fit-cover{object-fit:cover;}
 
 .table-hover tbody tr:hover {
     background-color: rgba(0, 123, 255, 0.05);
@@ -356,8 +358,20 @@
 <script>
 // Company detail view
 function viewCompany(companyId) {
-    fetch(`/admin/companies/${companyId}`)
-        .then(response => response.json())
+    fetch(`/admin/companies/${companyId}`, {headers:{'Accept':'application/json'}})
+        .then(async response => {
+            const ct = response.headers.get('content-type') || '';
+            if(!response.ok){
+                throw new Error('HTTP '+response.status);
+            }
+            if(ct.includes('application/json')){
+                return response.json();
+            }
+            // If got HTML, show fallback redirect
+            const text = await response.text();
+            console.warn('Non-JSON response received', text.slice(0,200));
+            throw new Error('Response bukan JSON');
+        })
         .then(data => {
             if (data.success) {
                 const company = data.data;
@@ -426,8 +440,9 @@ function viewCompany(companyId) {
             }
         })
         .catch(error => {
-            console.error('Error:', error);
-            alert('Terjadi kesalahan saat memuat data');
+            console.error('Error load company:', error);
+            // Fallback buka halaman detail biasa
+            window.location.href = `/admin/companies/${companyId}`;
         });
 }
 

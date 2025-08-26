@@ -456,17 +456,22 @@ function submitApplication() {
             return;
         }
         if (response.ok && data && data.success) {
-            // Show success message
+            // Replace body with success state
             document.getElementById('applyModalBody').innerHTML = `
                 <div class="text-center py-4">
                     <i class="fas fa-check-circle text-success fa-3x mb-3"></i>
                     <h5 class="text-success">Lamaran Berhasil Dikirim!</h5>
                     <p class="text-muted">Terima kasih telah melamar. Tim kami akan segera meninjau lamaran Anda.</p>
-                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal" onclick="location.reload()">
-                        Tutup
-                    </button>
                 </div>
             `;
+            // Update footer to single close button
+            const footer = document.querySelector('#applyModal .modal-footer');
+            if (footer) {
+                if (!window._applyFooterOriginal) {
+                    window._applyFooterOriginal = footer.innerHTML; // backup original buttons
+                }
+                footer.innerHTML = '<button type="button" class="btn btn-primary" data-bs-dismiss="modal" onclick="location.reload()"><i class="fas fa-check me-2"></i>Tutup</button>';
+            }
         } else {
             let msg = (data && data.message) ? data.message : '';
             // Extract first validation error if present
@@ -661,6 +666,11 @@ document.addEventListener('DOMContentLoaded', function() {
                         charCount.textContent = '0';
                         charCount.className = '';
                     }
+                }
+                // Restore original footer buttons if modified
+                const footer = document.querySelector('#applyModal .modal-footer');
+                if (footer && window._applyFooterOriginal) {
+                    footer.innerHTML = window._applyFooterOriginal;
                 }
             }
         });
