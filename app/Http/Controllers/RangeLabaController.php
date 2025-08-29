@@ -15,10 +15,11 @@ class RangeLabaController extends Controller
      */
     public function index()
     {
-        $data = RangeLaba::query()->paginate();
+        $data = RangeLaba::query()->latest('id')->cursorPaginate();
 
         return ResponseBuilder::success()
             ->data(RangeLabaResource::collection($data))
+            ->pagination($data->nextCursor()?->encode(), $data->previousCursor()?->encode())
             ->build();
     }
 

@@ -16,5 +16,14 @@ class JalurMasukKuliahSeeder extends Seeder
         JalurMasukKuliah::create(['nama' => 'SNBP']);
         JalurMasukKuliah::create(['nama' => 'SNBT']);
         JalurMasukKuliah::create(['nama' => 'Mandiri - Prestasi']);
+
+
+        $data = [];
+
+        for ($i = 1; $i <= 100; $i++) {
+            $data[] = ['nama' => "jalur masuk kuliah - {$i}"];
+        }
+
+        JalurMasukKuliah::insert($data);
     }
 }

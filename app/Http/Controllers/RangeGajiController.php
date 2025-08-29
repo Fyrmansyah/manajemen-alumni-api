@@ -15,11 +15,11 @@ class RangeGajiController extends Controller
      */
     public function index()
     {
-        $data = RangeGaji::query()->cursorPaginate();
+        $data = RangeGaji::query()->latest('id')->cursorPaginate();
 
         return ResponseBuilder::success()
             ->data(RangeGajiResource::collection($data))
-            ->pagination($data->nextPageUrl(), $data->previousPageUrl())
+            ->pagination($data->nextCursor()?->encode(), $data->previousCursor()?->encode())
             ->build();
     }
 

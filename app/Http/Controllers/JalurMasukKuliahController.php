@@ -11,7 +11,7 @@ class JalurMasukKuliahController extends Controller
 {
     public function index()
     {
-        $data = JalurMasukKuliah::query()->latest('id')->cursorPaginate();
+        $data = JalurMasukKuliah::query()->latest('id')->latest('id')->cursorPaginate();
 
         return ResponseBuilder::success()
             ->data(JalurMasukKuliahResource::collection($data))

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Helpers\ResponseBuilder;
 use App\Http\Requests\DurasiKerjaRequest;
+use App\Http\Resources\DurasiKerjaResource;
 use App\Models\DurasiKerja;
 use Illuminate\Http\Request;
 
@@ -14,11 +15,11 @@ class DurasiKerjaController extends Controller
      */
     public function index()
     {
-        $data = DurasiKerja::query()->cursorPaginate();
+        $data = DurasiKerja::query()->latest('id')->cursorPaginate();
 
         return ResponseBuilder::success()
-            ->data($data)
-            ->pagination($data->nextPageUrl(), $data->previousPageUrl())
+            ->data(DurasiKerjaResource::collection($data))
+            ->pagination($data->nextCursor()?->encode(), $data->previousCursor()?->encode())
             ->build();
     }
 
@@ -30,7 +31,7 @@ class DurasiKerjaController extends Controller
         $data = DurasiKerja::create($request->validated());
 
         return ResponseBuilder::success()
-            ->data($data)
+            ->data(DurasiKerjaResource::make($data))
             ->message('Sukses Membuat Data Baru')
             ->build();
     }
@@ -41,7 +42,7 @@ class DurasiKerjaController extends Controller
     public function show(DurasiKerja $durasiKerja)
     {
         return ResponseBuilder::success()
-            ->data($durasiKerja)
+            ->data(DurasiKerjaResource::make($durasiKerja))
             ->build();
     }
 
@@ -53,7 +54,7 @@ class DurasiKerjaController extends Controller
         $durasiKerja->update($request->validated());
 
         return ResponseBuilder::success()
-            ->data($durasiKerja)
+            ->data(DurasiKerjaResource::make($durasiKerja))
             ->build();
     }
 

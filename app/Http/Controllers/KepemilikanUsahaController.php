@@ -15,11 +15,11 @@ class KepemilikanUsahaController extends Controller
      */
     public function index()
     {
-        $data = KepemilikanUsaha::query()->cursorPaginate();
+        $data = KepemilikanUsaha::query()->latest('id')->cursorPaginate();
 
         return ResponseBuilder::success()
             ->data(KepemilikanUsahaResource::collection($data))
-            ->pagination($data->nextPageUrl(), $data->previousPageUrl())
+            ->pagination($data->nextCursor()?->encode(), $data->previousCursor()?->encode())
             ->build();
     }
 

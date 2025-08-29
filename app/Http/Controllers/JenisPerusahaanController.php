@@ -15,11 +15,11 @@ class JenisPerusahaanController extends Controller
      */
     public function index()
     {
-        $data = JenisPerusahaan::query()->cursorPaginate();
+        $data = JenisPerusahaan::query()->latest('id')->cursorPaginate();
 
         return ResponseBuilder::success()
             ->data(JenisPerusahaanResource::collection($data))
-            ->pagination($data->nextPageUrl(), $data->previousPageUrl())
+            ->pagination($data->nextCursor()?->encode(), $data->previousCursor()?->encode())
             ->build();
     }
 

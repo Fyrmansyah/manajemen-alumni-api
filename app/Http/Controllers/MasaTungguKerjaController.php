@@ -15,11 +15,11 @@ class MasaTungguKerjaController extends Controller
      */
     public function index()
     {
-        $data = MasaTungguKerja::query()->cursorPaginate();
+        $data = MasaTungguKerja::query()->latest('id')->cursorPaginate();
 
         return ResponseBuilder::success()
             ->data(MasaTungguKerjaResource::collection($data))
-            ->pagination($data->nextPageUrl(), $data->previousPageUrl())
+            ->pagination($data->nextCursor()?->encode(), $data->previousCursor()?->encode())
             ->build();
     }
 
