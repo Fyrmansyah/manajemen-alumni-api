@@ -11,11 +11,11 @@ class JalurMasukKuliahController extends Controller
 {
     public function index()
     {
-        $data = JalurMasukKuliah::query()->cursorPaginate();
+        $data = JalurMasukKuliah::query()->latest('id')->cursorPaginate();
 
         return ResponseBuilder::success()
             ->data(JalurMasukKuliahResource::collection($data))
-            ->pagination($data->nextPageUrl(), $data->previousPageUrl())
+            ->pagination($data->nextCursor()?->encode(), $data->previousCursor()?->encode())
             ->build();
     }
 
@@ -50,7 +50,7 @@ class JalurMasukKuliahController extends Controller
     {
         $jalurMasukKuliah->delete();
 
-        return ResponseBuilder::fail()
+        return ResponseBuilder::success()
             ->message('Data Sukses Dihapus')
             ->build();
     }
