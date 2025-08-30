@@ -15,25 +15,28 @@ class AlumniSeeder extends Seeder
      */
     public function run(): void
     {
-    $jurusan = Jurusan::first();
-    $nisn = Nisn::first();
+        $jurusan = Jurusan::first();
+        $nisn = Nisn::first();
+
         Alumni::create([
             'nama' => 'Budi Pekerti',
+            'jenis_kelamin' => 'L',
             'tgl_lahir' => '1996-08-19',
             'tahun_mulai' => 2021,
             'tahun_lulus' => 2024,
             'no_tlp' => '08813573779',
             'email' => 'budi@gmail.com',
             'password' => bcrypt('test123'),
-            'alamat' => 'Jl. Rumah Tentram Gembira No. 9',
-            'tempat_kerja' => null,
-            'jabatan_kerja' => null,
-            'tempat_kuliah' => 'Harvard',
-            'prodi_kuliah' => 'Teknik Informatika',
-            'kesesuaian_kerja' => null,
-            'kesesuaian_kuliah' => true,
             'jurusan_id' => $jurusan->id,
             'nisn_id' => $nisn?->id,
+            'alamat_jalan' => 'jalan test',
+            'alamat_rt' => 1,
+            'alamat_rw' => 1,
+            'alamat_desa' => 'desa test',
+            'alamat_kelurahan' => 'kelurahan test',
+            'alamat_kecamatan' => 'kecamatan test',
+            'alamat_kode_pos' => 'kode_pos test',
+            'tempat_lahir' => 'tempat_lahir test',
         ]);
 
         // Alumni::factory()->count(50)->create();

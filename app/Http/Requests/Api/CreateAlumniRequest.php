@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Api;
 
+use Illuminate\Validation\Rule;
 
 class CreateAlumniRequest extends ApiFormRequest
 {
@@ -22,23 +23,16 @@ class CreateAlumniRequest extends ApiFormRequest
     {
         return [
             // NISN now divalidasi langsung unik di tabel nisns; akan auto dibuat bila belum ada
-            'nisn' => 'required|digits:10|unique:nisns,number',
+            'nisn_id' => ['required', 'gt:0', Rule::unique('alumnis', 'nisn_id')->ignore($this->route('alumni'))],
             'nama' => 'required|string|max:255',
-            'nama_lengkap' => 'nullable|string|max:255',
             'jenis_kelamin' => 'required|in:L,P',
             'tgl_lahir' => 'required|date',
-            'tanggal_lahir' => 'nullable|date',
-            'email' => 'required|email|unique:alumnis,email',
+            'email' =>  ['required', 'email', Rule::unique('alumnis', 'email')->ignore($this->route('alumni'))],
             'password' => 'required|string|min:6',
             'no_tlp' => 'required|string|max:20',
-            'phone' => 'nullable|string|max:20',
-            'alamat' => 'required|string|max:500',
             'jurusan_id' => 'required|exists:jurusans,id',
             'tahun_mulai' => 'required|integer|min:1900|max:' . (date('Y') + 10),
             'tahun_lulus' => 'required|integer|min:1900|max:' . (date('Y') + 10),
-            'tempat_kerja' => 'nullable|string|max:255',
-            'jabatan_kerja' => 'nullable|string|max:255',
-            'tempat_kuliah' => 'nullable|string|max:255',
             'prodi_kuliah' => 'nullable|string|max:255',
             'kesesuaian_kerja' => 'nullable|boolean',
             'kesesuaian_kuliah' => 'nullable|boolean',
@@ -46,6 +40,14 @@ class CreateAlumniRequest extends ApiFormRequest
             'keahlian' => 'nullable|string',
             'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'is_verified' => 'boolean',
+            'alamat_jalan' => 'required|string|max:255',
+            'alamat_rt' => 'required|integer',
+            'alamat_rw' => 'required|integer',
+            'alamat_desa' => 'required|string|max:255',
+            'alamat_kelurahan' => 'required|string|max:255',
+            'alamat_kecamatan' => 'required|string|max:255',
+            'alamat_kode_pos' => 'required|integer',
+            'tempat_lahir' => 'required|string|max:255',
         ];
     }
 }
