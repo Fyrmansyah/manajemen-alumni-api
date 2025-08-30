@@ -78,8 +78,8 @@ class Alumni extends Authenticatable
     public function appliedJobs()
     {
         return $this->belongsToMany(Job::class, 'applications', 'alumni_id', 'job_posting_id')
-                    ->withPivot(['status', 'cover_letter', 'cv_file', 'applied_at', 'reviewed_at'])
-                    ->withTimestamps();
+            ->withPivot(['status', 'cover_letter', 'cv_file', 'applied_at', 'reviewed_at'])
+            ->withTimestamps();
     }
 
     public function hasAppliedFor(Job $job)
@@ -90,17 +90,24 @@ class Alumni extends Authenticatable
     public function getProfileCompletionAttribute()
     {
         $fields = [
-            'nama_lengkap', 'email', 'phone', 'alamat', 'tanggal_lahir',
-            'jenis_kelamin', 'nisn', 'tahun_lulus', 'jurusan_id'
+            'nama_lengkap',
+            'email',
+            'phone',
+            'alamat',
+            'tanggal_lahir',
+            'jenis_kelamin',
+            'nisn',
+            'tahun_lulus',
+            'jurusan_id'
         ];
-        
+
         $completedFields = 0;
         foreach ($fields as $field) {
             if (!empty($this->$field)) {
                 $completedFields++;
             }
         }
-        
+
         return round(($completedFields / count($fields)) * 100);
     }
 
@@ -140,6 +147,6 @@ class Alumni extends Authenticatable
     public function savedJobs()
     {
         return $this->belongsToMany(Job::class, 'saved_jobs', 'alumni_id', 'job_posting_id')
-                    ->withTimestamps();
+            ->withTimestamps();
     }
 }
