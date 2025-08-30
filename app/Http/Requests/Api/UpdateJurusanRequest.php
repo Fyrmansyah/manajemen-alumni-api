@@ -1,11 +1,9 @@
 <?php
 
-namespace App\Http\Requests;
+namespace App\Http\Requests\Api;
 
-use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
-class MasaTungguKerjaRequest extends ApiFormRequest
+class UpdateJurusanRequest extends ApiFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -23,10 +21,8 @@ class MasaTungguKerjaRequest extends ApiFormRequest
     public function rules(): array
     {
         return [
-            'value' => [
-                'required',
-                Rule::unique('masa_tunggu_kerjas')->ignore($this->route('masa_tunggu_kerja'))
-            ]
+            'nama' => 'required',
+            'tgl_berdiri' => 'required'
         ];
     }
 }

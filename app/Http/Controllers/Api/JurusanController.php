@@ -1,10 +1,11 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
 use App\Helpers\ResponseBuilder;
-use App\Http\Requests\CreateJurusanRequest;
-use App\Http\Requests\UpdateJurusanRequest;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\CreateJurusanRequest;
+use App\Http\Requests\Api\UpdateJurusanRequest;
 use App\Http\Resources\JurusanResource;
 use App\Models\Jurusan;
 use Illuminate\Http\JsonResponse;

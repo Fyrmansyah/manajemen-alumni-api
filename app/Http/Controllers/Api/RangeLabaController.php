@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
 use App\Helpers\ResponseBuilder;
-use App\Http\Requests\RangeLabaRequest;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\RangeLabaRequest;
 use App\Http\Resources\RangeLabaResource;
 use App\Models\RangeLaba;
-use Illuminate\Http\Request;
 
 class RangeLabaController extends Controller
 {

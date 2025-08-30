@@ -1,10 +1,9 @@
 <?php
 
-namespace App\Http\Requests;
+namespace App\Http\Requests\Api;
 
-use Illuminate\Foundation\Http\FormRequest;
 
-class RangeLabaRequest extends FormRequest
+class RangeLabaRequest extends ApiFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.

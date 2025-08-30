@@ -2,31 +2,27 @@
 
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AlumniController;
+use App\Http\Controllers\Api\DurasiKerjaController;
+use App\Http\Controllers\Api\JalurMasukKuliahController;
+use App\Http\Controllers\Api\JenisPerusahaanController;
+use App\Http\Controllers\Api\JurusanController;
+use App\Http\Controllers\Api\KepemilikanUsahaController;
+use App\Http\Controllers\Api\MasaTungguKerjaController;
+use App\Http\Controllers\Api\RangeGajiController;
+use App\Http\Controllers\Api\RangeLabaController;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\JurusanController;
 use App\Http\Controllers\JobController;
 use App\Http\Controllers\CompanyController;
-use App\Http\Controllers\DurasiKerjaController;
-use App\Http\Controllers\JalurMasukKuliahController;
-use App\Http\Controllers\JenisPerusahaanController;
-use App\Http\Controllers\KepemilikanUsahaController;
-use App\Http\Controllers\MasaTungguKerjaController;
 use App\Http\Controllers\NewsController;
-use App\Http\Controllers\RangeGajiController;
-use App\Http\Controllers\RangeLabaController;
 use App\Http\Controllers\WhatsAppController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-// Route::get('/user', function (Request $request) {
-//     return $request->user();
-// })->middleware('auth:sanctum');
+Route::post('/admin/login', [AuthController::class, 'loginAdmin']);
+Route::post('/alumni/login', [AuthController::class, 'loginAlumni']);
+Route::post('/company/register', [CompanyController::class, 'register']);
 
-Route::post('/admin/login', [AuthController::class, 'loginAdmin']); //1
-Route::post('/alumni/login', [AuthController::class, 'loginAlumni']); //1
-Route::post('/company/register', [CompanyController::class, 'register']); //1
-
-Route::apiResource('admins', AdminController::class); // 5
+Route::apiResource('admins', AdminController::class);
 Route::apiResource('jalur-masuk-kuliah', JalurMasukKuliahController::class);
 Route::apiResource('masa-tunggu-kerja', MasaTungguKerjaController::class);
 Route::apiResource('jenis-perusahaan', JenisPerusahaanController::class);

@@ -1,9 +1,10 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
 use App\Helpers\ResponseBuilder;
-use App\Http\Requests\JenisPerusahaanRequest;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\JenisPerusahaanRequest;
 use App\Http\Resources\JenisPerusahaanResource;
 use App\Models\JenisPerusahaan;
 use Illuminate\Http\Request;

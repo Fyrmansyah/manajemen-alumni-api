@@ -1,9 +1,10 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
 use App\Helpers\ResponseBuilder;
-use App\Http\Requests\JalurMasukKuliahRequest;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\JalurMasukKuliahRequest;
 use App\Http\Resources\JalurMasukKuliahResource;
 use App\Models\JalurMasukKuliah;
 

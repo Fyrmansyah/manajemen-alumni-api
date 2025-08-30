@@ -1,9 +1,10 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
 use App\Helpers\ResponseBuilder;
-use App\Http\Requests\MasaTungguKerjaRequest;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\MasaTungguKerjaRequest;
 use App\Http\Resources\MasaTungguKerjaResource;
 use App\Models\MasaTungguKerja;
 use Illuminate\Http\Request;

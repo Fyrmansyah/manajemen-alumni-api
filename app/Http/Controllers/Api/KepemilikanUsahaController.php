@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
 use App\Helpers\ResponseBuilder;
-use App\Http\Requests\KepemilikanUsahaRequest;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\KepemilikanUsahaRequest;
 use App\Http\Resources\KepemilikanUsahaResource;
 use App\Models\KepemilikanUsaha;
-use Illuminate\Http\Request;
 
 class KepemilikanUsahaController extends Controller
 {

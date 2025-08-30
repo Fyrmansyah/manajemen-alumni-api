@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
 use App\Helpers\ResponseBuilder;
-use App\Http\Requests\RangeGajiRequest;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\RangeGajiRequest;
 use App\Http\Resources\RangeGajiResource;
 use App\Models\RangeGaji;
-use Illuminate\Http\Request;
 
 class RangeGajiController extends Controller
 {

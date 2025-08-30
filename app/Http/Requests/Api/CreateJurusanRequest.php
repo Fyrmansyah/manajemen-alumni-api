@@ -1,9 +1,8 @@
 <?php
 
-namespace App\Http\Requests;
+namespace App\Http\Requests\Api;
 
 use Carbon\Carbon;
-use Illuminate\Foundation\Http\FormRequest;
 
 class CreateJurusanRequest extends ApiFormRequest
 {

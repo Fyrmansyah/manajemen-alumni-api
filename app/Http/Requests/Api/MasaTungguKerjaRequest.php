@@ -1,11 +1,10 @@
 <?php
 
-namespace App\Http\Requests;
+namespace App\Http\Requests\Api;
 
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class JenisPerusahaanRequest extends ApiFormRequest
+class MasaTungguKerjaRequest extends ApiFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -25,7 +24,7 @@ class JenisPerusahaanRequest extends ApiFormRequest
         return [
             'value' => [
                 'required',
-                Rule::unique('jenis_perusahaans')->ignore($this->route('jenis_perusahaan'))
+                Rule::unique('masa_tunggu_kerjas')->ignore($this->route('masa_tunggu_kerja'))
             ]
         ];
     }

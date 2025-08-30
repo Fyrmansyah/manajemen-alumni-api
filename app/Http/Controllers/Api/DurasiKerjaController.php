@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
 use App\Helpers\ResponseBuilder;
-use App\Http\Requests\DurasiKerjaRequest;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\DurasiKerjaRequest;
 use App\Http\Resources\DurasiKerjaResource;
 use App\Models\DurasiKerja;
-use Illuminate\Http\Request;
 
 class DurasiKerjaController extends Controller
 {
