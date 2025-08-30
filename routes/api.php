@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AlumniController;
+use App\Http\Controllers\Api\AlumniController as ApiAlumniController;
 use App\Http\Controllers\Api\DurasiKerjaController;
 use App\Http\Controllers\Api\JalurMasukKuliahController;
 use App\Http\Controllers\Api\JenisPerusahaanController;
@@ -31,7 +32,7 @@ Route::apiResource('range-gaji', RangeGajiController::class);
 Route::apiResource('kepemilikan-usaha', KepemilikanUsahaController::class);
 Route::apiResource('range-laba', RangeLabaController::class);
 
-Route::controller(AlumniController::class)->group(function () {
+Route::controller(ApiAlumniController::class)->group(function () {
     Route::get('/alumnis', 'getAll');
     Route::get('/alumnis/chart', 'getChart');
     Route::get('/alumnis/check-nisn-valid/{nisn}', 'checkNisnValid');

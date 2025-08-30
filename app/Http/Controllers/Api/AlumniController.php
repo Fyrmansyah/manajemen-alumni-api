@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Helpers\ResponseBuilder;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\CreateAlumniRequest;
 use App\Http\Resources\AlumniResource;
 use App\Imports\AlumnisImport;
 use App\Models\Alumni;
@@ -73,9 +74,9 @@ class AlumniController extends Controller
         return response()->json(false);
     }
 
-    public function create(Request $request): JsonResponse
+    public function create(CreateAlumniRequest $request): JsonResponse
     {
-        $alumni = Alumni::create($request->all());
+        $alumni = Alumni::create($request->validated());
 
         return ResponseBuilder::success()
             ->data($alumni)
