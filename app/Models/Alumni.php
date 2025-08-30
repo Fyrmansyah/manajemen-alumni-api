@@ -80,6 +80,12 @@ class Alumni extends Authenticatable
         return $this->hasMany(CV::class);
     }
 
+    public function nisn(): BelongsTo
+    {
+        return $this->belongsTo(Nisn::class);
+    }
+
+    // @TODO<suggestion> hapus method nisnNumber(), gunakan nisn() saja
     public function nisnNumber(): BelongsTo
     {
         return $this->belongsTo(Nisn::class, 'nisn_id');
