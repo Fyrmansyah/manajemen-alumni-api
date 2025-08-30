@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -52,6 +53,21 @@ class Alumni extends Authenticatable
     public function jurusan(): BelongsTo
     {
         return $this->belongsTo(Jurusan::class);
+    }
+
+    public function kuliahs(): HasMany
+    {
+        return $this->hasMany(Kuliah::class);
+    }
+
+    public function kerjas(): HasMany
+    {
+        return $this->hasMany(Kerja::class);
+    }
+
+    public function usahas(): HasMany
+    {
+        return $this->hasMany(Usaha::class);
     }
 
     public function applications()
