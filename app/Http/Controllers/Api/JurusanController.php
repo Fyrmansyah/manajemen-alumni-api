@@ -21,7 +21,7 @@ class JurusanController extends Controller
 
         return ResponseBuilder::success()
             ->data(JurusanResource::collection($data))
-            ->pagination($data->nextPageUrl(), $data->previousPageUrl())
+            ->pagination($data->nextCursor()?->encode(), $data->previousCursor()?->encode())
             ->build();
     }
 
