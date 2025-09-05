@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Alumni;
 use App\Models\KepemilikanUsaha;
 use App\Models\RangeLaba;
 use Illuminate\Database\Migrations\Migration;
@@ -22,6 +23,7 @@ return new class extends Migration
             $table->foreignIdFor(KepemilikanUsaha::class);
             $table->unsignedInteger('jml_karyawan')->default(0);
             $table->foreignIdFor(RangeLaba::class);
+            $table->foreignIdFor(Alumni::class);
             $table->boolean('sesuai_jurusan');
             $table->timestamps();
         });
