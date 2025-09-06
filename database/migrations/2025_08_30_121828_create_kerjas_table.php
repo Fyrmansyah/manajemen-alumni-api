@@ -25,8 +25,8 @@ return new class extends Migration
             $table->foreignIdFor(JenisPerusahaan::class);
             $table->foreignIdFor(DurasiKerja::class);
             $table->foreignIdFor(RangeGaji::class);
-            $table->date('tahun_mulai');
-            $table->date('tahun_selesai');
+            $table->date('tgl_mulai');
+            $table->date('tgl_selesai');
             $table->boolean('sesuai_jurusan');
             $table->string('jabatan');
             $table->timestamps();

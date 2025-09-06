@@ -16,8 +16,8 @@ return new class extends Migration
     {
         Schema::create('usahas', function (Blueprint $table) {
             $table->id();
-            $table->date('tahun_mulai');
-            $table->date('tahun_selesai');
+            $table->date('tgl_mulai');
+            $table->date('tgl_selesai');
             $table->string('nama_perusahaan');
             $table->string('bidang');
             $table->foreignIdFor(KepemilikanUsaha::class);
