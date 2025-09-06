@@ -47,7 +47,7 @@ class CreateAlumniRequest extends ApiFormRequest
             'alamat_desa' => 'required|string|max:255',
             'alamat_kelurahan' => 'required|string|max:255',
             'alamat_kecamatan' => 'required|string|max:255',
-            'alamat_kode_pos' => 'required|integer',
+            'alamat_kode_pos' => 'required|numeric',
             'tempat_lahir' => 'required|string|max:255',
         ];
     }
@@ -90,7 +90,7 @@ class CreateAlumniRequest extends ApiFormRequest
             'usahas.*.tgl_selesai' => 'required|date',
             'usahas.*.nama_perusahaan' => 'required|string',
             'usahas.*.bidang' => 'required|string',
-            'usahas.*.jml_karyawan' => 'required|integer',
+            'usahas.*.jml_karyawan' => 'nullable|integer',
             'usahas.*.sesuai_jurusan' => 'required|boolean',
             'usahas.*.kepemilikan_usaha_id' => 'required|exists:kepemilikan_usahas,id',
             'usahas.*.range_laba_id' => 'required|exists:range_labas,id',
