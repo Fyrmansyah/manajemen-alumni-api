@@ -21,8 +21,17 @@ class CreateAlumniRequest extends ApiFormRequest
      */
     public function rules(): array
     {
+        return array_merge(
+            $this->baseRules(),
+            $this->kuliahRules(),
+            $this->kerjaRules(),
+            $this->usahaRules(),
+        );
+    }
+
+    private function baseRules(): array
+    {
         return [
-            // NISN now divalidasi langsung unik di tabel nisns; akan auto dibuat bila belum ada
             'nisn_id' => ['required', 'gt:0', Rule::unique('alumnis', 'nisn_id')->ignore($this->route('alumni'))],
             'nama' => 'required|string|max:255',
             'jenis_kelamin' => 'required|in:L,P',
@@ -40,6 +49,51 @@ class CreateAlumniRequest extends ApiFormRequest
             'alamat_kecamatan' => 'required|string|max:255',
             'alamat_kode_pos' => 'required|integer',
             'tempat_lahir' => 'required|string|max:255',
+        ];
+    }
+
+    private function kuliahRules(): array
+    {
+        return [
+            'kuliahs' => 'array',
+            'kuliahs.*.nama_kampus' => 'required|string',
+            'kuliahs.*.prodi' => 'required|string',
+            'kuliahs.*.tahun_masuk' => 'required|digits:4',
+            'kuliahs.*.tahun_lulus' => 'nullable|digits:4',
+            'kuliahs.*.sesuai_jurusan' => 'required|boolean',
+            'kuliahs.*.jalur_masuk_id' => 'required|exists:jalur_masuk_kuliahs,id',
+        ];
+    }
+
+    private function kerjaRules(): array
+    {
+        return [
+            'kerjas' => 'array',
+            'kerjas.*.nama_perusahaan' => 'required|string',
+            'kerjas.*.alamat_perusahaan' => 'required|string',
+            'kerjas.*.tgl_mulai' => 'required|date',
+            'kerjas.*.tgl_selesai' => 'required|date',
+            'kerjas.*.sesuai_jurusan' => 'required|boolean',
+            'kerjas.*.jabatan' => 'required|string',
+            'kerjas.*.masa_tunggu_kerja_id' => 'required|exists:masa_tunggu_kerjas,id',
+            'kerjas.*.jenis_perusahaan_id' => 'required|exists:jenis_perusahaans,id',
+            'kerjas.*.durasi_kerja_id' => 'required|exists:durasi_kerjas,id',
+            'kerjas.*.range_gaji_id' => 'required|exists:range_gajis,id',
+        ];
+    }
+
+    private function usahaRules(): array
+    {
+        return [
+            'usahas' => 'array',
+            'usahas.*.tgl_mulai' => 'required|date',
+            'usahas.*.tgl_selesai' => 'required|date',
+            'usahas.*.nama_perusahaan' => 'required|string',
+            'usahas.*.bidang' => 'required|string',
+            'usahas.*.jml_karyawan' => 'required|integer',
+            'usahas.*.sesuai_jurusan' => 'required|boolean',
+            'usahas.*.kepemilikan_usaha_id' => 'required|exists:kepemilikan_usahas,id',
+            'usahas.*.range_laba_id' => 'required|exists:range_labas,id',
         ];
     }
 }
