@@ -115,14 +115,26 @@ class AdminJobController extends Controller
         $query->withCount('applications');
 
         $jobs = $query->paginate(15)->withQueryString();
-        $companies = Company::where('status', 'active')->orderBy('company_name')->get();
+        $companies = Company::where('status', 'aktif')
+                           ->where(function($query) {
+                               $query->where('is_verified', true)
+                                     ->orWhere('is_approved', true);
+                           })
+                           ->orderBy('company_name')
+                           ->get(['id', 'company_name']);
 
         return view('admin.jobs.index', compact('jobs', 'companies', 'view', 'counts'));
     }
 
     public function create()
     {
-        $companies = Company::where('status', 'active')->orderBy('company_name')->get();
+        $companies = Company::where('status', 'aktif')
+                           ->where(function($query) {
+                               $query->where('is_verified', true)
+                                     ->orWhere('is_approved', true);
+                           })
+                           ->orderBy('company_name')
+                           ->get(['id', 'company_name', 'status', 'is_verified', 'is_approved']);
         return view('admin.jobs.create', compact('companies'));
     }
 

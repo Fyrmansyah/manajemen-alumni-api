@@ -191,8 +191,14 @@
                                             </td>
                                             <td>
                                                 <div class="d-flex align-items-center">
-                                                    <div class="avatar-sm rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-3">
-                                                        {{ strtoupper(substr($alumnus->nama_lengkap ?? $alumnus->nama, 0, 2)) }}
+                                                    <div class="avatar-sm rounded-circle d-flex align-items-center justify-content-center me-3 overflow-hidden" style="width:46px;height:46px;">
+                                                        @if(!empty($alumnus->foto) && file_exists(storage_path('app/public/alumni_photos/'.ltrim(str_replace('alumni_photos/','',$alumnus->foto),'/'))))
+                                                            <img src="{{ $alumnus->photo_url }}" alt="Foto {{ $alumnus->nama_lengkap ?? $alumnus->nama }}" class="w-100 h-100" style="object-fit:cover;">
+                                                        @else
+                                                            <div class="bg-primary text-white w-100 h-100 d-flex align-items-center justify-content-center fw-semibold">
+                                                                {{ strtoupper(substr($alumnus->nama_lengkap ?? $alumnus->nama, 0, 2)) }}
+                                                            </div>
+                                                        @endif
                                                     </div>
                                                     <div>
                                                         <h6 class="mb-0">{{ $alumnus->nama_lengkap ?? $alumnus->nama }}</h6>
@@ -425,12 +431,7 @@
 
 @push('styles')
 <style>
-.avatar-sm {
-    width: 40px;
-    height: 40px;
-    font-size: 14px;
-    font-weight: bold;
-}
+.avatar-sm {width:46px;height:46px;font-size:14px;font-weight:bold;}
 
 .table-hover tbody tr:hover {
     background-color: rgba(0, 123, 255, 0.05);

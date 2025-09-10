@@ -6,6 +6,20 @@
 <div class="container-fluid py-4">
     <div class="row">
         <div class="col-12">
+            @if(session('success'))
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="fas fa-check-circle me-1"></i>
+                    {{ session('success') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
+            @if(session('error'))
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-triangle me-1"></i>
+                    {{ session('error') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
             <!-- Page Header -->
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <div>
@@ -35,7 +49,7 @@
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
                                     <h6 class="text-white-50 mb-1">Total Perusahaan</h6>
-                                    <h3 class="mb-0">{{ $companies->total() }}</h3>
+                                    <h3 class="mb-0">{{ $stats['total'] ?? $companies->total() }}</h3>
                                 </div>
                                 <i class="fas fa-building fa-2x text-white-50"></i>
                             </div>
@@ -48,7 +62,7 @@
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
                                     <h6 class="text-white-50 mb-1">Aktif</h6>
-                                    <h3 class="mb-0">{{ $companies->where('status', 'active')->count() }}</h3>
+                                    <h3 class="mb-0">{{ $stats['aktif'] ?? 0 }}</h3>
                                 </div>
                                 <i class="fas fa-check-circle fa-2x text-white-50"></i>
                             </div>
@@ -61,7 +75,7 @@
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
                                     <h6 class="text-white-50 mb-1">Pending</h6>
-                                    <h3 class="mb-0">{{ $companies->where('status', 'pending')->count() }}</h3>
+                                    <h3 class="mb-0">{{ $stats['pending'] ?? 0 }}</h3>
                                 </div>
                                 <i class="fas fa-clock fa-2x text-white-50"></i>
                             </div>
@@ -74,7 +88,7 @@
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
                                     <h6 class="text-white-50 mb-1">Bulan Ini</h6>
-                                    <h3 class="mb-0">{{ $companies->where('created_at', '>=', now()->startOfMonth())->count() }}</h3>
+                                    <h3 class="mb-0">{{ $stats['thisMonth'] ?? 0 }}</h3>
                                 </div>
                                 <i class="fas fa-calendar fa-2x text-white-50"></i>
                             </div>
@@ -171,6 +185,7 @@
                                         <th>Kontak</th>
                                         <th>Industri</th>
                                         <th>Status</th>
+                                        <th>Verifikasi</th>
                                         <th>Lowongan</th>
                                         <th>Bergabung</th>
                                         <th width="120">Aksi</th>
@@ -185,13 +200,13 @@
                                             <td>
                                                 <div class="d-flex align-items-center">
                                                     <div class="avatar-sm rounded-circle d-flex align-items-center justify-content-center me-3 overflow-hidden position-relative" style="width:46px;height:46px;">
-                                                        @if(!empty($company->logo) && file_exists(storage_path('app/public/company_logos/'.$company->logo)))
-                                                            <img src="{{ asset('storage/company_logos/'.$company->logo) }}" alt="Logo {{ $company->company_name }}" class="w-100 h-100 object-fit-cover">
-                                                        @else
-                                                            <div class="w-100 h-100 bg-primary text-white d-flex align-items-center justify-content-center fw-semibold">
-                                                                {{ strtoupper(substr($company->company_name, 0, 2)) }}
-                                                            </div>
+                                                        @php($logoUrl = $company->logo ? asset('storage/company_logos/'.$company->logo) : null)
+                                                        @if($logoUrl)
+                                                            <img src="{{ $logoUrl }}" alt="Logo {{ $company->company_name }}" class="w-100 h-100 object-fit-cover" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                                                         @endif
+                                                        <div class="w-100 h-100 bg-primary text-white d-none align-items-center justify-content-center fw-semibold">
+                                                            {{ strtoupper(substr($company->company_name, 0, 2)) }}
+                                                        </div>
                                                     </div>
                                                     <div>
                                                         <h6 class="mb-0">{{ $company->company_name }}</h6>
@@ -225,15 +240,24 @@
                                                 @endif
                                             </td>
                                             <td>
-                                                @php
-                                                    $statusConfig = [
-                                                        'active' => ['class' => 'success', 'text' => 'Aktif'],
-                                                        'pending' => ['class' => 'warning', 'text' => 'Pending'],
-                                                        'inactive' => ['class' => 'danger', 'text' => 'Tidak Aktif'],
-                                                    ];
-                                                    $status = $statusConfig[$company->status] ?? ['class' => 'secondary', 'text' => ucfirst($company->status)];
-                                                @endphp
-                                                <span>{{ $status['text'] }}</span>
+                                                @if($company->status == 'aktif')
+                                                    <span class="badge bg-success">Aktif</span>
+                                                @elseif($company->status == 'pending')
+                                                    <span class="badge bg-warning">Pending</span>
+                                                @elseif($company->status == 'inactive')
+                                                    <span class="badge bg-danger">Tidak Aktif</span>
+                                                @elseif($company->status)
+                                                    <span class="badge bg-secondary">{{ ucfirst($company->status) }}</span>
+                                                @else
+                                                    <span class="badge bg-secondary">Tidak Diketahui</span>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                @if(($company->is_verified ?? false) || ($company->is_approved ?? false))
+                                                    <span class="badge bg-success">Terverifikasi</span>
+                                                @else
+                                                    <span class="badge bg-warning text-dark">Menunggu</span>
+                                                @endif
                                             </td>
                                             <td>
                                                 <span>{{ $company->jobs_count ?? 0 }} Lowongan</span>
@@ -251,6 +275,21 @@
                                                        class="btn btn-sm btn-outline-warning" title="Edit">
                                                         <i class="fas fa-edit"></i>
                                                     </a>
+                                                    @if(!$company->is_verified)
+                                                    <form method="POST" action="{{ route('admin.companies.verify', $company) }}" class="d-inline">
+                                                        @csrf
+                                                        <button type="submit" class="btn btn-sm btn-outline-success" title="Verifikasi">
+                                                            <i class="fas fa-check"></i>
+                                                        </button>
+                                                    </form>
+                                                    @else
+                                                    <form method="POST" action="{{ route('admin.companies.unverify', $company) }}" class="d-inline">
+                                                        @csrf
+                                                        <button type="submit" class="btn btn-sm btn-outline-secondary" title="Batalkan Verifikasi">
+                                                            <i class="fas fa-undo"></i>
+                                                        </button>
+                                                    </form>
+                                                    @endif
                                                     <button type="button" class="btn btn-sm btn-outline-danger" 
                                                             onclick="deleteCompany({{ $company->id }}, '{{ $company->company_name }}')" title="Hapus">
                                                         <i class="fas fa-trash"></i>

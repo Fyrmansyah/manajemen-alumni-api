@@ -29,6 +29,8 @@ class CompanySeeder extends Seeder
                 'password' => Hash::make('password123'),
                 'status' => 'aktif',
                 'is_approved' => true,
+                'is_verified' => true,
+                'verified_at' => now(),
             ],
             [
                 'company_name' => 'CV Kreatif Digital',
@@ -45,6 +47,8 @@ class CompanySeeder extends Seeder
                 'password' => Hash::make('password123'),
                 'status' => 'aktif',
                 'is_approved' => true,
+                'is_verified' => true,
+                'verified_at' => now(),
             ],
             [
                 'company_name' => 'PT Otomotif Nusantara',
@@ -61,6 +65,8 @@ class CompanySeeder extends Seeder
                 'password' => Hash::make('password123'),
                 'status' => 'aktif',
                 'is_approved' => true,
+                'is_verified' => true,
+                'verified_at' => now(),
             ],
             [
                 'company_name' => 'Toko Elektro Sejahtera',
@@ -77,6 +83,8 @@ class CompanySeeder extends Seeder
                 'password' => Hash::make('password123'),
                 'status' => 'aktif',
                 'is_approved' => true,
+                'is_verified' => true,
+                'verified_at' => now(),
             ],
         ];
 

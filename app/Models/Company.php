@@ -29,6 +29,9 @@ class Company extends Authenticatable
         'contact_position',
         'logo',
         'status',
+        'is_approved',
+        'is_verified',
+        'verified_at',
     ];
 
     protected $hidden = [
@@ -37,7 +40,9 @@ class Company extends Authenticatable
 
     protected $casts = [
         'password' => 'hashed',
-        'is_approved' => 'boolean',
+    'is_approved' => 'boolean',
+    'is_verified' => 'boolean',
+    'verified_at' => 'datetime',
         'established_year' => 'integer',
     ];
 
@@ -68,11 +73,13 @@ class Company extends Authenticatable
 
     public function scopeActive($query)
     {
-        return $query->where('status', 'aktif')->where('is_approved', true);
+        return $query->whereIn('status', ['active', 'aktif'])->where(function($q){
+            $q->where('is_verified', true)->orWhere('is_approved', true);
+        });
     }
 
     public function scopePending($query)
     {
-        return $query->where('status', 'pending');
+        return $query->where('status', 'pending')->orWhere('is_verified', false);
     }
 }
