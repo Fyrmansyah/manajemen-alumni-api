@@ -172,7 +172,7 @@
                                     <label for="status_kerja" class="form-label">Status Kerja</label>
                                     <select class="form-select @error('status_kerja') is-invalid @enderror" 
                                             id="status_kerja" name="status_kerja">
-                                        <option value="">Pilih Status</option>
+                                        <option value="belum_diisi" {{ old('status_kerja', $alumni->status_kerja) == 'belum_diisi' ? 'selected' : '' }}>Belum Diisi</option>
                                         <option value="bekerja" {{ old('status_kerja', $alumni->status_kerja) == 'bekerja' ? 'selected' : '' }}>Bekerja</option>
                                         <option value="kuliah" {{ old('status_kerja', $alumni->status_kerja) == 'kuliah' ? 'selected' : '' }}>Kuliah</option>
                                         <option value="wirausaha" {{ old('status_kerja', $alumni->status_kerja) == 'wirausaha' ? 'selected' : '' }}>Wirausaha</option>
