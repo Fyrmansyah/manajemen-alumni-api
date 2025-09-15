@@ -162,7 +162,11 @@
                                 </a>
                             </h3>
                             <p class="card-text text-muted mb-3">
-                                {{ Str::limit($featuredNews->content, 200) }}
+                                @if($featuredNews->excerpt)
+                                    {{ $featuredNews->excerpt }}
+                                @else
+                                    {{ Str::limit(strip_tags($featuredNews->content), 200) }}
+                                @endif
                             </p>
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
@@ -209,7 +213,11 @@
                                 </h5>
                                 
                                 <p class="card-text text-muted flex-grow-1">
-                                    {{ Str::limit($article->content, 120) }}
+                                    @if($article->excerpt)
+                                        {{ Str::limit($article->excerpt, 120) }}
+                                    @else
+                                        {{ Str::limit(strip_tags($article->content), 120) }}
+                                    @endif
                                 </p>
                                 
                                 <div class="d-flex justify-content-between align-items-center mt-auto">

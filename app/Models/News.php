@@ -14,6 +14,7 @@ class News extends Model
         'content',
         'excerpt',
         'featured_image',
+        'image_caption',
         'slug',
         'status',
         'is_featured',

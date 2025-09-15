@@ -380,15 +380,11 @@
                                                 @endif
                                                 
                                                 @if(!$job->isArchived())
-                                                    <form action="{{ route('admin.jobs.destroy', $job) }}" method="POST" class="d-inline">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <button type="submit" class="btn btn-outline-danger btn-sm" 
-                                                                onclick="return confirm('Yakin ingin menghapus lowongan ini? Tindakan ini tidak dapat dibatalkan!')"
-                                                                title="Hapus Lowongan">
-                                                            <i class="fas fa-trash"></i>
-                                                        </button>
-                                                    </form>
+                                                    <button class="btn btn-outline-danger btn-sm"
+                                                            onclick="deleteSingleJob({{ $job->id }})"
+                                                            title="Hapus Lowongan">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
                                                 @endif
                                             </div>
                                         </td>
@@ -805,6 +801,29 @@ function archiveSingleJob(jobId) {
     form.innerHTML = `
         <input type="hidden" name="_token" value="${csrfToken}">
         <input type="hidden" name="_method" value="PATCH">
+        <input type="hidden" name="reason" value="${reason}">
+    `;
+    
+    document.body.appendChild(form);
+    form.submit();
+}
+
+function deleteSingleJob(jobId) {
+    if (!confirm('Yakin ingin menghapus lowongan ini? Tindakan ini tidak dapat dibatalkan!')) {
+        return;
+    }
+    
+    const reason = prompt('Masukkan alasan penghapusan:');
+    if (reason === null) return; // User cancelled
+    
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = `{{ url('/admin/jobs') }}/${jobId}`;
+    
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    form.innerHTML = `
+        <input type="hidden" name="_token" value="${csrfToken}">
+        <input type="hidden" name="_method" value="DELETE">
         <input type="hidden" name="reason" value="${reason}">
     `;
     

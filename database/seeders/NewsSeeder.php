@@ -16,7 +16,7 @@ class NewsSeeder extends Seeder
     public function run(): void
     {
         // Get admin user for author_id
-        $admin = Admin::where('username', 'admin')->first();
+        $admin = Admin::where('username', 'admin@smkn1sby.sch.id')->first();
         
         if (!$admin) {
             $this->command->info('No admin user found. Please run AdminSeeder first.');

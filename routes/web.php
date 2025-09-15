@@ -90,6 +90,10 @@ Route::middleware('auth:admin')->prefix('admin')->name('admin.')->group(function
     
     // News management
     Route::resource('news', AdminNewsController::class);
+    Route::post('news/upload-image', [AdminNewsController::class, 'uploadImage'])->name('news.upload-image');
+    Route::get('news/create-tinymce', function() {
+        return view('admin.news.create-tinymce');
+    })->name('news.create-tinymce');
     
     // Company management
     Route::resource('companies', AdminCompanyController::class);

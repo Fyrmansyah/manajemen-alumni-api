@@ -196,9 +196,12 @@ class AdminJobController extends Controller
             ->with('success', 'Lowongan kerja berhasil diperbarui.');
     }
 
-    public function destroy(Job $job)
+    public function destroy(Job $job, Request $request)
     {
         try {
+            // Get reason from request
+            $reason = $request->input('reason', 'Deleted by admin');
+            
             // Gunakan pengarsipan sebagai penghapusan yang aman (soft delete via archive)
             if ($job->isArchived()) {
                 // Jika sudah diarsip, tidak perlu menghapus lagi
@@ -207,10 +210,10 @@ class AdminJobController extends Controller
                     ->with('info', "Lowongan '{$job->title}' sudah dalam status arsip.");
             }
 
-            $job->archive('Deleted by admin');
+            $job->archive($reason);
             return redirect()
                 ->route('admin.jobs.index')
-                ->with('success', "Lowongan '{$job->title}' dipindahkan ke arsip (hapus aman).");
+                ->with('success', "Lowongan '{$job->title}' dipindahkan ke arsip. Alasan: {$reason}");
         } catch (\Exception $e) {
             return back()->with('error', 'Terjadi kesalahan saat menghapus lowongan kerja.');
         }

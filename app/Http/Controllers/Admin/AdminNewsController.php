@@ -71,6 +71,7 @@ class AdminNewsController extends Controller
             'category' => 'required|in:info,achievement,job,event,announcement',
             'status' => 'required|in:draft,published,archived',
             'featured_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'image_caption' => 'nullable|string|max:255',
             'published_at' => 'nullable|date',
             'tags' => 'nullable|string',
             'meta_description' => 'nullable|string|max:160',
@@ -127,6 +128,7 @@ class AdminNewsController extends Controller
             'category' => 'required|in:info,achievement,job,event,announcement',
             'status' => 'required|in:draft,published,archived',
             'featured_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'image_caption' => 'nullable|string|max:255',
             'published_at' => 'nullable|date',
             'tags' => 'nullable|string',
             'meta_description' => 'nullable|string|max:160',
@@ -183,6 +185,74 @@ class AdminNewsController extends Controller
                 ->with('success', 'Berita berhasil dihapus.');
         } catch (\Exception $e) {
             return back()->with('error', 'Terjadi kesalahan saat menghapus berita.');
+        }
+    }
+
+    /**
+     * Upload image for CKEditor and TinyMCE
+     */
+    public function uploadImage(Request $request)
+    {
+        try {
+            // Log the request for debugging
+            \Log::info('Editor upload request received', [
+                'files' => $request->allFiles(),
+                'all_data' => $request->all()
+            ]);
+
+            $request->validate([
+                'upload' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:2048'
+            ]);
+
+            if ($request->hasFile('upload')) {
+                $file = $request->file('upload');
+                $fileName = time() . '_' . $file->getClientOriginalName();
+                $filePath = $file->storeAs('news/content-images', $fileName, 'public');
+                
+                $url = asset('storage/' . $filePath);
+                
+                \Log::info('Image uploaded successfully', [
+                    'url' => $url,
+                    'file_name' => $fileName
+                ]);
+                
+                // Return format compatible with both CKEditor and TinyMCE
+                return response()->json([
+                    'url' => $url,
+                    'uploaded' => true,
+                    'fileName' => $fileName,
+                    'location' => $url  // TinyMCE expects 'location'
+                ]);
+            }
+
+            return response()->json([
+                'error' => [
+                    'message' => 'File upload failed'
+                ]
+            ], 400);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Log::error('Validation error in upload', [
+                'errors' => $e->errors()
+            ]);
+            
+            return response()->json([
+                'error' => [
+                    'message' => 'Validation failed: ' . implode(', ', $e->errors()['upload'] ?? ['Unknown error'])
+                ]
+            ], 422);
+            
+        } catch (\Exception $e) {
+            \Log::error('Editor upload error', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'error' => [
+                    'message' => 'Upload failed: ' . $e->getMessage()
+                ]
+            ], 400);
         }
     }
 }
