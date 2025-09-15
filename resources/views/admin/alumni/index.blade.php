@@ -110,6 +110,7 @@
                             <label for="status_kerja" class="form-label">Status Kerja</label>
                             <select class="form-select" id="status_kerja" name="status_kerja">
                                 <option value="">Semua Status</option>
+                                <option value="belum_diisi" {{ request('status_kerja') == 'belum_diisi' ? 'selected' : '' }}>Belum Diisi</option>
                                 <option value="bekerja" {{ request('status_kerja') == 'bekerja' ? 'selected' : '' }}>Bekerja</option>
                                 <option value="kuliah" {{ request('status_kerja') == 'kuliah' ? 'selected' : '' }}>Kuliah</option>
                                 <option value="wirausaha" {{ request('status_kerja') == 'wirausaha' ? 'selected' : '' }}>Wirausaha</option>
@@ -213,30 +214,49 @@
                                                 <strong>{{ $alumnus->tahun_lulus }}</strong>
                                             </td>
                                             <td>
-                                                @if($alumnus->tempat_kerja)
-                                                    <span>
-                                                        <i class="fas fa-briefcase me-1"></i>
-                                                        Bekerja
-                                                    </span>
-                                                    <div class="small text-muted mt-1">{{ Str::limit($alumnus->tempat_kerja, 30) }}</div>
-                                                    @if($alumnus->jabatan_kerja)
-                                                        <div class="small text-muted">{{ Str::limit($alumnus->jabatan_kerja, 30) }}</div>
-                                                    @endif
-                                                @elseif($alumnus->tempat_kuliah)
-                                                    <span>
-                                                        <i class="fas fa-graduation-cap me-1"></i>
-                                                        Kuliah
-                                                    </span>
-                                                    <div class="small text-muted mt-1">{{ Str::limit($alumnus->tempat_kuliah, 30) }}</div>
-                                                    @if($alumnus->prodi_kuliah)
-                                                        <div class="small text-muted">{{ Str::limit($alumnus->prodi_kuliah, 30) }}</div>
-                                                    @endif
-                                                @else
-                                                    <span>
-                                                        <i class="fas fa-question me-1"></i>
-                                                        Belum diisi
-                                                    </span>
-                                                @endif
+                                                @switch($alumnus->status_kerja ?? 'belum_diisi')
+                                                    @case('bekerja')
+                                                        <span class="badge bg-success">
+                                                            <i class="fas fa-briefcase me-1"></i>
+                                                            Bekerja
+                                                        </span>
+                                                        @if($alumnus->tempat_kerja)
+                                                            <div class="small text-muted mt-1">{{ Str::limit($alumnus->tempat_kerja, 30) }}</div>
+                                                        @endif
+                                                        @if($alumnus->jabatan_kerja)
+                                                            <div class="small text-muted">{{ Str::limit($alumnus->jabatan_kerja, 30) }}</div>
+                                                        @endif
+                                                        @break
+                                                    @case('kuliah')
+                                                        <span class="badge bg-primary">
+                                                            <i class="fas fa-graduation-cap me-1"></i>
+                                                            Kuliah
+                                                        </span>
+                                                        @if($alumnus->tempat_kuliah)
+                                                            <div class="small text-muted mt-1">{{ Str::limit($alumnus->tempat_kuliah, 30) }}</div>
+                                                        @endif
+                                                        @if($alumnus->prodi_kuliah)
+                                                            <div class="small text-muted">{{ Str::limit($alumnus->prodi_kuliah, 30) }}</div>
+                                                        @endif
+                                                        @break
+                                                    @case('wirausaha')
+                                                        <span class="badge bg-warning text-dark">
+                                                            <i class="fas fa-store me-1"></i>
+                                                            Wirausaha
+                                                        </span>
+                                                        @break
+                                                    @case('menganggur')
+                                                        <span class="badge bg-danger">
+                                                            <i class="fas fa-user-clock me-1"></i>
+                                                            Menganggur
+                                                        </span>
+                                                        @break
+                                                    @default
+                                                        <span class="badge bg-secondary">
+                                                            <i class="fas fa-question me-1"></i>
+                                                            Belum diisi
+                                                        </span>
+                                                @endswitch
                                             </td>
                                             <td>
                                                 <div>
