@@ -16,8 +16,8 @@ class AdminSeeder extends Seeder
         // Create admin user in admins table
         Admin::create([
             'nama' => 'Admin BKK SMKN 1 Surabaya',
-            'username' => 'admin',
-            'password' => 'admin123',
+            'username' => 'admin@smkn1sby.sch.id',
+            'password' => 'admin@20532205',
         ]);
     }
 }
