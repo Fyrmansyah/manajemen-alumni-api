@@ -98,17 +98,13 @@
                                 @endif
                             </div>
 
-                            <!-- Excerpt -->
-                            @if($news->excerpt)
-                                <div class="alert alert-info border-0 bg-light">
-                                    <i class="fas fa-quote-left me-2"></i>
-                                    <strong>Ringkasan:</strong> {{ $news->excerpt }}
-                                </div>
-                            @endif
+                            
 
                             <!-- Content -->
                             <div class="content">
-                                {!! nl2br(e($news->content)) !!}
+                                <div class="admin-content-preview">
+                                    {!! $news->content !!}
+                                </div>
                             </div>
 
                             <!-- Tags -->
@@ -372,4 +368,58 @@ function copyToClipboard(text) {
     });
 }
 </script>
+
+@push('styles')
+<style>
+.admin-content-preview {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 2rem;
+    line-height: 1.7;
+    font-size: 1rem;
+}
+
+.admin-content-preview p {
+    margin-bottom: 1.2rem;
+    text-align: justify;
+}
+
+.admin-content-preview a {
+    color: #0066cc;
+    text-decoration: underline;
+}
+
+.admin-content-preview a:hover {
+    color: #0052a3;
+}
+
+.admin-content-preview img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 6px;
+    margin: 1rem 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.admin-content-preview blockquote {
+    border-left: 4px solid #007bff;
+    padding-left: 1rem;
+    margin: 1rem 0;
+    font-style: italic;
+    color: #666;
+}
+
+.admin-content-preview h1,
+.admin-content-preview h2,
+.admin-content-preview h3,
+.admin-content-preview h4,
+.admin-content-preview h5,
+.admin-content-preview h6 {
+    color: #333;
+    margin-top: 1.5rem;
+    margin-bottom: 1rem;
+}
+</style>
+@endpush
 @endpush

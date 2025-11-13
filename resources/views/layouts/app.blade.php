@@ -273,8 +273,7 @@
                 padding: 10px 20px;
                 line-height: 1.5;
             }
-        }
-        }
+    }
 
         /* Breadcrumb Styles */
         .breadcrumb {
@@ -607,6 +606,37 @@
     <!-- Main Content -->
     <main class="main-content">
         @yield('content')
+
+        @if(auth('company')->check())
+            @php $company = auth('company')->user(); @endphp
+            @if(!$company->is_verified)
+                @php
+                    $joinedAt = $company->created_at ? $company->created_at->timezone(config('app.timezone')) : null;
+                    $estimate = $joinedAt ? \Carbon\Carbon::parse($joinedAt)->addWeekdays(2) : null; // ~1-2 hari kerja
+                @endphp
+                <div class="position-fixed bottom-0 start-50 translate-middle-x mb-3" style="z-index:1050; max-width: 840px; width: 95%;">
+                    <div class="alert alert-warning shadow-sm d-flex align-items-center justify-content-between mb-0">
+                        <div class="me-3">
+                            <div class="fw-semibold"><i class="fas fa-hourglass-half me-2"></i>Akun perusahaan Anda belum diverifikasi.</div>
+                            <div class="small text-muted">
+                                Beberapa fitur dibatasi sampai verifikasi selesai. Perkiraan waktu: 1–2 hari kerja
+                                @if($estimate)
+                                    (perkiraan selesai: {{ $estimate->format('d M Y') }}).
+                                @else
+                                    .
+                                @endif
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2">
+                            @if($joinedAt)
+                                <span class="badge text-bg-light align-self-center">Bergabung: {{ $joinedAt->format('d M Y') }}</span>
+                            @endif
+                            <a href="{{ route('company.pending') }}" class="btn btn-sm btn-outline-dark">Lihat Status</a>
+                        </div>
+                    </div>
+                </div>
+            @endif
+        @endif
     </main>
 
     <!-- Include Footer Component -->

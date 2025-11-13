@@ -28,6 +28,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'auth.admin' => \App\Http\Middleware\AdminAuth::class,
             'auth.alumni' => \App\Http\Middleware\AlumniAuth::class,
             'auth.company' => \App\Http\Middleware\CompanyAuth::class,
+            'verified.company' => \App\Http\Middleware\EnsureCompanyIsVerified::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

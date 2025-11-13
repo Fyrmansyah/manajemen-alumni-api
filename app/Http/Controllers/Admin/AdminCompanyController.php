@@ -27,7 +27,8 @@ class AdminCompanyController extends Controller
 
         // Filter by status
         if ($request->filled('status')) {
-            $query->where('status', $request->status);
+            $status = $request->status === 'active' ? 'aktif' : $request->status;
+            $query->where('status', $status);
         }
 
         // Filter by industry
@@ -50,12 +51,35 @@ class AdminCompanyController extends Controller
                 $query->latest();
         }
 
-        // Add jobs count
-        $query->withCount(['jobs']);
+        // Add jobs count and avoid N+1. Select only fields needed by the view
+        $query->select(['id','company_name','email','phone','website','description','industry','status','created_at','logo','is_verified','is_approved'])
+              ->withCount(['jobs']);
 
         $companies = $query->paginate(15)->withQueryString();
 
-        return view('admin.companies.index', compact('companies'));
+        // Compute lightweight stats matching current filters except status & sort
+        $statsBase = Company::query();
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $statsBase->where(function($q) use ($search) {
+                $q->where('company_name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+        if ($request->filled('industry')) {
+            $statsBase->where('industry', $request->industry);
+        }
+
+        $stats = [
+            'total' => (clone $statsBase)->count(),
+            'aktif' => (clone $statsBase)->where('status', 'aktif')->count(),
+            'pending' => (clone $statsBase)->where('status', 'pending')->count(),
+            'inactive' => (clone $statsBase)->where('status', 'inactive')->count(),
+            'thisMonth' => (clone $statsBase)->where('created_at', '>=', now()->startOfMonth())->count(),
+        ];
+
+        return view('admin.companies.index', compact('companies','stats'));
     }
 
     public function show(Company $company)
@@ -95,13 +119,37 @@ class AdminCompanyController extends Controller
         $validatedData = $request->validate([
             'company_name' => 'required|string|max:255',
             'email' => 'required|email|unique:companies',
+            'password' => 'required|string|min:8|confirmed',
             'phone' => 'nullable|string|max:20',
             'website' => 'nullable|url',
             'address' => 'nullable|string',
             'industry' => 'nullable|string',
             'description' => 'nullable|string',
-            'status' => 'required|in:active,pending,inactive',
+            'status' => 'required|in:active,aktif,pending,inactive',
+            'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'is_verified' => 'nullable|boolean',
+            'is_approved' => 'nullable|boolean',
         ]);
+
+        // Hash the password
+        $validatedData['password'] = bcrypt($validatedData['password']);
+        
+        // Handle logo upload
+        if ($request->hasFile('logo')) {
+            $logo = $request->file('logo');
+            $logoName = time() . '_' . $logo->getClientOriginalName();
+            $logo->storeAs('public/company_logos', $logoName);
+            $validatedData['logo'] = $logoName;
+        }
+
+        // Handle verification flags
+        $validatedData['is_verified'] = $request->has('is_verified');
+        $validatedData['is_approved'] = $request->has('is_approved');
+        
+        // Set verified_at if verified
+        if ($validatedData['is_verified']) {
+            $validatedData['verified_at'] = now();
+        }
 
         $company = Company::create($validatedData);
 
@@ -125,7 +173,7 @@ class AdminCompanyController extends Controller
             'address' => 'nullable|string',
             'industry' => 'nullable|string',
             'description' => 'nullable|string',
-            'status' => 'required|in:active,pending,inactive',
+            'status' => 'required|in:active,aktif,pending,inactive',
         ]);
 
         $company->update($validatedData);
@@ -159,7 +207,12 @@ class AdminCompanyController extends Controller
 
     public function approve(Company $company)
     {
-        $company->update(['status' => 'active']);
+        $company->update([
+            'status' => 'aktif',
+            'is_verified' => true,
+            'verified_at' => now(),
+            'is_approved' => true,
+        ]);
 
         return response()->json([
             'success' => true,
@@ -169,12 +222,48 @@ class AdminCompanyController extends Controller
 
     public function reject(Company $company)
     {
-        $company->update(['status' => 'inactive']);
+    $company->update([
+            'status' => 'inactive',
+            'is_verified' => false,
+            'is_approved' => false,
+            'verified_at' => null,
+        ]);
 
         return response()->json([
             'success' => true,
             'message' => 'Perusahaan ditolak.'
         ]);
+    }
+
+    public function verify(Company $company)
+    {
+        $company->update([
+            'status' => 'aktif',
+            'is_verified' => true,
+            'verified_at' => now(),
+            'is_approved' => true,
+        ]);
+
+        // Notify company via email (best-effort)
+        try {
+            \Illuminate\Support\Facades\Mail::to($company->email)->send(new \App\Mail\CompanyVerifiedMail($company));
+        } catch (\Throwable $e) {
+            // ignore email failure
+        }
+
+    return redirect()->route('admin.companies.index')->with('success', 'Perusahaan telah diverifikasi.');
+    }
+
+    public function unverify(Company $company)
+    {
+        $company->update([
+            'status' => 'pending',
+            'is_verified' => false,
+            'is_approved' => false,
+            'verified_at' => null,
+        ]);
+
+    return redirect()->route('admin.companies.index')->with('success', 'Status verifikasi perusahaan diubah menjadi pending.');
     }
 
     public function export(Request $request)

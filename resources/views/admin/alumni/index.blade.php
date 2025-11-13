@@ -110,6 +110,7 @@
                             <label for="status_kerja" class="form-label">Status Kerja</label>
                             <select class="form-select" id="status_kerja" name="status_kerja">
                                 <option value="">Semua Status</option>
+                                <option value="belum_diisi" {{ request('status_kerja') == 'belum_diisi' ? 'selected' : '' }}>Belum Diisi</option>
                                 <option value="bekerja" {{ request('status_kerja') == 'bekerja' ? 'selected' : '' }}>Bekerja</option>
                                 <option value="kuliah" {{ request('status_kerja') == 'kuliah' ? 'selected' : '' }}>Kuliah</option>
                                 <option value="wirausaha" {{ request('status_kerja') == 'wirausaha' ? 'selected' : '' }}>Wirausaha</option>
@@ -191,8 +192,14 @@
                                             </td>
                                             <td>
                                                 <div class="d-flex align-items-center">
-                                                    <div class="avatar-sm rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-3">
-                                                        {{ strtoupper(substr($alumnus->nama_lengkap ?? $alumnus->nama, 0, 2)) }}
+                                                    <div class="avatar-sm rounded-circle d-flex align-items-center justify-content-center me-3 overflow-hidden" style="width:46px;height:46px;">
+                                                        @if(!empty($alumnus->foto) && file_exists(storage_path('app/public/alumni_photos/'.ltrim(str_replace('alumni_photos/','',$alumnus->foto),'/'))))
+                                                            <img src="{{ $alumnus->photo_url }}" alt="Foto {{ $alumnus->nama_lengkap ?? $alumnus->nama }}" class="w-100 h-100" style="object-fit:cover;">
+                                                        @else
+                                                            <div class="bg-primary text-white w-100 h-100 d-flex align-items-center justify-content-center fw-semibold">
+                                                                {{ strtoupper(substr($alumnus->nama_lengkap ?? $alumnus->nama, 0, 2)) }}
+                                                            </div>
+                                                        @endif
                                                     </div>
                                                     <div>
                                                         <h6 class="mb-0">{{ $alumnus->nama_lengkap ?? $alumnus->nama }}</h6>
@@ -207,30 +214,49 @@
                                                 <strong>{{ $alumnus->tahun_lulus }}</strong>
                                             </td>
                                             <td>
-                                                @if($alumnus->tempat_kerja)
-                                                    <span>
-                                                        <i class="fas fa-briefcase me-1"></i>
-                                                        Bekerja
-                                                    </span>
-                                                    <div class="small text-muted mt-1">{{ Str::limit($alumnus->tempat_kerja, 30) }}</div>
-                                                    @if($alumnus->jabatan_kerja)
-                                                        <div class="small text-muted">{{ Str::limit($alumnus->jabatan_kerja, 30) }}</div>
-                                                    @endif
-                                                @elseif($alumnus->tempat_kuliah)
-                                                    <span>
-                                                        <i class="fas fa-graduation-cap me-1"></i>
-                                                        Kuliah
-                                                    </span>
-                                                    <div class="small text-muted mt-1">{{ Str::limit($alumnus->tempat_kuliah, 30) }}</div>
-                                                    @if($alumnus->prodi_kuliah)
-                                                        <div class="small text-muted">{{ Str::limit($alumnus->prodi_kuliah, 30) }}</div>
-                                                    @endif
-                                                @else
-                                                    <span>
-                                                        <i class="fas fa-question me-1"></i>
-                                                        Belum diisi
-                                                    </span>
-                                                @endif
+                                                @switch($alumnus->status_kerja ?? 'belum_diisi')
+                                                    @case('bekerja')
+                                                        <span class="badge bg-success">
+                                                            <i class="fas fa-briefcase me-1"></i>
+                                                            Bekerja
+                                                        </span>
+                                                        @if($alumnus->tempat_kerja)
+                                                            <div class="small text-muted mt-1">{{ Str::limit($alumnus->tempat_kerja, 30) }}</div>
+                                                        @endif
+                                                        @if($alumnus->jabatan_kerja)
+                                                            <div class="small text-muted">{{ Str::limit($alumnus->jabatan_kerja, 30) }}</div>
+                                                        @endif
+                                                        @break
+                                                    @case('kuliah')
+                                                        <span class="badge bg-primary">
+                                                            <i class="fas fa-graduation-cap me-1"></i>
+                                                            Kuliah
+                                                        </span>
+                                                        @if($alumnus->tempat_kuliah)
+                                                            <div class="small text-muted mt-1">{{ Str::limit($alumnus->tempat_kuliah, 30) }}</div>
+                                                        @endif
+                                                        @if($alumnus->prodi_kuliah)
+                                                            <div class="small text-muted">{{ Str::limit($alumnus->prodi_kuliah, 30) }}</div>
+                                                        @endif
+                                                        @break
+                                                    @case('wirausaha')
+                                                        <span class="badge bg-warning text-dark">
+                                                            <i class="fas fa-store me-1"></i>
+                                                            Wirausaha
+                                                        </span>
+                                                        @break
+                                                    @case('menganggur')
+                                                        <span class="badge bg-danger">
+                                                            <i class="fas fa-user-clock me-1"></i>
+                                                            Menganggur
+                                                        </span>
+                                                        @break
+                                                    @default
+                                                        <span class="badge bg-secondary">
+                                                            <i class="fas fa-question me-1"></i>
+                                                            Belum diisi
+                                                        </span>
+                                                @endswitch
                                             </td>
                                             <td>
                                                 <div>
@@ -425,12 +451,7 @@
 
 @push('styles')
 <style>
-.avatar-sm {
-    width: 40px;
-    height: 40px;
-    font-size: 14px;
-    font-weight: bold;
-}
+.avatar-sm {width:46px;height:46px;font-size:14px;font-weight:bold;}
 
 .table-hover tbody tr:hover {
     background-color: rgba(0, 123, 255, 0.05);

@@ -218,7 +218,7 @@ class AuthController extends Controller
             'contact_person_phone' => 'required|string|max:20',
         ]);
 
-        \App\Models\Company::create([
+        $company = \App\Models\Company::create([
             'company_name' => $request->input('company_name'),
             'email' => $request->input('email'),
             'password' => $request->input('password'),
@@ -233,6 +233,13 @@ class AuthController extends Controller
             'contact_person_phone' => $request->input('contact_person_phone'),
             'status' => 'pending',
         ]);
+
+        // Send email notification (best-effort)
+        try {
+            \Illuminate\Support\Facades\Mail::to($company->email)->send(new \App\Mail\CompanyRegisteredMail($company));
+        } catch (\Throwable $e) {
+            // swallow to avoid blocking registration if mail fails
+        }
 
         return redirect('/login')->with('success', 'Pendaftaran berhasil! Akun Anda sedang dalam proses verifikasi.');
     }

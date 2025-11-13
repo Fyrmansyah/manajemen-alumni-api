@@ -12,17 +12,39 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('nisns', function (Blueprint $table) {
-            $table->string('nama')->after('number');
-            $table->string('nik')->after('nama');
-            $table->date('tgl_lahir')->after('nik');
-            $table->string('tempat_lahir')->after('tgl_lahir');
-            $table->string('alamat')->after('tempat_lahir');
-            $table->unsignedInteger('rt')->after('alamat');
-            $table->unsignedInteger('rw')->after('rt');
-            $table->string('kelurahan')->after('rw');
-            $table->string('kecamatan')->after('kelurahan');
-            $table->string('kode_pos')->after('kecamatan');
-            $table->string('no_tlp')->after('kode_pos');
+            if (!Schema::hasColumn('nisns', 'nama')) {
+                $table->string('nama')->nullable()->after('number');
+            }
+            if (!Schema::hasColumn('nisns', 'nik')) {
+                $table->string('nik')->nullable()->after('nama');
+            }
+            if (!Schema::hasColumn('nisns', 'tgl_lahir')) {
+                $table->date('tgl_lahir')->nullable()->after('nik');
+            }
+            if (!Schema::hasColumn('nisns', 'tempat_lahir')) {
+                $table->string('tempat_lahir')->nullable()->after('tgl_lahir');
+            }
+            if (!Schema::hasColumn('nisns', 'alamat')) {
+                $table->string('alamat')->nullable()->after('tempat_lahir');
+            }
+            if (!Schema::hasColumn('nisns', 'rt')) {
+                $table->unsignedInteger('rt')->nullable()->after('alamat');
+            }
+            if (!Schema::hasColumn('nisns', 'rw')) {
+                $table->unsignedInteger('rw')->nullable()->after('rt');
+            }
+            if (!Schema::hasColumn('nisns', 'kelurahan')) {
+                $table->string('kelurahan')->nullable()->after('rw');
+            }
+            if (!Schema::hasColumn('nisns', 'kecamatan')) {
+                $table->string('kecamatan')->nullable()->after('kelurahan');
+            }
+            if (!Schema::hasColumn('nisns', 'kode_pos')) {
+                $table->string('kode_pos')->nullable()->after('kecamatan');
+            }
+            if (!Schema::hasColumn('nisns', 'no_tlp')) {
+                $table->string('no_tlp')->nullable()->after('kode_pos');
+            }
         });
     }
 
@@ -32,19 +54,11 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('nisns', function (Blueprint $table) {
-            $table->dropColumn([
-                'nama',
-                'nik',
-                'tgl_lahir',
-                'tempat_lahir',
-                'alamat',
-                'rt',
-                'rw',
-                'kelurahan',
-                'kecamatan',
-                'kode_pos',
-                'no_tlp',
-            ]);
+            foreach (['no_tlp','kode_pos','kecamatan','kelurahan','rw','rt','alamat','tempat_lahir','tgl_lahir','nik','nama'] as $col) {
+                if (Schema::hasColumn('nisns', $col)) {
+                    $table->dropColumn($col);
+                }
+            }
         });
     }
 };

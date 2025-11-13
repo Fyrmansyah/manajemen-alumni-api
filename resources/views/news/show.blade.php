@@ -31,18 +31,34 @@
                                 </div>
                             </div>
 
-                            <h1 class="h2 mb-3">{{ $news->title }}</h1>
+                            <h1 class="h2 mb-4">{{ $news->title }}</h1>
 
                             @if($news->featured_image)
-                                <div class="text-center mb-4">
-                                    <img src="{{ asset('storage/' . $news->featured_image) }}" alt="{{ $news->title }}"
-                                        class="img-fluid rounded shadow">
+                                <div class="featured-image-container mb-4">
+                                    <img src="{{ asset('storage/' . $news->featured_image) }}" 
+                                         alt="{{ $news->title }}"
+                                         class="img-fluid w-100 rounded shadow-sm"
+                                         style="height: 350px; object-fit: cover;">
+                                    @if($news->image_caption)
+                                        <div class="text-muted small mt-3 text-center border-start border-primary border-3 ps-3">
+                                            <em><i class="fas fa-camera me-2 text-primary"></i>{{ $news->image_caption }}</em>
+                                        </div>
+                                    @endif
                                 </div>
                             @endif
+
+                           
                         </div>
 
+                        <!-- Article Content -->
                         <div class="article-content">
-                        {!! nl2br(strip_tags($news->content)) !!}
+                            @if($news->content)
+                                <div class="content-wrapper">
+                                    {!! $news->content !!}
+                                </div>
+                            @else
+                                <p class="text-muted">Konten tidak tersedia.</p>
+                            @endif
                         </div>
 
                         <!-- Article Footer -->
@@ -278,10 +294,255 @@
         .article-content {
             line-height: 1.8;
             font-size: 1.1rem;
+            color: #333;
+        }
+
+        .content-wrapper {
+            background: #fff;
+            padding: 0;
+            border-radius: 8px;
         }
 
         .article-content p {
             margin-bottom: 1.5rem;
+            text-align: justify;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        /* Handle long URLs and text that might break layout */
+        .article-content a {
+            word-break: break-all;
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        .article-content a:hover {
+            text-decoration: underline;
+        }
+
+        /* Ensure proper spacing for blockquotes or quoted content */
+        .article-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin: 1.5rem 0;
+            color: #666;
+            font-style: italic;
+        }
+
+        /* Handle very long paragraphs */
+        .article-content p {
+            max-width: 100%;
+            overflow-wrap: break-word;
+            hyphens: auto;
+        }
+
+        /* Style for content that might be from external sources */
+        .article-content .content-wrapper {
+            max-height: none;
+            overflow: visible;
+        }
+
+        /* Clean up any malformed content */
+        .article-content br + br {
+            display: none;
+        }
+
+        .article-content p:empty {
+            display: none;
+        }
+
+        .article-content img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin: 1.5rem auto;
+            display: block;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .article-content img:hover {
+            transform: scale(1.02);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        /* CKEditor uploaded images styling */
+        .article-content .image {
+            margin: 2rem 0;
+            text-align: center;
+        }
+
+        .article-content .image img {
+            border-radius: 10px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        }
+
+        .article-content .image-style-align-left {
+            float: left;
+            margin: 0 1.5rem 1rem 0;
+            max-width: 50%;
+        }
+
+        .article-content .image-style-align-right {
+            float: right;
+            margin: 0 0 1rem 1.5rem;
+            max-width: 50%;
+        }
+
+        .article-content .image-style-align-center {
+            text-align: center;
+            margin: 2rem auto;
+        }
+
+        .article-content figure {
+            margin: 2rem 0;
+            text-align: center;
+        }
+
+        .article-content figure img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .article-content figcaption {
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+            color: #666;
+            font-style: italic;
+            text-align: center;
+        }
+
+        .article-content h1, 
+        .article-content h2, 
+        .article-content h3,
+        .article-content h4,
+        .article-content h5,
+        .article-content h6 {
+            color: #2c5aa0;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .article-content h2 {
+            font-size: 1.5rem;
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 0.5rem;
+        }
+
+        .article-content h3 {
+            font-size: 1.3rem;
+        }
+
+        .article-content ul, 
+        .article-content ol {
+            margin-bottom: 1.5rem;
+            padding-left: 2rem;
+        }
+
+        .article-content li {
+            margin-bottom: 0.5rem;
+        }
+
+        .article-content blockquote {
+            border-left: 4px solid #2c5aa0;
+            background-color: #f8f9fa;
+            padding: 1rem 1.5rem;
+            margin: 1.5rem 0;
+            font-style: italic;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .article-content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            font-size: 0.95rem;
+        }
+
+        .article-content table th,
+        .article-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.75rem;
+            text-align: left;
+        }
+
+        .article-content table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .article-content table tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        .article-content a {
+            color: #2c5aa0;
+            text-decoration: none;
+            border-bottom: 1px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .article-content a:hover {
+            color: #1e3d72;
+            border-bottom-color: #1e3d72;
+        }
+
+        .article-content strong {
+            font-weight: 600;
+            color: #2c5aa0;
+        }
+
+        .article-content em {
+            color: #666;
+        }
+
+        /* Responsive images in content */
+        @media (max-width: 768px) {
+            .article-content {
+                font-size: 1rem;
+            }
+            
+            .article-content figure {
+                margin: 1rem 0;
+            }
+            
+            .article-content h2 {
+                font-size: 1.3rem;
+            }
+            
+            .article-content h3 {
+                font-size: 1.2rem;
+            }
+        }
+
+        /* Featured Image Styling */
+        .featured-image-container {
+            position: relative;
+            overflow: hidden;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            margin-bottom: 2rem;
+        }
+
+        .featured-image-container img {
+            transition: transform 0.3s ease;
+        }
+
+        .featured-image-container:hover img {
+            transform: scale(1.02);
+        }
+
+        /* Category Badge */
+        .category-badge {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            z-index: 10;
         }
 
         .social-share .btn {

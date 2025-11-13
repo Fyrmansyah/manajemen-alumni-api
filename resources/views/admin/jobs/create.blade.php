@@ -102,12 +102,24 @@
                                     <select class="form-select @error('company_id') is-invalid @enderror" 
                                             id="company_id" name="company_id">
                                         <option value="">Pilih Perusahaan</option>
-                                        @foreach($companies as $company)
+                                        @forelse($companies as $company)
                                             <option value="{{ $company->id }}" {{ old('company_id') == $company->id ? 'selected' : '' }}>
                                                 {{ $company->company_name }}
+                                                @if($company->is_verified || $company->is_approved)
+                                                    <span class="text-success">✓</span>
+                                                @endif
                                             </option>
-                                        @endforeach
+                                        @empty
+                                            <option value="" disabled>Tidak ada perusahaan aktif yang terverifikasi</option>
+                                        @endforelse
                                     </select>
+                                    @if($companies->isEmpty())
+                                        <div class="form-text text-warning">
+                                            <i class="fas fa-exclamation-triangle me-1"></i>
+                                            Tidak ada perusahaan aktif yang terverifikasi. 
+                                            <a href="{{ route('admin.companies.index') }}" class="text-primary">Kelola perusahaan</a>
+                                        </div>
+                                    @endif
                                     @error('company_id')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror

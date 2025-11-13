@@ -244,6 +244,7 @@ class AdminAlumniController extends Controller
             'gaji' => 'nullable|numeric|min:0',        // tidak ada kolom di DB, diabaikan
             'tempat_kuliah' => 'nullable|string|max:255',
             'prodi_kuliah' => 'nullable|string|max:255',
+            'status_kerja' => 'nullable|in:bekerja,kuliah,wirausaha,menganggur,belum_diisi',
             'is_verified' => 'nullable|boolean',
         ]);
 
@@ -271,6 +272,7 @@ class AdminAlumniController extends Controller
             'jabatan_kerja' => $request->input('jabatan_kerja') ?: $request->input('posisi'),
             'tempat_kuliah' => $request->input('tempat_kuliah'),
             'prodi_kuliah' => $request->input('prodi_kuliah'),
+            'status_kerja' => $request->input('status_kerja') ?: 'belum_diisi',
             'is_verified' => $request->boolean('is_verified'),
         ];
 

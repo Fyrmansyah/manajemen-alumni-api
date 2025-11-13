@@ -90,9 +90,15 @@ Route::middleware('auth:admin')->prefix('admin')->name('admin.')->group(function
     
     // News management
     Route::resource('news', AdminNewsController::class);
+    Route::post('news/upload-image', [AdminNewsController::class, 'uploadImage'])->name('news.upload-image');
+    Route::get('news/create-tinymce', function() {
+        return view('admin.news.create-tinymce');
+    })->name('news.create-tinymce');
     
     // Company management
     Route::resource('companies', AdminCompanyController::class);
+    Route::post('companies/{company}/verify', [AdminCompanyController::class, 'verify'])->name('companies.verify');
+    Route::post('companies/{company}/unverify', [AdminCompanyController::class, 'unverify'])->name('companies.unverify');
     
     // Application management
     Route::get('/applications', [AdminApplicationController::class, 'index'])->name('applications.index');
@@ -147,6 +153,13 @@ Route::middleware('auth:alumni')->prefix('alumni')->name('alumni.')->group(funct
 
 // Company routes (using company guard)
 Route::middleware('auth:company')->prefix('company')->name('company.')->group(function () {
+    // Pending page accessible without verified middleware
+    Route::get('/pending', function(){
+        return view('company.pending');
+    })->name('pending');
+
+    // All other company features require verification
+    Route::middleware('verified.company')->group(function(){
     Route::get('/dashboard', [CompanyDashboardController::class, 'index'])->name('dashboard');
     Route::get('/jobs', function (\Illuminate\Http\Request $request) {
         if ($request->query('action') === 'create') {
@@ -166,9 +179,11 @@ Route::middleware('auth:company')->prefix('company')->name('company.')->group(fu
     Route::patch('/jobs/{id}/close', [CompanyDashboardController::class, 'closeJob'])->name('jobs.close');
     Route::get('/applications', [CompanyDashboardController::class, 'applications'])->name('applications');
     Route::get('/applications/{id}/detail', [CompanyDashboardController::class, 'getApplicationDetail'])->name('applications.detail');
+    Route::put('/applications/{id}/status', [CompanyDashboardController::class, 'updateApplicationStatus'])->name('applications.update-status');
+    });
+    // profile routes stay accessible for pending accounts to complete info
     Route::get('/profile', [CompanyDashboardController::class, 'profile'])->name('profile');
     Route::put('/profile', [CompanyDashboardController::class, 'updateProfile'])->name('profile.update');
-    Route::put('/applications/{id}/status', [CompanyDashboardController::class, 'updateApplicationStatus'])->name('applications.update-status');
 });
 
 

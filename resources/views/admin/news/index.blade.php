@@ -104,37 +104,39 @@
                 </div>
                 <div class="card-body p-0">
                     @if($news->count() > 0)
-                        <div class="table-responsive">
+                        <div class="table-responsive-md">
                             <table class="table table-hover mb-0">
                                 <thead class="bg-light">
                                     <tr>
-                                        <th>Judul</th>
-                                        <th>Kategori</th>
-                                        <th>Status</th>
-                                        <th>Views</th>
-                                        <th>Dibuat</th>
-                                        <th width="120">Aksi</th>
+                                        <th style="width: 45%;">Judul</th>
+                                        <th style="width: 10%;">Kategori</th>
+                                        <th style="width: 10%;">Status</th>
+                                        <th style="width: 8%;">Views</th>
+                                        <th style="width: 12%;">Dibuat</th>
+                                        <th style="width: 15%;">Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach($news as $item)
                                         <tr>
-                                            <td>
-                                                <div class="d-flex">
+                                            <td style="max-width: 0; overflow: hidden;">
+                                                <div class="d-flex align-items-center">
                                                     @if($item->featured_image)
                                                         <img src="{{ asset('storage/' . $item->featured_image) }}" 
                                                              alt="{{ $item->title }}" 
-                                                             class="rounded me-3" 
-                                                             style="width: 60px; height: 40px; object-fit: cover;">
+                                                             class="rounded me-2 flex-shrink-0" 
+                                                             style="width: 45px; height: 30px; object-fit: cover;">
                                                     @else
-                                                        <div class="bg-secondary rounded me-3 d-flex align-items-center justify-content-center" 
-                                                             style="width: 60px; height: 40px;">
-                                                            <i class="fas fa-newspaper text-white"></i>
+                                                        <div class="bg-secondary rounded me-2 d-flex align-items-center justify-content-center flex-shrink-0" 
+                                                             style="width: 45px; height: 30px;">
+                                                            <i class="fas fa-newspaper text-white small"></i>
                                                         </div>
                                                     @endif
-                                                    <div>
-                                                        <h6 class="mb-1">{{ Str::limit($item->title, 60) }}</h6>
-                                                        <small class="text-muted">{{ Str::limit(strip_tags($item->content), 80) }}</small>
+                                                    <div class="min-w-0 flex-grow-1">
+                                                        <h6 class="mb-0 text-truncate" title="{{ $item->title }}">{{ $item->title }}</h6>
+                                                        <small class="text-muted text-truncate d-block" title="{{ strip_tags($item->content) }}">
+                                                            {{ Str::limit(strip_tags($item->content), 60) }}
+                                                        </small>
                                                     </div>
                                                 </div>
                                             </td>
@@ -192,34 +194,26 @@
                                                 </small>
                                             </td>
                                             <td>
-                                                <div class="dropdown">
-                                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" 
-                                                            type="button" data-bs-toggle="dropdown">
-                                                        <i class="fas fa-cogs"></i>
-                                                    </button>
-                                                    <ul class="dropdown-menu">
-                                                        <li>
-                                                            <a class="dropdown-item" href="{{ route('admin.news.show', $item) }}">
-                                                                <i class="fas fa-eye me-2"></i>Lihat
-                                                            </a>
-                                                        </li>
-                                                        <li>
-                                                            <a class="dropdown-item" href="{{ route('admin.news.edit', $item) }}">
-                                                                <i class="fas fa-edit me-2"></i>Edit
-                                                            </a>
-                                                        </li>
-                                                        <li><hr class="dropdown-divider"></li>
-                                                        <li>
-                                                            <form action="{{ route('admin.news.destroy', $item) }}" method="POST" 
-                                                                  onsubmit="return confirm('Yakin ingin menghapus berita ini?')" class="d-inline">
-                                                                @csrf
-                                                                @method('DELETE')
-                                                                <button type="submit" class="dropdown-item text-danger">
-                                                                    <i class="fas fa-trash me-2"></i>Hapus
-                                                                </button>
-                                                            </form>
-                                                        </li>
-                                                    </ul>
+                                                <div class="btn-group" role="group">
+                                                    <a href="{{ route('admin.news.show', $item) }}" 
+                                                       class="btn btn-sm btn-outline-info" 
+                                                       title="Lihat">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                    <a href="{{ route('admin.news.edit', $item) }}" 
+                                                       class="btn btn-sm btn-outline-primary" 
+                                                       title="Edit">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
+                                                    <form action="{{ route('admin.news.destroy', $item) }}" method="POST" 
+                                                          onsubmit="return confirm('Yakin ingin menghapus berita ini?')" 
+                                                          class="d-inline">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Hapus">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    </form>
                                                 </div>
                                             </td>
                                         </tr>
@@ -267,6 +261,47 @@
     
     .dropdown-toggle::after {
         display: none;
+    }
+</style>
+@endpush
+
+@push('styles')
+<style>
+    /* Prevent table from overflowing and creating horizontal scroll */
+    .table-responsive-md {
+        overflow-x: auto;
+    }
+    
+    @media (min-width: 768px) {
+        .table-responsive-md {
+            overflow-x: visible;
+        }
+    }
+    
+    /* Ensure action buttons are always visible */
+    .btn-group .btn {
+        white-space: nowrap;
+    }
+    
+    /* Fix text overflow in title column */
+    .text-truncate {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .min-w-0 {
+        min-width: 0;
+    }
+    
+    /* Ensure table cells don't wrap and maintain layout */
+    .table td {
+        vertical-align: middle;
+        white-space: nowrap;
+    }
+    
+    .table td:first-child {
+        white-space: normal; /* Allow title column to wrap */
     }
 </style>
 @endpush

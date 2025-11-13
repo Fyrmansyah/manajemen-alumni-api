@@ -229,7 +229,7 @@
 
                         <div class="alert alert-info">
                             <i class="fab fa-whatsapp me-2"></i>
-                            <strong>Notifikasi WhatsApp:</strong> Sistem akan mengirimkan notifikasi WhatsApp ke nomor kontak person saat ada lamaran masuk atau update penting lainnya.
+                            <strong>Notifikasi WhatsApp:</strong> Sistem akan mengirimkan notifikasi WhatsApp ke nomor kontak person saat ada lamaran masuk atau update penting lainnya. <strong>!!Under Develop!!</strong>
                         </div>
 
                         <h5 class="text-primary mb-3 mt-4">

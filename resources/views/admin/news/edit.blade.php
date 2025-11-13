@@ -89,12 +89,15 @@
 
                                 <div class="mb-3">
                                     <label for="content" class="form-label">Konten Berita <span class="text-danger">*</span></label>
-                                    <textarea class="form-control @error('content') is-invalid @enderror" 
-                                              id="content" name="content" rows="15" 
-                                              placeholder="Tulis konten berita lengkap di sini...">{{ old('content', $news->content) }}</textarea>
+                                    <div id="content-editor">{!! old('content', $news->content) !!}</div>
+                                    <textarea id="content" name="content" style="display: none;">{!! old('content', $news->content) !!}</textarea>
                                     @error('content')
-                                        <div class="invalid-feedback">{{ $message }}</div>
+                                        <div class="invalid-feedback d-block">{{ $message }}</div>
                                     @enderror
+                                    <div class="form-text">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Anda dapat menambahkan gambar, format teks, dan konten multimedia lainnya
+                                    </div>
                                 </div>
 
                                 <div class="row">
@@ -176,6 +179,16 @@
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                     <div class="form-text">Format: JPG, PNG, WebP. Maksimal 2MB</div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="image_caption" class="form-label">Caption Gambar</label>
+                                    <input type="text" class="form-control @error('image_caption') is-invalid @enderror" 
+                                           id="image_caption" name="image_caption" value="{{ old('image_caption', $news->image_caption) }}" 
+                                           placeholder="Deskripsi gambar...">
+                                    @error('image_caption')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
                                 </div>
 
                                 <div class="mb-3">
@@ -361,6 +374,112 @@ document.addEventListener('DOMContentLoaded', function() {
         
         return true;
     });
+});
+</script>
+
+<!-- CKEditor 5 -->
+<script src="https://cdn.ckeditor.com/ckeditor5/40.0.0/classic/ckeditor.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Custom Upload Adapter for CKEditor
+    class MyUploadAdapter {
+        constructor(loader) {
+            this.loader = loader;
+        }
+
+        upload() {
+            return this.loader.file
+                .then(file => new Promise((resolve, reject) => {
+                    const data = new FormData();
+                    data.append('upload', file);
+                    data.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
+
+                    fetch('{{ route("admin.news.upload-image") }}', {
+                        method: 'POST',
+                        body: data,
+                        credentials: 'same-origin'
+                    })
+                    .then(response => response.json())
+                    .then(result => {
+                        if (result.url) {
+                            resolve({
+                                default: result.url
+                            });
+                        } else {
+                            reject(result.error ? result.error.message : 'Upload failed');
+                        }
+                    })
+                    .catch(error => {
+                        reject('Upload failed: ' + error.message);
+                    });
+                }));
+        }
+
+        abort() {
+            // Abort upload
+        }
+    }
+
+    function MyCustomUploadAdapterPlugin(editor) {
+        editor.plugins.get('FileRepository').createUploadAdapter = (loader) => {
+            return new MyUploadAdapter(loader);
+        };
+    }
+
+    // Initialize CKEditor 5
+    ClassicEditor
+        .create(document.querySelector('#content-editor'), {
+            extraPlugins: [MyCustomUploadAdapterPlugin],
+            toolbar: {
+                items: [
+                    'heading', '|',
+                    'bold', 'italic', 'link', '|',
+                    'bulletedList', 'numberedList', '|',
+                    'outdent', 'indent', '|',
+                    'imageUpload', 'blockQuote', 'insertTable', '|',
+                    'undo', 'redo'
+                ]
+            },
+            language: 'id',
+            image: {
+                toolbar: [
+                    'imageTextAlternative',
+                    'imageCaption',
+                    '|',
+                    'imageStyle:inline',
+                    'imageStyle:block',
+                    'imageStyle:side'
+                ]
+            },
+            table: {
+                contentToolbar: [
+                    'tableColumn',
+                    'tableRow',
+                    'mergeTableCells'
+                ]
+            }
+        })
+        .then(editor => {
+            // Sync with hidden textarea
+            editor.model.document.on('change:data', () => {
+                document.getElementById('content').value = editor.getData();
+            });
+            
+            // Set initial content
+            const initialContent = document.getElementById('content').value;
+            if (initialContent) {
+                editor.setData(initialContent);
+            }
+            
+            // Update form submission to include editor content
+            const form = document.querySelector('form');
+            form.addEventListener('submit', function() {
+                document.getElementById('content').value = editor.getData();
+            });
+        })
+        .catch(error => {
+            console.error('Error initializing CKEditor:', error);
+        });
 });
 </script>
 @endpush
