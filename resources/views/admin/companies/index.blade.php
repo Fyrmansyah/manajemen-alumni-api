@@ -48,10 +48,10 @@
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
-                                    <h6 class="text-white-50 mb-1">Total Perusahaan</h6>
+                                    <h6 class="text-white mb-1">Total Perusahaan</h6>
                                     <h3 class="mb-0">{{ $stats['total'] ?? $companies->total() }}</h3>
                                 </div>
-                                <i class="fas fa-building fa-2x text-white-50"></i>
+                                <i class="fas fa-building fa-2x text-white"></i>
                             </div>
                         </div>
                     </div>
@@ -61,10 +61,10 @@
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
-                                    <h6 class="text-white-50 mb-1">Aktif</h6>
+                                    <h6 class="text-white mb-1">Aktif</h6>
                                     <h3 class="mb-0">{{ $stats['aktif'] ?? 0 }}</h3>
                                 </div>
-                                <i class="fas fa-check-circle fa-2x text-white-50"></i>
+                                <i class="fas fa-check-circle fa-2x text-white"></i>
                             </div>
                         </div>
                     </div>
@@ -74,10 +74,10 @@
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
-                                    <h6 class="text-white-50 mb-1">Pending</h6>
+                                    <h6 class="text-white mb-1">Pending</h6>
                                     <h3 class="mb-0">{{ $stats['pending'] ?? 0 }}</h3>
                                 </div>
-                                <i class="fas fa-clock fa-2x text-white-50"></i>
+                                <i class="fas fa-clock fa-2x text-white"></i>
                             </div>
                         </div>
                     </div>
@@ -87,10 +87,10 @@
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
-                                    <h6 class="text-white-50 mb-1">Bulan Ini</h6>
+                                    <h6 class="text-white mb-1">Bulan Ini</h6>
                                     <h3 class="mb-0">{{ $stats['thisMonth'] ?? 0 }}</h3>
                                 </div>
-                                <i class="fas fa-calendar fa-2x text-white-50"></i>
+                                <i class="fas fa-calendar fa-2x text-white"></i>
                             </div>
                         </div>
                     </div>
@@ -210,7 +210,7 @@
                                                     </div>
                                                     <div>
                                                         <h6 class="mb-0">{{ $company->company_name }}</h6>
-                                                        <small class="text-muted">{{ Str::limit($company->description ?? 'Tidak ada deskripsi', 50) }}</small>
+                                                        <small class="text-muted">{{ Str::limit(strip_tags($company->description ?? 'Tidak ada deskripsi'), 50) }}</small>
                                                     </div>
                                                 </div>
                                             </td>

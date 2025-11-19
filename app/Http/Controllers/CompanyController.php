@@ -6,6 +6,7 @@ use App\Models\Company;
 use App\Models\Job;
 use App\Models\Application;
 use App\Models\Admin;
+use App\Models\Notification as NotificationModel;
 use App\Notifications\WhatsAppCompanyRegistrationNotification;
 use App\Notifications\WhatsAppJobStatusNotification;
 use Illuminate\Http\Request;
@@ -69,6 +70,16 @@ class CompanyController extends Controller
             ));
         } catch (\Exception $e) {
             \Log::error('Failed to send WhatsApp notification for company registration', [
+                'company_id' => $company->id,
+                'error' => $e->getMessage()
+            ]);
+        }
+
+        // Create notification for all admins about new company registration
+        try {
+            NotificationModel::createCompanyRegistration($company);
+        } catch (\Exception $e) {
+            \Log::error('Failed to create database notification for company registration', [
                 'company_id' => $company->id,
                 'error' => $e->getMessage()
             ]);
