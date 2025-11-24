@@ -83,31 +83,14 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
-                     <label for="nama" class="form-label">Nama <span class="text-danger">*</span></label>
+                     <label for="nama" class="form-label">Nama Lengkap <span class="text-danger">*</span></label>
                                     <input type="text" 
                                            class="form-control @error('nama') is-invalid @enderror" 
                                            id="nama" 
                          name="nama" required
                          value="{{ old('nama') }}" 
-                                           placeholder="Masukkan nama">
-                                    @error('nama')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                     <label for="nama_lengkap" class="form-label">Nama Lengkap</label>
-                                    <input type="text" 
-                                           class="form-control @error('nama_lengkap') is-invalid @enderror" 
-                                           id="nama_lengkap" 
-                         name="nama_lengkap" 
-                                           value="{{ old('nama_lengkap') }}" 
                                            placeholder="Masukkan nama lengkap">
-                                    @error('nama_lengkap')
+                                    @error('nama')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
@@ -145,6 +128,23 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
+                                    <label for="tempat_lahir" class="form-label">Tempat Lahir <span class="text-danger">*</span></label>
+                                    <input type="text" required
+                                           class="form-control @error('tempat_lahir') is-invalid @enderror" 
+                                           id="tempat_lahir" 
+                                           name="tempat_lahir" 
+                                           value="{{ old('tempat_lahir') }}" 
+                                           placeholder="Masukkan tempat lahir">
+                                    @error('tempat_lahir')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
                                     <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
                                     <input type="email" required
                                            class="form-control @error('email') is-invalid @enderror" 
@@ -157,7 +157,6 @@
                                     @enderror
                                 </div>
                             </div>
-                        </div>
 
                         <div class="row">
                             <div class="col-md-6">
@@ -191,7 +190,7 @@
 
                         <div class="row">
                             <div class="col-12">
-                                <div class="mb-4">
+                                <div class="mb-3">
                                     <label for="alamat" class="form-label">Alamat <span class="text-danger">*</span></label>
                                     <textarea class="form-control @error('alamat') is-invalid @enderror" required
                                               id="alamat" 
@@ -199,6 +198,85 @@
                                               rows="3" 
                                               placeholder="Masukkan alamat lengkap">{{ old('alamat') }}</textarea>
                                     @error('alamat')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="alamat_rt" class="form-label">RT</label>
+                                    <input type="text" 
+                                           class="form-control @error('alamat_rt') is-invalid @enderror" 
+                                           id="alamat_rt" 
+                                           name="alamat_rt" 
+                                           value="{{ old('alamat_rt') }}" 
+                                           placeholder="001">
+                                    @error('alamat_rt')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="alamat_rw" class="form-label">RW</label>
+                                    <input type="text" 
+                                           class="form-control @error('alamat_rw') is-invalid @enderror" 
+                                           id="alamat_rw" 
+                                           name="alamat_rw" 
+                                           value="{{ old('alamat_rw') }}" 
+                                           placeholder="001">
+                                    @error('alamat_rw')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="alamat_kelurahan" class="form-label">Kelurahan / Desa</label>
+                                    <input type="text"
+                                           class="form-control @error('alamat_kelurahan') is-invalid @enderror"
+                                           id="alamat_kelurahan"
+                                           name="alamat_kelurahan"
+                                           value="{{ old('alamat_kelurahan') }}"
+                                           placeholder="Masukkan kelurahan atau desa">
+                                    @error('alamat_kelurahan')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="alamat_kecamatan" class="form-label">Kecamatan</label>
+                                    <input type="text" 
+                                           class="form-control @error('alamat_kecamatan') is-invalid @enderror" 
+                                           id="alamat_kecamatan" 
+                                           name="alamat_kecamatan" 
+                                           value="{{ old('alamat_kecamatan') }}" 
+                                           placeholder="Masukkan kecamatan">
+                                    @error('alamat_kecamatan')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="alamat_kode_pos" class="form-label">Kode Pos</label>
+                                    <input type="text" 
+                                           class="form-control @error('alamat_kode_pos') is-invalid @enderror" 
+                                           id="alamat_kode_pos" 
+                                           name="alamat_kode_pos" 
+                                           value="{{ old('alamat_kode_pos') }}" 
+                                           placeholder="60000">
+                                    @error('alamat_kode_pos')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>

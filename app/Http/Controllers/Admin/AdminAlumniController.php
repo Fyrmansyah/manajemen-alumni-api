@@ -159,11 +159,17 @@ class AdminAlumniController extends Controller
             'email' => 'required|email|unique:alumnis,email',
             'no_tlp' => 'required|string|max:20',
             'alamat' => 'required|string',
+            'alamat_rt' => 'nullable|string|max:255',
+            'alamat_rw' => 'nullable|string|max:255',
+            'alamat_kelurahan' => 'nullable|string|max:255', // digabung Kelurahan / Desa
+            'alamat_kecamatan' => 'nullable|string|max:255',
+            'alamat_kode_pos' => 'nullable|string|max:255',
             'jurusan_id' => 'required|exists:jurusans,id',
             'tahun_mulai' => 'required|integer|min:2000|max:' . (date('Y') + 5),
             'tahun_lulus' => 'required|integer|min:2000|max:' . (date('Y') + 5),
             'jenis_kelamin' => 'required|in:L,P',
             'tgl_lahir' => 'required|date',
+            'tempat_lahir' => 'required|string|max:255',
             'password' => 'required|string|min:6',
             // Opsional
             'tempat_kerja' => 'nullable|string|max:255',
@@ -197,11 +203,19 @@ class AdminAlumniController extends Controller
             'no_tlp' => $request->input('no_tlp'),
             'phone' => $request->input('no_tlp'), // mirror ke field baru
             'alamat' => $request->input('alamat'),
+            'alamat_jalan' => '', // field dihapus dari form, set empty string
+            'alamat_rt' => $request->input('alamat_rt'),
+            'alamat_rw' => $request->input('alamat_rw'),
+            'alamat_kelurahan' => $request->input('alamat_kelurahan'),
+            'alamat_desa' => $request->input('alamat_kelurahan'), // mirror dari input tunggal
+            'alamat_kecamatan' => $request->input('alamat_kecamatan'),
+            'alamat_kode_pos' => $request->input('alamat_kode_pos'),
             'jurusan_id' => $request->input('jurusan_id'),
             'tahun_mulai' => (int) $request->input('tahun_mulai'),
             'tahun_lulus' => (int) $request->input('tahun_lulus'),
             'jenis_kelamin' => $request->input('jenis_kelamin'),
             'tgl_lahir' => $request->input('tgl_lahir'),
+            'tempat_lahir' => $request->input('tempat_lahir'),
             'tanggal_lahir' => $request->input('tgl_lahir'), // mirror ke field baru
             'tempat_kerja' => $request->input('tempat_kerja'),
             'jabatan_kerja' => $request->input('jabatan_kerja'),

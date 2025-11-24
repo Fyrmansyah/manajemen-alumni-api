@@ -280,7 +280,7 @@
                                         </td>
                                         <td>
                                             <div class="fw-bold">{{ $job->title }}</div>
-                                            <small class="text-muted">{{ Str::limit($job->description, 60) }}</small>
+                                            <small class="text-muted">{{ Str::limit(strip_tags($job->description), 60) }}</small>
                                             @if($job->isArchived())
                                                 <br><small class="text-warning">
                                                     <i class="fas fa-archive me-1"></i>

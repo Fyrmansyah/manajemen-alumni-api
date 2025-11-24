@@ -225,6 +225,46 @@
                             </div>
                         </div>
 
+                        <!-- Career Information -->
+                        <div class="row mt-4 mb-4">
+                            <div class="col-12">
+                                <h6 class="text-primary mb-3">
+                                    <i class="fas fa-briefcase me-2"></i>Informasi Karir (Opsional)
+                                </h6>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="tempat_kerja" class="form-label">Tempat Kerja</label>
+                                    <input type="text" 
+                                           class="form-control @error('tempat_kerja') is-invalid @enderror" 
+                                           id="tempat_kerja" 
+                                           name="tempat_kerja" 
+                                           value="{{ old('tempat_kerja', auth('alumni')->user()->tempat_kerja) }}" 
+                                           placeholder="Nama perusahaan">
+                                    @error('tempat_kerja')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="jabatan_kerja" class="form-label">Jabatan</label>
+                                    <input type="text" 
+                                           class="form-control @error('jabatan_kerja') is-invalid @enderror" 
+                                           id="jabatan_kerja" 
+                                           name="jabatan_kerja" 
+                                           value="{{ old('jabatan_kerja', auth('alumni')->user()->jabatan_kerja) }}" 
+                                           placeholder="Posisi/jabatan">
+                                    @error('jabatan_kerja')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Professional Information -->
                         <div class="row mt-4">
                             <div class="col-12">

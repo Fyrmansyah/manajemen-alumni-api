@@ -9,21 +9,15 @@
 <section class="main-slide" style="background-color:#012340;overflow:hidden;">
     <div class="container py-4">
         <div id="homeCustomCarousel" class="carousel slide modern-carousel" data-bs-ride="carousel" data-bs-interval="6000" data-bs-touch="true" data-bs-pause="hover">
-            <div class="carousel-indicators modern-indicators">
-                @if(($homepage_slides ?? collect())->isNotEmpty())
-                    @foreach($homepage_slides as $i => $slide)
-                        <button type="button" data-bs-target="#homeCustomCarousel" data-bs-slide-to="{{ $i }}" class="{{ $i==0?'active':'' }}" aria-current="{{ $i==0?'true':'false' }}" aria-label="Slide {{ $i+1 }}"></button>
-                    @endforeach
-                @else
-                    <button type="button" class="active" aria-current="true" aria-label="Slide 1"></button>
-                @endif
-            </div>
             <div class="carousel-inner">
                 @if(($homepage_slides ?? collect())->isNotEmpty())
                     @foreach($homepage_slides as $i => $slide)
                         <div class="carousel-item {{ $i==0?'active':'' }}">
-                            <div class="slide-item-wrapper modern-slide d-flex align-items-stretch">
-                                <div class="slide-text flex-column px-4 px-lg-5 py-5">
+                            <div class="slide-item-wrapper modern-slide d-flex align-items-stretch flex-wrap">
+                                <div class="slide-image p-0 d-flex align-items-center justify-content-center order-1 order-md-2">
+                                    <img src="{{ asset('storage/'.$slide->image) }}" class="slide-image-el" alt="{{ $slide->title }}">
+                                </div>
+                                <div class="slide-text flex-column px-4 px-lg-5 py-5 order-2 order-md-1">
                                     @if($slide->title)
                                         <h2 class="slide-title display-slide-title mb-4">{{ $slide->title }}</h2>
                                     @endif
@@ -37,9 +31,6 @@
                                         <a href="{{ $slide->button_link }}" class="btn btn-slide-primary btn-lg px-4" target="_blank" rel="noopener">{{ $slide->button_text }}</a>
                                     </div>
                                     @endif
-                                </div>
-                                <div class="slide-image p-0 d-flex align-items-center justify-content-center">
-                                    <img src="{{ asset('storage/'.$slide->image) }}" class="slide-image-el" alt="{{ $slide->title }}">
                                 </div>
                             </div>
                         </div>
@@ -56,6 +47,16 @@
                             </div>
                         </div>
                     </div>
+                @endif
+            </div>
+            <!-- Indicators moved below slides so on mobile they appear after the button/content -->
+            <div class="carousel-indicators modern-indicators">
+                @if(($homepage_slides ?? collect())->isNotEmpty())
+                    @foreach($homepage_slides as $i => $slide)
+                        <button type="button" data-bs-target="#homeCustomCarousel" data-bs-slide-to="{{ $i }}" class="{{ $i==0?'active':'' }}" aria-current="{{ $i==0?'true':'false' }}" aria-label="Slide {{ $i+1 }}"></button>
+                    @endforeach
+                @else
+                    <button type="button" class="active" aria-current="true" aria-label="Slide 1"></button>
                 @endif
             </div>
         </div>
@@ -312,6 +313,13 @@
     .modern-slide .slide-image{max-width:100%;}
     .modern-slide .slide-image-el{min-height:340px;}
     .modern-slide .slide-text{max-width:100%;}
+}
+/* Mobile adjustments: image on top, text below, indicators under image */
+@media (max-width: 767.98px){
+    .modern-slide .slide-image{order:1;width:100%;}
+    .modern-slide .slide-text{order:2;padding-top:1.75rem !important;padding-bottom:2.25rem !important;}
+    .modern-indicators{position:static;left:auto;bottom:auto;transform:none;justify-content:center;padding:1rem 0 0 0;width:100%;margin-top:.75rem;}
+    .main-slide .carousel-indicators .active{width:34px;}
 }
 .btn-slide-primary{background:#36a4f5;border:none;color:#fff;font-weight:600;border-radius:6px;transition:.3s;}
 .btn-slide-primary:hover{background:#1d8cd9;color:#fff;transform:translateY(-2px);box-shadow:0 8px 24px -6px rgba(54,164,245,.45);} 

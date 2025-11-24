@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\AdminJobController;
 use App\Http\Controllers\Admin\AdminNewsController;
 use App\Http\Controllers\Admin\AdminCompanyController;
 use App\Http\Controllers\Admin\AdminApplicationController;
+use App\Http\Controllers\Admin\AdminNotificationController;
 use App\Http\Controllers\Admin\NisnImportController;
 use App\Http\Controllers\Admin\AdminHomepageController;
 use App\Http\Controllers\Alumni\AlumniDashboardController;
@@ -77,6 +78,16 @@ Route::prefix('news')->name('news.')->group(function () {
 // Admin routes (using admin guard) - RESTORED MIDDLEWARE  
 Route::middleware('auth:admin')->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+    
+    // Debug route for testing auth
+    Route::get('/debug-auth', function() {
+        $admin = Auth::guard('admin')->user();
+        return response()->json([
+            'authenticated' => Auth::guard('admin')->check(),
+            'admin' => $admin ? $admin->username : null,
+            'notifications_count' => \App\Models\Notification::count()
+        ]);
+    });
     // NISN import
     Route::get('/nisn/import', [NisnImportController::class, 'form'])->name('nisn.import');
     Route::post('/nisn/import', [NisnImportController::class, 'upload'])->name('nisn.upload');
@@ -118,6 +129,14 @@ Route::middleware('auth:admin')->prefix('admin')->name('admin.')->group(function
     Route::put('/alumni/{alumni}', [AdminAlumniController::class, 'update'])->name('alumni.update');
     Route::delete('/alumni/{alumni}', [AdminAlumniController::class, 'destroy'])->name('alumni.destroy');
     Route::post('/alumni/{alumni}/verify', [AdminAlumniController::class, 'verify'])->name('alumni.verify');
+    
+    // Notification management
+    Route::get('/notifications', [AdminNotificationController::class, 'index'])->name('notifications.index');
+    Route::get('/notifications/unread-count', [AdminNotificationController::class, 'getUnreadCount'])->name('notifications.unread-count');
+    Route::get('/notifications/recent', [AdminNotificationController::class, 'getRecent'])->name('notifications.recent');
+    Route::patch('/notifications/{notification}/read', [AdminNotificationController::class, 'markAsRead'])->name('notifications.read');
+    Route::patch('/notifications/mark-all-read', [AdminNotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
+    Route::delete('/notifications/{notification}', [AdminNotificationController::class, 'destroy'])->name('notifications.destroy');
     
     // Homepage management
     Route::get('/homepage', [AdminHomepageController::class, 'index'])->name('homepage.index');
