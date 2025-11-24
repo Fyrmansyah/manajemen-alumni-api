@@ -145,62 +145,115 @@ class AlumniController extends Controller
             ->when($request->query('tahun_lulus'), function (Builder $query, $tahun_lulus) {
                 $query->where('tahun_lulus', $tahun_lulus);
             })
-            ->whereNull('tempat_kerja')
-            ->whereNull('tempat_kuliah')
+            ->whereDoesntHave('kuliahs')
+            ->whereDoesntHave('kerjas')
+            ->whereDoesntHave('usahas')
             ->count();
 
         $total_kuliah = Alumni::query()
             ->when($request->query('tahun_lulus'), function (Builder $query, $tahun_lulus) {
                 $query->where('tahun_lulus', $tahun_lulus);
             })
-            ->whereNotNull('tempat_kuliah')
-            ->whereNull('tempat_kerja')
+            ->whereHas('kuliahs')
+            ->whereDoesntHave('kerjas')
+            ->whereDoesntHave('usahas')
             ->count();
 
         $total_kerja = Alumni::query()
             ->when($request->query('tahun_lulus'), function (Builder $query, $tahun_lulus) {
                 $query->where('tahun_lulus', $tahun_lulus);
             })
-            ->whereNotNull('tempat_kerja')
-            ->whereNull('tempat_kuliah')
+            ->whereHas('kerjas')
+            ->whereDoesntHave('kuliahs')
+            ->whereDoesntHave('usahas')
+            ->count();
+
+        $total_usaha = Alumni::query()
+            ->when($request->query('tahun_lulus'), function (Builder $query, $tahun_lulus) {
+                $query->where('tahun_lulus', $tahun_lulus);
+            })
+            ->whereHas('usahas')
+            ->whereDoesntHave('kuliahs')
+            ->whereDoesntHave('kerjas')
             ->count();
 
         $total_kuliah_dan_kerja =  Alumni::query()
             ->when($request->query('tahun_lulus'), function (Builder $query, $tahun_lulus) {
                 $query->where('tahun_lulus', $tahun_lulus);
             })
-            ->whereNotNull('tempat_kerja')
-            ->whereNotNull('tempat_kuliah')
+            ->whereHas('kuliahs')
+            ->whereHas('kerjas')
+            ->whereDoesntHave('usahas')
             ->count();
 
-        $bar_data = compact('total_pengangguran', 'total_kuliah', 'total_kerja', 'total_kuliah_dan_kerja');
+        $total_kuliah_dan_usaha =  Alumni::query()
+            ->when($request->query('tahun_lulus'), function (Builder $query, $tahun_lulus) {
+                $query->where('tahun_lulus', $tahun_lulus);
+            })
+            ->whereHas('kuliahs')
+            ->whereHas('usahas')
+            ->whereDoesntHave('kerjas')
+            ->count();
+
+        $total_kerja_dan_usaha =  Alumni::query()
+            ->when($request->query('tahun_lulus'), function (Builder $query, $tahun_lulus) {
+                $query->where('tahun_lulus', $tahun_lulus);
+            })
+            ->whereHas('kerjas')
+            ->whereHas('usahas')
+            ->whereDoesntHave('kuliahs')
+            ->count();
+
+        $total_kuliah_dan_kerja_dan_usaha =  Alumni::query()
+            ->when($request->query('tahun_lulus'), function (Builder $query, $tahun_lulus) {
+                $query->where('tahun_lulus', $tahun_lulus);
+            })
+            ->whereHas('kerjas')
+            ->whereHas('usahas')
+            ->whereHas('kuliahs')
+            ->count();
+
+        $bar_data = compact('total_pengangguran', 'total_kuliah', 'total_kerja', 'total_usaha', 'total_kuliah_dan_kerja', 'total_kuliah_dan_usaha', 'total_kerja_dan_usaha', 'total_kuliah_dan_kerja_dan_usaha');
 
         $pct_tidak_sesuai = Alumni::query()
             ->when($request->query('tahun_lulus'), function (Builder $query, $tahun_lulus) {
                 $query->where('tahun_lulus', $tahun_lulus);
             })
-            ->where('kesesuaian_kerja', false)
-            ->orWhere('kesesuaian_kuliah', false)
+            ->where(function ($q) {
+                $q->whereHas('kuliahs', fn($q2) => $q2->where('sesuai_jurusan', false))
+                    ->orWhereHas('kerjas', fn($q2) => $q2->where('sesuai_jurusan', false))
+                    ->orWhereHas('usahas', fn($q2) => $q2->where('sesuai_jurusan', false));
+            })
             ->count();
+
         $pct_kuliah_sesuai = Alumni::query()
             ->when($request->query('tahun_lulus'), function (Builder $query, $tahun_lulus) {
                 $query->where('tahun_lulus', $tahun_lulus);
             })
-            ->where('kesesuaian_kuliah', true)
+            ->whereHas('kuliahs', fn($q) => $q->where('sesuai_jurusan', true))
             ->count();
+
         $pct_kerja_sesuai = Alumni::query()
             ->when($request->query('tahun_lulus'), function (Builder $query, $tahun_lulus) {
                 $query->where('tahun_lulus', $tahun_lulus);
             })
-            ->where('kesesuaian_kerja', true)
+            ->whereHas('kerjas', fn($q) => $q->where('sesuai_jurusan', true))
             ->count();
 
-        $total_pct = ($pct_tidak_sesuai + $pct_kuliah_sesuai + $pct_kerja_sesuai);
+        $pct_usaha_sesuai = Alumni::query()
+            ->when($request->query('tahun_lulus'), function (Builder $query, $tahun_lulus) {
+                $query->where('tahun_lulus', $tahun_lulus);
+            })
+            ->whereHas('usahas', fn($q) => $q->where('sesuai_jurusan', true))
+            ->count();
+
+        $total_pct = ($pct_tidak_sesuai + $pct_kuliah_sesuai + $pct_kerja_sesuai + $pct_usaha_sesuai);
         $pct_tidak_sesuai = round($pct_tidak_sesuai / $total_pct * 100);
         $pct_kuliah_sesuai = round($pct_kuliah_sesuai / $total_pct * 100);
         $pct_kerja_sesuai = round($pct_kerja_sesuai / $total_pct * 100);
+        $pct_usaha_sesuai = round($pct_usaha_sesuai / $total_pct * 100);
 
-        $pie_data = compact('pct_tidak_sesuai', 'pct_kuliah_sesuai', 'pct_kerja_sesuai');
+        $pie_data = compact('pct_tidak_sesuai', 'pct_kuliah_sesuai', 'pct_kerja_sesuai', 'pct_usaha_sesuai');
 
         return ResponseBuilder::success()
             ->data(compact('bar_data', 'pie_data'))
