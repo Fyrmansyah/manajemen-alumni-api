@@ -32,7 +32,9 @@ class AlumniController extends Controller
 
     public function getDetail(Request $request): JsonResponse
     {
-        $alumni = Alumni::with('jurusan')->find($request->alumni_id);
+        $includedRelations = ['jurusan', 'kuliahs', 'kerjas', 'usahas', 'nisn'];
+
+        $alumni = Alumni::with($includedRelations)->find($request->alumni_id);
         if (!$alumni) {
             return ResponseBuilder::fail()
                 ->message('Alumni dengan id: ' . $request->alumni_id . ' tidak ada')
@@ -91,7 +93,7 @@ class AlumniController extends Controller
             ->build();
     }
 
-    public function update(Request $request, string $alumniId): JsonResponse
+    public function update(CreateAlumniRequest $request, string $alumniId): JsonResponse
     {
         $alumni = Alumni::find($alumniId);
         if (!$alumni) {
@@ -100,7 +102,68 @@ class AlumniController extends Controller
                 ->build();
         }
 
-        $alumni->update($request->all());
+        $data = $request->validated();
+
+        $data['tgl_lahir'] = date('Y-m-d', strtotime($data['tgl_lahir']));
+
+        $nisn = Nisn::query()->where('number', $data['nisn'])->first('id');
+        if ($nisn) {
+            $data['nisn_id'] = $nisn->id;
+        }
+
+        $kuliahs = $data['kuliahs'] ?? [];
+        $kerjas  = $data['kerjas'] ?? [];
+        $usahas  = $data['usahas'] ?? [];
+
+        unset($data['kuliahs'], $data['kerjas'], $data['usahas']);
+
+        $alumni->update($data);
+
+        $alumni->kuliahs()->delete();
+        foreach ($kuliahs as $item) {
+            $alumni->kuliahs()->create([
+                'nama_kampus' => $item['nama_kampus'],
+                'prodi' => $item['prodi'],
+                'tahun_masuk' => $item['tahun_masuk'],
+                'tahun_lulus' => $item['tahun_lulus'] ?? null,
+                'sesuai_jurusan' => $item['sesuai_jurusan'],
+                'jalur_masuk_kuliah_id' => $item['jalur_masuk_kuliah_id'],
+            ]);
+        }
+
+        $alumni->kerjas()->delete();
+        foreach ($kerjas as $item) {
+            $alumni->kerjas()->create([
+                'nama_perusahaan' => $item['nama_perusahaan'],
+                'alamat_perusahaan' => $item['alamat_perusahaan'],
+                'tgl_mulai' => date('Y-m-d', strtotime($item['tgl_mulai'])),
+                'tgl_selesai' => $item['tgl_selesai']
+                    ? date('Y-m-d', strtotime($item['tgl_selesai']))
+                    : null,
+                'sesuai_jurusan' => $item['sesuai_jurusan'],
+                'jabatan' => $item['jabatan'],
+                'masa_tunggu_kerja_id' => $item['masa_tunggu_kerja_id'],
+                'jenis_perusahaan_id' => $item['jenis_perusahaan_id'],
+                'durasi_kerja_id' => $item['durasi_kerja_id'],
+                'range_gaji_id' => $item['range_gaji_id'],
+            ]);
+        }
+
+        $alumni->usahas()->delete();
+        foreach ($usahas as $item) {
+            $alumni->usahas()->create([
+                'nama_perusahaan' => $item['nama_perusahaan'],
+                'bidang' => $item['bidang'],
+                'jml_karyawan' => $item['jml_karyawan'] ?? null,
+                'tgl_mulai' => date('Y-m-d', strtotime($item['tgl_mulai'])),
+                'tgl_selesai' => $item['tgl_selesai']
+                    ? date('Y-m-d', strtotime($item['tgl_selesai']))
+                    : null,
+                'sesuai_jurusan' => $item['sesuai_jurusan'],
+                'kepemilikan_usaha_id' => $item['kepemilikan_usaha_id'],
+                'range_laba_id' => $item['range_laba_id'],
+            ]);
+        }
 
         return ResponseBuilder::success()
             ->message('sukses memperbarui data alumni')

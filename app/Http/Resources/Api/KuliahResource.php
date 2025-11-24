@@ -23,6 +23,7 @@ class KuliahResource extends JsonResource
             'tahun_lulus' => $this->tahun_lulus,
             'sesuai_jurusan' => $this->sesuai_jurusan,
             'jalur_masuk' => AlumniResource::make($this->whenLoaded('jalur_masuk')),
+            'jalur_masuk_kuliah_id' =>  $this->jalur_masuk_kuliah_id,
         ];
     }
 }

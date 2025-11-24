@@ -36,7 +36,7 @@ class CreateAlumniRequest extends ApiFormRequest
             'nama' => 'required|string|max:255',
             'jenis_kelamin' => 'required|in:L,P',
             'tgl_lahir' => 'required|date',
-            'email' =>  ['required', 'email', Rule::unique('alumnis', 'email')->ignore($this->route('alumni'))],
+            'email' =>  ['required', 'email', Rule::unique('alumnis', 'email')->ignore($this->route('alumni_id'))],
             'no_tlp' => 'required|string|max:20',
             'jurusan_id' => 'required|exists:jurusans,id',
             'tahun_mulai' => 'required|integer',
