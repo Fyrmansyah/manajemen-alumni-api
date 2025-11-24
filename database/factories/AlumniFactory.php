@@ -32,11 +32,10 @@ class AlumniFactory extends Factory
             'email' => $this->faker->unique()->safeEmail(),
             'password' => 'password',
             'alamat' => $this->faker->address(),
-            'alamat_jalan' => $this->faker->streetName(),
             'alamat_rt' => $this->faker->numberBetween(1, 20),
             'alamat_rw' => $this->faker->numberBetween(1, 10),
             'alamat_kelurahan' => $this->faker->randomElement(['Tegalsari', 'Keputran', 'Wonokromo', 'Gubeng', 'Sukolilo']),
-            'alamat_desa' => $this->faker->optional()->randomElement(['Desa A', 'Desa B', 'Desa C']),
+            'alamat_desa' => null, // gunakan field gabungan di form; mirror bisa di seeder jika perlu
             'alamat_kecamatan' => $this->faker->randomElement(['Tegalsari', 'Wonokromo', 'Gubeng', 'Sukolilo', 'Rungkut']),
             'alamat_kode_pos' => $this->faker->postcode(),
             'tempat_kerja' => $this->faker->optional()->company(),

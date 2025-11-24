@@ -159,11 +159,9 @@ class AdminAlumniController extends Controller
             'email' => 'required|email|unique:alumnis,email',
             'no_tlp' => 'required|string|max:20',
             'alamat' => 'required|string',
-            'alamat_jalan' => 'nullable|string|max:255',
             'alamat_rt' => 'nullable|string|max:255',
             'alamat_rw' => 'nullable|string|max:255',
-            'alamat_kelurahan' => 'nullable|string|max:255',
-            'alamat_desa' => 'nullable|string|max:255',
+            'alamat_kelurahan' => 'nullable|string|max:255', // digabung Kelurahan / Desa
             'alamat_kecamatan' => 'nullable|string|max:255',
             'alamat_kode_pos' => 'nullable|string|max:255',
             'jurusan_id' => 'required|exists:jurusans,id',
@@ -205,11 +203,11 @@ class AdminAlumniController extends Controller
             'no_tlp' => $request->input('no_tlp'),
             'phone' => $request->input('no_tlp'), // mirror ke field baru
             'alamat' => $request->input('alamat'),
-            'alamat_jalan' => $request->input('alamat_jalan'),
+            'alamat_jalan' => '', // field dihapus dari form, set empty string
             'alamat_rt' => $request->input('alamat_rt'),
             'alamat_rw' => $request->input('alamat_rw'),
             'alamat_kelurahan' => $request->input('alamat_kelurahan'),
-            'alamat_desa' => $request->input('alamat_desa'),
+            'alamat_desa' => $request->input('alamat_kelurahan'), // mirror dari input tunggal
             'alamat_kecamatan' => $request->input('alamat_kecamatan'),
             'alamat_kode_pos' => $request->input('alamat_kode_pos'),
             'jurusan_id' => $request->input('jurusan_id'),

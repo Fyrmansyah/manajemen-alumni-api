@@ -13,6 +13,60 @@ class JobPostingSeeder extends Seeder
     {
         $companies = Company::all();
         
+        // Jika belum ada company, buat dulu
+        if ($companies->isEmpty()) {
+            $companies = collect([
+                Company::create([
+                    'company_name' => 'PT Teknologi Indonesia',
+                    'email' => 'hr@teknologiindonesia.com',
+                    'password' => bcrypt('password'),
+                    'phone' => '021-1234567',
+                    'address' => 'Jakarta',
+                    'description' => 'Perusahaan teknologi terkemuka di Indonesia',
+                    'website' => 'https://teknologiindonesia.com',
+                    'is_verified' => true,
+                    'is_approved' => true,
+                    'status' => 'aktif',
+                ]),
+                Company::create([
+                    'company_name' => 'PT Digital Creative',
+                    'email' => 'info@digitalcreative.com',
+                    'password' => bcrypt('password'),
+                    'phone' => '021-7654321',
+                    'address' => 'Jakarta',
+                    'description' => 'Agency kreatif dan digital marketing',
+                    'website' => 'https://digitalcreative.com',
+                    'is_verified' => true,
+                    'is_approved' => true,
+                    'status' => 'aktif',
+                ]),
+                Company::create([
+                    'company_name' => 'CV Otomotif Jaya',
+                    'email' => 'contact@otomotifjaya.com',
+                    'password' => bcrypt('password'),
+                    'phone' => '031-1234567',
+                    'address' => 'Surabaya',
+                    'description' => 'Bengkel dan service center otomotif',
+                    'website' => 'https://otomotifjaya.com',
+                    'is_verified' => true,
+                    'is_approved' => true,
+                    'status' => 'aktif',
+                ]),
+                Company::create([
+                    'company_name' => 'Toko Elektronik Maju',
+                    'email' => 'service@elektronikmaju.com',
+                    'password' => bcrypt('password'),
+                    'phone' => '0341-567890',
+                    'address' => 'Malang',
+                    'description' => 'Service center elektronik dan penjualan',
+                    'website' => 'https://elektronikmaju.com',
+                    'is_verified' => true,
+                    'is_approved' => true,
+                    'status' => 'aktif',
+                ]),
+            ]);
+        }
+        
         $jobPostings = [
             [
                 'company_id' => $companies->first()->id,

@@ -83,31 +83,14 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
-                     <label for="nama" class="form-label">Nama <span class="text-danger">*</span></label>
+                     <label for="nama" class="form-label">Nama Lengkap <span class="text-danger">*</span></label>
                                     <input type="text" 
                                            class="form-control @error('nama') is-invalid @enderror" 
                                            id="nama" 
                          name="nama" required
                          value="{{ old('nama') }}" 
-                                           placeholder="Masukkan nama">
-                                    @error('nama')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                     <label for="nama_lengkap" class="form-label">Nama Lengkap</label>
-                                    <input type="text" 
-                                           class="form-control @error('nama_lengkap') is-invalid @enderror" 
-                                           id="nama_lengkap" 
-                         name="nama_lengkap" 
-                                           value="{{ old('nama_lengkap') }}" 
                                            placeholder="Masukkan nama lengkap">
-                                    @error('nama_lengkap')
+                                    @error('nama')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
@@ -222,20 +205,6 @@
                         </div>
 
                         <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="alamat_jalan" class="form-label">Nama Jalan</label>
-                                    <input type="text" 
-                                           class="form-control @error('alamat_jalan') is-invalid @enderror" 
-                                           id="alamat_jalan" 
-                                           name="alamat_jalan" 
-                                           value="{{ old('alamat_jalan') }}" 
-                                           placeholder="Contoh: Jl. Keputran">
-                                    @error('alamat_jalan')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
                             <div class="col-md-3">
                                 <div class="mb-3">
                                     <label for="alamat_rt" class="form-label">RT</label>
@@ -269,28 +238,14 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label for="alamat_kelurahan" class="form-label">Kelurahan</label>
-                                    <input type="text" 
-                                           class="form-control @error('alamat_kelurahan') is-invalid @enderror" 
-                                           id="alamat_kelurahan" 
-                                           name="alamat_kelurahan" 
-                                           value="{{ old('alamat_kelurahan') }}" 
-                                           placeholder="Masukkan kelurahan">
+                                    <label for="alamat_kelurahan" class="form-label">Kelurahan / Desa</label>
+                                    <input type="text"
+                                           class="form-control @error('alamat_kelurahan') is-invalid @enderror"
+                                           id="alamat_kelurahan"
+                                           name="alamat_kelurahan"
+                                           value="{{ old('alamat_kelurahan') }}"
+                                           placeholder="Masukkan kelurahan atau desa">
                                     @error('alamat_kelurahan')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="alamat_desa" class="form-label">Desa</label>
-                                    <input type="text" 
-                                           class="form-control @error('alamat_desa') is-invalid @enderror" 
-                                           id="alamat_desa" 
-                                           name="alamat_desa" 
-                                           value="{{ old('alamat_desa') }}" 
-                                           placeholder="Masukkan desa">
-                                    @error('alamat_desa')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>

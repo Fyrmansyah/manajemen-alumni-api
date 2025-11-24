@@ -103,13 +103,15 @@ class AlumniDashboardController extends Controller
             'whatsapp_notifications' => 'nullable|boolean',
             'tempat_kuliah' => 'nullable|string|max:255',
             'prodi_kuliah' => 'nullable|string|max:255',
+            'tempat_kerja' => 'nullable|string|max:255',
+            'jabatan_kerja' => 'nullable|string|max:255',
             'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
         $data = $request->only([
             'nama_lengkap', 'email', 'phone', 'tanggal_lahir', 'jenis_kelamin',
             'jurusan_id', 'tahun_lulus', 'alamat', 'pengalaman_kerja', 'keahlian',
-            'tempat_kuliah', 'prodi_kuliah'
+            'tempat_kuliah', 'prodi_kuliah', 'tempat_kerja', 'jabatan_kerja'
         ]);
 
         // Map NISN -> nisn_id tanpa membuat data baru; pastikan tidak dipakai alumni lain
