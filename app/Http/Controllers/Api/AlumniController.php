@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Helpers\ResponseBuilder;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\CreateAlumniRequest;
-use App\Http\Resources\AlumniResource;
+use App\Http\Resources\Api\AlumniResource;
 use App\Imports\AlumnisImport;
 use App\Models\Alumni;
 use App\Models\Nisn;
@@ -18,36 +18,15 @@ class AlumniController extends Controller
 {
     public function getAll(Request $request): JsonResponse
     {
-        $selected_fields = [
-            'id',
-            'nama',
-            'tempat_kerja',
-            'jabatan_kerja',
-            'tempat_kuliah',
-            'prodi_kuliah',
-            'tahun_mulai',
-            'tahun_lulus'
-        ];
+        $includedRelations = ['jurusan', 'kuliahs', 'kerjas', 'usahas', 'nisn'];
 
         $data = Alumni::query()
-            ->when($request->query('search'), function (Builder $query, $search) {
-                $query->where(function ($q) use ($search) {
-                    $q->where('nama', 'like', "%{$search}%")
-                        ->orWhere('tempat_kerja', 'like', "%{$search}%")
-                        ->orWhere('tempat_kuliah', 'like', "%{$search}%");
-                });
-            })
-            ->when($request->query('tahun_mulai'), function (Builder $query, $tahun_mulai) {
-                $query->where('tahun_mulai', $tahun_mulai);
-            })
-            ->when($request->query('tahun_lulus'), function (Builder $query, $tahun_lulus) {
-                $query->where('tahun_lulus', $tahun_lulus);
-            })
-            ->cursorPaginate(10, $selected_fields);
+            ->with($includedRelations)
+            ->cursorPaginate();
 
         return ResponseBuilder::success()
             ->data(AlumniResource::collection($data))
-            ->pagination($data->nextPageUrl(), $data->previousPageUrl())
+            ->pagination($data->nextCursor()?->encode(), $data->previousCursor()?->encode())
             ->build();
     }
 
@@ -76,7 +55,35 @@ class AlumniController extends Controller
 
     public function create(CreateAlumniRequest $request): JsonResponse
     {
-        $alumni = Alumni::create($request->validated());
+        $data = $request->validated();
+
+        $data['tgl_lahir'] = date('Y-m-d', strtotime($data['tgl_lahir']));
+
+        $nisn = Nisn::query()->where('number', $data['nisn'])->first('id');
+
+        $alumni = Alumni::create([...$data, 'nisn_id' => $nisn->id]);
+
+        if (!empty($data['kuliahs'])) {
+            foreach ($data['kuliahs'] as $item) {
+                $alumni->kuliahs()->create($item);
+            }
+        }
+
+        if (!empty($data['kerjas'])) {
+            foreach ($data['kerjas'] as $item) {
+                $item['tgl_mulai'] = date('Y-m-d', strtotime($item['tgl_mulai']));
+                $item['tgl_selesai'] = date('Y-m-d', strtotime($item['tgl_selesai']));
+                $alumni->kerjas()->create($item);
+            }
+        }
+
+        if (!empty($data['usahas'])) {
+            foreach ($data['usahas'] as $item) {
+                $item['tgl_mulai'] = date('Y-m-d', strtotime($item['tgl_mulai']));
+                $item['tgl_selesai'] = date('Y-m-d', strtotime($item['tgl_selesai']));
+                $alumni->usahas()->create($item);
+            }
+        }
 
         return ResponseBuilder::success()
             ->data($alumni)
@@ -207,6 +214,9 @@ class AlumniController extends Controller
             return ResponseBuilder::fail()->message('NISN Tidak ditemukan')->build();
         }
 
-        return ResponseBuilder::success()->message('NISN valid')->build();
+        return ResponseBuilder::success()
+            ->message('NISN valid')
+            ->data($valid_nisn)
+            ->build();
     }
 }

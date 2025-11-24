@@ -32,15 +32,15 @@ class CreateAlumniRequest extends ApiFormRequest
     private function baseRules(): array
     {
         return [
-            'nisn_id' => ['required', 'gt:0', Rule::unique('alumnis', 'nisn_id')->ignore($this->route('alumni'))],
+            'nisn' => 'required',
             'nama' => 'required|string|max:255',
             'jenis_kelamin' => 'required|in:L,P',
             'tgl_lahir' => 'required|date',
             'email' =>  ['required', 'email', Rule::unique('alumnis', 'email')->ignore($this->route('alumni'))],
             'no_tlp' => 'required|string|max:20',
             'jurusan_id' => 'required|exists:jurusans,id',
-            'tahun_mulai' => 'required|integer|min:1900|max:' . (date('Y') + 10),
-            'tahun_lulus' => 'required|integer|min:1900|max:' . (date('Y') + 10),
+            'tahun_mulai' => 'required|integer',
+            'tahun_lulus' => 'required|integer',
             'alamat_jalan' => 'required|string|max:255',
             'alamat_rt' => 'required|integer',
             'alamat_rw' => 'required|integer',
@@ -61,7 +61,7 @@ class CreateAlumniRequest extends ApiFormRequest
             'kuliahs.*.tahun_masuk' => 'required|digits:4',
             'kuliahs.*.tahun_lulus' => 'nullable|digits:4',
             'kuliahs.*.sesuai_jurusan' => 'required|boolean',
-            'kuliahs.*.jalur_masuk_id' => 'required|exists:jalur_masuk_kuliahs,id',
+            'kuliahs.*.jalur_masuk_kuliah_id' => 'required|exists:jalur_masuk_kuliahs,id',
         ];
     }
 
