@@ -317,35 +317,54 @@ class AlumniController extends Controller
             ->count();
 
         $total_pct = ($pct_tidak_sesuai + $pct_kuliah_sesuai + $pct_kerja_sesuai + $pct_usaha_sesuai);
-        $pct_tidak_sesuai = round($pct_tidak_sesuai / $total_pct * 100);
-        $pct_kuliah_sesuai = round($pct_kuliah_sesuai / $total_pct * 100);
-        $pct_kerja_sesuai = round($pct_kerja_sesuai / $total_pct * 100);
-        $pct_usaha_sesuai = round($pct_usaha_sesuai / $total_pct * 100);
+        if ($total_pct > 0) {
+            $pct_tidak_sesuai = round($pct_tidak_sesuai / $total_pct * 100);
+            $pct_kuliah_sesuai = round($pct_kuliah_sesuai / $total_pct * 100);
+            $pct_kerja_sesuai = round($pct_kerja_sesuai / $total_pct * 100);
+            $pct_usaha_sesuai = round($pct_usaha_sesuai / $total_pct * 100);
+        } else {
+            $pct_tidak_sesuai = 0;
+            $pct_kuliah_sesuai = 0;
+            $pct_kerja_sesuai = 0;
+            $pct_usaha_sesuai = 0;
+        }
 
         $pie_data = compact('pct_tidak_sesuai', 'pct_kuliah_sesuai', 'pct_kerja_sesuai', 'pct_usaha_sesuai');
 
-        $jalur_masuk_kuliah = JalurMasukKuliah::withCount('kuliahs')
+        $jalur_masuk_kuliah = JalurMasukKuliah::withCount([
+            'kuliahs' => fn($q) =>
+            $q->when($request->query('tahun_lulus'), fn($q2, $tahun) => $q2->whereHas('alumni', fn($q3) => $q3->where('tahun_lulus', $tahun)))
+        ])
             ->get()
             ->map(fn($item) => [
                 'label' => $item->nama,
                 'total' => $item->kuliahs_count
             ]);
 
-        $masa_tunggu_kerja = MasaTungguKerja::withCount('kerjas')
+        $masa_tunggu_kerja = MasaTungguKerja::withCount([
+            'kerjas' => fn($q) =>
+            $q->when($request->query('tahun_lulus'), fn($q2, $tahun) => $q2->whereHas('alumni', fn($q3) => $q3->where('tahun_lulus', $tahun)))
+        ])
             ->get()
             ->map(fn($item) => [
                 'label' => $item->value,
                 'total' => $item->kerjas_count
             ]);
 
-        $jenis_perusahaan = JenisPerusahaan::withCount('kerjas')
+        $jenis_perusahaan = JenisPerusahaan::withCount([
+            'kerjas' => fn($q) =>
+            $q->when($request->query('tahun_lulus'), fn($q2, $tahun) => $q2->whereHas('alumni', fn($q3) => $q3->where('tahun_lulus', $tahun)))
+        ])
             ->get()
             ->map(fn($item) => [
                 'label' => $item->value,
                 'total' => $item->kerjas_count
             ]);
 
-        $durasi_kerja_raw = DurasiKerja::withCount('kerjas')
+        $durasi_kerja_raw = DurasiKerja::withCount([
+            'kerjas' => fn($q) =>
+            $q->when($request->query('tahun_lulus'), fn($q2, $tahun) => $q2->whereHas('alumni', fn($q3) => $q3->where('tahun_lulus', $tahun)))
+        ])
             ->get()
             ->map(fn($item) => [
                 'label' => $item->value,
@@ -359,15 +378,20 @@ class AlumniController extends Controller
         ]);
 
 
-
-        $range_gaji = RangeGaji::withCount('kerjas')
+        $range_gaji = RangeGaji::withCount([
+            'kerjas' => fn($q) =>
+            $q->when($request->query('tahun_lulus'), fn($q2, $tahun) => $q2->whereHas('alumni', fn($q3) => $q3->where('tahun_lulus', $tahun)))
+        ])
             ->get()
             ->map(fn($item) => [
                 'label' => $item->value,
                 'total' => $item->kerjas_count
             ]);
 
-        $laba_usaha = RangeLaba::withCount('usahas')
+        $laba_usaha = RangeLaba::withCount([
+            'usahas' => fn($q) =>
+            $q->when($request->query('tahun_lulus'), fn($q2, $tahun) => $q2->whereHas('alumni', fn($q3) => $q3->where('tahun_lulus', $tahun)))
+        ])
             ->get()
             ->map(fn($item) => [
                 'label' => $item->value,
