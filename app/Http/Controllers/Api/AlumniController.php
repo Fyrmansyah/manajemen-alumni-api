@@ -8,7 +8,13 @@ use App\Http\Requests\Api\CreateAlumniRequest;
 use App\Http\Resources\Api\AlumniResource;
 use App\Imports\AlumnisImport;
 use App\Models\Alumni;
+use App\Models\DurasiKerja;
+use App\Models\JalurMasukKuliah;
+use App\Models\JenisPerusahaan;
+use App\Models\MasaTungguKerja;
 use App\Models\Nisn;
+use App\Models\RangeGaji;
+use App\Models\RangeLaba;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -318,8 +324,67 @@ class AlumniController extends Controller
 
         $pie_data = compact('pct_tidak_sesuai', 'pct_kuliah_sesuai', 'pct_kerja_sesuai', 'pct_usaha_sesuai');
 
+        $jalur_masuk_kuliah = JalurMasukKuliah::withCount('kuliahs')
+            ->get()
+            ->map(fn($item) => [
+                'label' => $item->nama,
+                'total' => $item->kuliahs_count
+            ]);
+
+        $masa_tunggu_kerja = MasaTungguKerja::withCount('kerjas')
+            ->get()
+            ->map(fn($item) => [
+                'label' => $item->value,
+                'total' => $item->kerjas_count
+            ]);
+
+        $jenis_perusahaan = JenisPerusahaan::withCount('kerjas')
+            ->get()
+            ->map(fn($item) => [
+                'label' => $item->value,
+                'total' => $item->kerjas_count
+            ]);
+
+        $durasi_kerja_raw = DurasiKerja::withCount('kerjas')
+            ->get()
+            ->map(fn($item) => [
+                'label' => $item->value,
+                'total' => $item->kerjas_count
+            ]);
+        $total = $durasi_kerja_raw->sum('total');
+
+        $durasi_kerja = $durasi_kerja_raw->map(fn($item) => [
+            'label' => $item['label'],
+            'total' => $total > 0 ? round($item['total'] / $total * 100, 2) : 0,
+        ]);
+
+
+
+        $range_gaji = RangeGaji::withCount('kerjas')
+            ->get()
+            ->map(fn($item) => [
+                'label' => $item->value,
+                'total' => $item->kerjas_count
+            ]);
+
+        $laba_usaha = RangeLaba::withCount('usahas')
+            ->get()
+            ->map(fn($item) => [
+                'label' => $item->value,
+                'total' => $item->usahas_count
+            ]);
+
         return ResponseBuilder::success()
-            ->data(compact('bar_data', 'pie_data'))
+            ->data(compact(
+                'bar_data',
+                'pie_data',
+                'jalur_masuk_kuliah',
+                'masa_tunggu_kerja',
+                'jenis_perusahaan',
+                'durasi_kerja',
+                'range_gaji',
+                'laba_usaha'
+            ))
             ->build();
     }
 
