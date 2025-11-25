@@ -91,11 +91,15 @@ class Alumni extends Authenticatable
         return $this->belongsTo(Nisn::class, 'nisn_id');
     }
 
-    public function getNisnAttribute(): ?string
-    {
-        // Virtual attribute to keep existing code working
-        return $this->nisnNumber?->number;
-    }
+    // @TODO<crash> jangan buat attribute dengan nama seperti relasi
+    // karena akan merusak relasi $alumni->nisn
+    // ubah nama attribute, atau hapus jika tidak butuh
+    // karena bisa langsung saja $alumni->nisn->number
+    // public function getNisnAttribute(): ?string
+    // {
+    //     // Virtual attribute to keep existing code working
+    //     return $this->nisnNumber?->number;
+    // }
 
     public function appliedJobs()
     {
