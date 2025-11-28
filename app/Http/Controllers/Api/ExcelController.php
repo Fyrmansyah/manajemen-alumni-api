@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Imports\NisnImport;
 use App\Models\Nisn;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
 
 class ExcelController extends Controller
@@ -28,8 +29,27 @@ class ExcelController extends Controller
         }
     }
 
-    public  function exportAlumni()
+    public  function exportAlumni(Request $request)
     {
-        return Excel::download(AlumnisExport::class, 'export_data_alumni.xlsx');
+        $fileName = 'data_alumni.xlsx';
+        $path = 'exports/' . $fileName;
+
+        $filters = [
+            'kerja'   => $request->boolean('export_kerja'),
+            'kuliah'  => $request->boolean('export_kuliah'),
+            'usaha'   => $request->boolean('export_usaha'),
+            'jobless' => $request->boolean('export_jobless'),
+        ];
+
+        if (!array_filter($filters)) {
+            $filters = [];
+        }
+
+        Excel::store(new AlumnisExport($filters), $path);
+
+        return response()->json([
+            'fileUrl' => asset('storage/exports/' . $fileName),
+            'fileName' => $fileName,
+        ]);
     }
 }

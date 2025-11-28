@@ -59,16 +59,52 @@ class Alumni extends Authenticatable
     {
         return $this->hasMany(Kuliah::class);
     }
+    public function latestKuliah()
+    {
+        return $this->hasOne(Kuliah::class)
+            ->orderByRaw('
+            CASE
+                WHEN tahun_lulus IS NULL THEN 0
+                ELSE 1
+            END ASC
+        ')
+            ->orderByDesc('tahun_lulus');
+    }
+
 
     public function kerjas(): HasMany
     {
         return $this->hasMany(Kerja::class);
     }
+    public function latestKerja()
+    {
+        return $this->hasOne(Kerja::class)
+            ->orderByRaw('
+            CASE
+                WHEN tgl_selesai IS NULL THEN 0
+                ELSE 1
+            END ASC
+        ')
+            ->orderByDesc('tgl_selesai');
+    }
+
 
     public function usahas(): HasMany
     {
         return $this->hasMany(Usaha::class);
     }
+    public function latestUsaha()
+    {
+        return $this->hasOne(Usaha::class)
+            ->orderByRaw('
+            CASE
+                WHEN tgl_selesai IS NULL THEN 0
+                ELSE 1
+            END ASC
+        ')
+            ->orderByDesc('tgl_selesai');
+    }
+
 
     public function applications()
     {
