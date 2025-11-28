@@ -13,4 +13,13 @@ class Usaha extends Model
     {
         return $this->belongsTo(Alumni::class);
     }
+
+    public function kepemilikan_usaha(): BelongsTo
+    {
+        return $this->belongsTo(KepemilikanUsaha::class);
+    }
+    public function range_laba(): BelongsTo
+    {
+        return $this->belongsTo(RangeLaba::class);
+    }
 }

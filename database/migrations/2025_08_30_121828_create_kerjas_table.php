@@ -26,7 +26,7 @@ return new class extends Migration
             $table->foreignIdFor(DurasiKerja::class);
             $table->foreignIdFor(RangeGaji::class);
             $table->date('tgl_mulai');
-            $table->date('tgl_selesai');
+            $table->date('tgl_selesai')->nullable();
             $table->boolean('sesuai_jurusan');
             $table->string('jabatan');
             $table->timestamps();

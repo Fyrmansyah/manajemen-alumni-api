@@ -28,6 +28,7 @@ class NisnResource extends JsonResource
             'kecamatan' => $this->kecamatan,
             'kode_pos' => $this->kode_pos,
             'no_tlp' => $this->no_tlp,
+            'alumni' => AlumniResource::make($this->whenLoaded('alumni'))
         ];
     }
 }

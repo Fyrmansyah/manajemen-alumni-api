@@ -17,7 +17,7 @@ return new class extends Migration
         Schema::create('usahas', function (Blueprint $table) {
             $table->id();
             $table->date('tgl_mulai');
-            $table->date('tgl_selesai');
+            $table->date('tgl_selesai')->nullable();
             $table->string('nama_perusahaan');
             $table->string('bidang');
             $table->foreignIdFor(KepemilikanUsaha::class);

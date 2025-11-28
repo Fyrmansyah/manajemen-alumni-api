@@ -13,4 +13,24 @@ class Kerja extends Model
     {
         return $this->belongsTo(Alumni::class);
     }
+
+    public function durasi_kerja(): BelongsTo
+    {
+        return $this->belongsTo(DurasiKerja::class);
+    }
+
+    public function jenis_perusahaan(): BelongsTo
+    {
+        return $this->belongsTo(JenisPerusahaan::class);
+    }
+
+    public function masa_tunggu_kerja(): BelongsTo
+    {
+        return $this->belongsTo(MasaTungguKerja::class);
+    }
+
+    public function range_gaji(): BelongsTo
+    {
+        return $this->belongsTo(RangeGaji::class);
+    }
 }

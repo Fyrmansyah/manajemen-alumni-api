@@ -4,6 +4,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AlumniController;
 use App\Http\Controllers\Api\AlumniController as ApiAlumniController;
 use App\Http\Controllers\Api\DurasiKerjaController;
+use App\Http\Controllers\Api\ExcelController;
 use App\Http\Controllers\Api\JalurMasukKuliahController;
 use App\Http\Controllers\Api\JenisPerusahaanController;
 use App\Http\Controllers\Api\JurusanController;
@@ -31,6 +32,11 @@ Route::apiResource('durasi-kerja', DurasiKerjaController::class);
 Route::apiResource('range-gaji', RangeGajiController::class);
 Route::apiResource('kepemilikan-usaha', KepemilikanUsahaController::class);
 Route::apiResource('range-laba', RangeLabaController::class);
+
+Route::controller(ExcelController::class)->group(function () {
+    Route::post('/import/nisn', 'importNisn');
+    Route::post('/export/alumni', 'exportAlumni');
+});
 
 Route::controller(ApiAlumniController::class)->group(function () {
     Route::get('/alumnis', 'getAll');

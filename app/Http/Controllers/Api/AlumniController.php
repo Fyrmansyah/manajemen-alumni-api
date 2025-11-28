@@ -26,8 +26,24 @@ class AlumniController extends Controller
     {
         $includedRelations = ['jurusan', 'kuliahs', 'kerjas', 'usahas', 'nisn'];
 
-        $data = Alumni::query()
-            ->with($includedRelations)
+        $query = Alumni::query()->with($includedRelations);
+
+        // Filter berdasarkan search
+        if ($request->filled('search')) {
+            $query->where('nama', 'like', '%' . $request->query('search') . '%');
+        }
+
+        // Filter berdasarkan tahunMulai
+        if ($request->filled('tahun_mulai')) {
+            $query->where('tahun_mulai', $request->query('tahun_mulai'));
+        }
+
+        // Filter berdasarkan tahunLulus
+        if ($request->filled('tahun_lulus')) {
+            $query->where('tahun_lulus', $request->query('tahun_lulus'));
+        }
+
+        $data = $query
             ->cursorPaginate();
 
         return ResponseBuilder::success()
@@ -80,7 +96,9 @@ class AlumniController extends Controller
         if (!empty($data['kerjas'])) {
             foreach ($data['kerjas'] as $item) {
                 $item['tgl_mulai'] = date('Y-m-d', strtotime($item['tgl_mulai']));
-                $item['tgl_selesai'] = date('Y-m-d', strtotime($item['tgl_selesai']));
+                if ($item['tgl_selesai']) {
+                    $item['tgl_selesai'] = date('Y-m-d', strtotime($item['tgl_selesai']));
+                }
                 $alumni->kerjas()->create($item);
             }
         }
@@ -88,7 +106,9 @@ class AlumniController extends Controller
         if (!empty($data['usahas'])) {
             foreach ($data['usahas'] as $item) {
                 $item['tgl_mulai'] = date('Y-m-d', strtotime($item['tgl_mulai']));
-                $item['tgl_selesai'] = date('Y-m-d', strtotime($item['tgl_selesai']));
+                if ($item['tgl_selesai']) {
+                    $item['tgl_selesai'] = date('Y-m-d', strtotime($item['tgl_selesai']));
+                }
                 $alumni->usahas()->create($item);
             }
         }
@@ -143,7 +163,7 @@ class AlumniController extends Controller
                 'nama_perusahaan' => $item['nama_perusahaan'],
                 'alamat_perusahaan' => $item['alamat_perusahaan'],
                 'tgl_mulai' => date('Y-m-d', strtotime($item['tgl_mulai'])),
-                'tgl_selesai' => $item['tgl_selesai']
+                'tgl_selesai' => isset($item['tgl_selesai']) && $item['tgl_selesai']
                     ? date('Y-m-d', strtotime($item['tgl_selesai']))
                     : null,
                 'sesuai_jurusan' => $item['sesuai_jurusan'],
@@ -162,7 +182,7 @@ class AlumniController extends Controller
                 'bidang' => $item['bidang'],
                 'jml_karyawan' => $item['jml_karyawan'] ?? null,
                 'tgl_mulai' => date('Y-m-d', strtotime($item['tgl_mulai'])),
-                'tgl_selesai' => $item['tgl_selesai']
+                'tgl_selesai' => isset($item['tgl_selesai']) && $item['tgl_selesai']
                     ? date('Y-m-d', strtotime($item['tgl_selesai']))
                     : null,
                 'sesuai_jurusan' => $item['sesuai_jurusan'],
@@ -414,7 +434,18 @@ class AlumniController extends Controller
 
     public function checkNisnValid(string $nisn): JsonResponse
     {
-        $valid_nisn = Nisn::query()->where('number', $nisn)->first();
+        $includedRelations = [
+            'alumni.kuliahs.jalur_masuk_kuliah',
+            'alumni.kerjas.durasi_kerja',
+            'alumni.kerjas.jenis_perusahaan',
+            'alumni.kerjas.masa_tunggu_kerja',
+            'alumni.kerjas.range_gaji',
+            'alumni.usahas.kepemilikan_usaha',
+            'alumni.usahas.range_laba',
+            'alumni.jurusan',
+        ];
+
+        $valid_nisn = Nisn::query()->with($includedRelations)->where('number', $nisn)->first();
         if (!$valid_nisn) {
             return ResponseBuilder::fail()->message('NISN Tidak ditemukan')->build();
         }

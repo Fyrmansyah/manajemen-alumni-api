@@ -72,7 +72,7 @@ class CreateAlumniRequest extends ApiFormRequest
             'kerjas.*.nama_perusahaan' => 'required|string',
             'kerjas.*.alamat_perusahaan' => 'required|string',
             'kerjas.*.tgl_mulai' => 'required|date',
-            'kerjas.*.tgl_selesai' => 'required|date',
+            'kerjas.*.tgl_selesai' => 'nullable|date',
             'kerjas.*.sesuai_jurusan' => 'required|boolean',
             'kerjas.*.jabatan' => 'required|string',
             'kerjas.*.masa_tunggu_kerja_id' => 'required|exists:masa_tunggu_kerjas,id',
@@ -87,7 +87,7 @@ class CreateAlumniRequest extends ApiFormRequest
         return [
             'usahas' => 'array',
             'usahas.*.tgl_mulai' => 'required|date',
-            'usahas.*.tgl_selesai' => 'required|date',
+            'usahas.*.tgl_selesai' => 'nullable|date',
             'usahas.*.nama_perusahaan' => 'required|string',
             'usahas.*.bidang' => 'required|string',
             'usahas.*.jml_karyawan' => 'nullable|integer',

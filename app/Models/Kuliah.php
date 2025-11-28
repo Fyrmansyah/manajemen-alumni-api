@@ -13,4 +13,9 @@ class Kuliah extends Model
     {
         return $this->belongsTo(Alumni::class);
     }
+
+    public function jalur_masuk_kuliah(): BelongsTo
+    {
+        return $this->belongsTo(JalurMasukKuliah::class);
+    }
 }
