@@ -96,9 +96,9 @@ class AlumniController extends Controller
         if (!empty($data['kerjas'])) {
             foreach ($data['kerjas'] as $item) {
                 $item['tgl_mulai'] = date('Y-m-d', strtotime($item['tgl_mulai']));
-                if ($item['tgl_selesai']) {
-                    $item['tgl_selesai'] = date('Y-m-d', strtotime($item['tgl_selesai']));
-                }
+                $item['tgl_selesai'] = isset($item['tgl_selesai']) && $item['tgl_selesai']
+                    ? date('Y-m-d', strtotime($item['tgl_selesai']))
+                    : null;
                 $alumni->kerjas()->create($item);
             }
         }
@@ -106,9 +106,9 @@ class AlumniController extends Controller
         if (!empty($data['usahas'])) {
             foreach ($data['usahas'] as $item) {
                 $item['tgl_mulai'] = date('Y-m-d', strtotime($item['tgl_mulai']));
-                if ($item['tgl_selesai']) {
-                    $item['tgl_selesai'] = date('Y-m-d', strtotime($item['tgl_selesai']));
-                }
+                $item['tgl_selesai'] = isset($item['tgl_selesai']) && $item['tgl_selesai']
+                    ? date('Y-m-d', strtotime($item['tgl_selesai']))
+                    : null;
                 $alumni->usahas()->create($item);
             }
         }
