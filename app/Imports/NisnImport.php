@@ -5,8 +5,9 @@ namespace App\Imports;
 use App\Models\Nisn;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use Maatwebsite\Excel\Concerns\WithUpserts;
 
-class NisnImport implements ToModel, WithHeadingRow
+class NisnImport implements ToModel, WithHeadingRow, WithUpserts
 {
     /**
      * @param array $row
@@ -27,7 +28,12 @@ class NisnImport implements ToModel, WithHeadingRow
             'kelurahan' => $row['kelurahan'],
             'kecamatan' => $row['kecamatan'],
             'kode_pos' => $row['kode_pos'],
-            'no_telepon' => $row['no_telepon'],
+            'no_tlp' => $row['no_telepon'],
         ]);
+    }
+
+    public function uniqueBy()
+    {
+        return 'number';
     }
 }
