@@ -353,7 +353,15 @@ class AlumniController extends Controller
 
         $jalur_masuk_kuliah = JalurMasukKuliah::withCount([
             'kuliahs' => fn($q) =>
-            $q->when($request->query('tahun_lulus'), fn($q2, $tahun) => $q2->whereHas('alumni', fn($q3) => $q3->where('tahun_lulus', $tahun)))
+            $q->whereHas(
+                'alumni',
+                fn($a) =>
+                $a->when(
+                    $request->query('tahun_lulus'),
+                    fn($aa, $tahun) =>
+                    $aa->where('tahun_lulus', $tahun)
+                )
+            )
         ])
             ->get()
             ->map(fn($item) => [
@@ -363,7 +371,15 @@ class AlumniController extends Controller
 
         $masa_tunggu_kerja = MasaTungguKerja::withCount([
             'kerjas' => fn($q) =>
-            $q->when($request->query('tahun_lulus'), fn($q2, $tahun) => $q2->whereHas('alumni', fn($q3) => $q3->where('tahun_lulus', $tahun)))
+            $q->whereHas(
+                'alumni',
+                fn($a) =>
+                $a->when(
+                    $request->query('tahun_lulus'),
+                    fn($aa, $tahun) =>
+                    $aa->where('tahun_lulus', $tahun)
+                )
+            )
         ])
             ->get()
             ->map(fn($item) => [
@@ -373,7 +389,15 @@ class AlumniController extends Controller
 
         $jenis_perusahaan = JenisPerusahaan::withCount([
             'kerjas' => fn($q) =>
-            $q->when($request->query('tahun_lulus'), fn($q2, $tahun) => $q2->whereHas('alumni', fn($q3) => $q3->where('tahun_lulus', $tahun)))
+            $q->whereHas(
+                'alumni',
+                fn($a) =>
+                $a->when(
+                    $request->query('tahun_lulus'),
+                    fn($aa, $tahun) =>
+                    $aa->where('tahun_lulus', $tahun)
+                )
+            )
         ])
             ->get()
             ->map(fn($item) => [
@@ -383,7 +407,15 @@ class AlumniController extends Controller
 
         $durasi_kerja_raw = DurasiKerja::withCount([
             'kerjas' => fn($q) =>
-            $q->when($request->query('tahun_lulus'), fn($q2, $tahun) => $q2->whereHas('alumni', fn($q3) => $q3->where('tahun_lulus', $tahun)))
+            $q->whereHas(
+                'alumni',
+                fn($a) =>
+                $a->when(
+                    $request->query('tahun_lulus'),
+                    fn($aa, $tahun) =>
+                    $aa->where('tahun_lulus', $tahun)
+                )
+            )
         ])
             ->get()
             ->map(fn($item) => [
@@ -400,7 +432,15 @@ class AlumniController extends Controller
 
         $range_gaji = RangeGaji::withCount([
             'kerjas' => fn($q) =>
-            $q->when($request->query('tahun_lulus'), fn($q2, $tahun) => $q2->whereHas('alumni', fn($q3) => $q3->where('tahun_lulus', $tahun)))
+            $q->whereHas(
+                'alumni',
+                fn($a) =>
+                $a->when(
+                    $request->query('tahun_lulus'),
+                    fn($aa, $tahun) =>
+                    $aa->where('tahun_lulus', $tahun)
+                )
+            )
         ])
             ->get()
             ->map(fn($item) => [
@@ -410,7 +450,15 @@ class AlumniController extends Controller
 
         $laba_usaha = RangeLaba::withCount([
             'usahas' => fn($q) =>
-            $q->when($request->query('tahun_lulus'), fn($q2, $tahun) => $q2->whereHas('alumni', fn($q3) => $q3->where('tahun_lulus', $tahun)))
+            $q->whereHas(
+                'alumni',
+                fn($a) =>
+                $a->when(
+                    $request->query('tahun_lulus'),
+                    fn($aa, $tahun) =>
+                    $aa->where('tahun_lulus', $tahun)
+                )
+            )
         ])
             ->get()
             ->map(fn($item) => [
