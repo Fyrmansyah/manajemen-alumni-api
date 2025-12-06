@@ -15,7 +15,6 @@ class Alumni extends Authenticatable
 
     // Allow mass assignment for all columns except id so profile updates & foto work
     protected $guarded = ['id'];
-    protected $hidden = ['password'];
 
     public function username(): string
     {

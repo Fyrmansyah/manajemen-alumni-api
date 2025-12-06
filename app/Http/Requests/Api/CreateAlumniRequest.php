@@ -49,6 +49,7 @@ class CreateAlumniRequest extends ApiFormRequest
             'alamat_kecamatan' => 'required|string|max:255',
             'alamat_kode_pos' => 'required|numeric',
             'tempat_lahir' => 'required|string|max:255',
+            'password' => 'sometimes|string|max:255'
         ];
     }
 

@@ -18,6 +18,7 @@ use App\Models\RangeLaba;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Maatwebsite\Excel\Facades\Excel;
 
 class AlumniController extends Controller
@@ -501,6 +502,29 @@ class AlumniController extends Controller
         return ResponseBuilder::success()
             ->message('NISN valid')
             ->data($valid_nisn)
+            ->build();
+    }
+
+    public function checkPassword(Alumni $alumni, Request $request): JsonResponse
+    {
+        if (Hash::check($request->password, $alumni->password)) {
+            return ResponseBuilder::success()
+                ->message('Berhasil')
+                ->build();
+        }
+
+        return  ResponseBuilder::success()
+            ->message('Pastikan telah memasukkan password benar')
+            ->build();
+    }
+
+    public function changePassword(Alumni $alumni, Request $request): JsonResponse
+    {
+        $alumni->password = $request->password;
+        $alumni->save();
+
+        return ResponseBuilder::success()
+            ->message('Berhasil')
             ->build();
     }
 }
