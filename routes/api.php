@@ -39,6 +39,8 @@ Route::controller(ExcelController::class)->group(function () {
 });
 
 Route::controller(ApiAlumniController::class)->group(function () {
+    Route::post('/alumni/change-password', 'changePassword');
+    Route::post('/alumni/check-password', 'checkPassword');
     Route::get('/alumnis', 'getAll');
     Route::get('/alumnis/chart', 'getChart');
     Route::get('/alumnis/check-nisn-valid/{nisn}', 'checkNisnValid');
