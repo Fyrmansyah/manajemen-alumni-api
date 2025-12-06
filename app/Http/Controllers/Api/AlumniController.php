@@ -508,12 +508,12 @@ class AlumniController extends Controller
     public function checkPassword(Alumni $alumni, Request $request): JsonResponse
     {
         if (Hash::check($request->password, $alumni->password)) {
-            return ResponseBuilder::fail()
+            return ResponseBuilder::success()
                 ->message('Berhasil')
                 ->build();
         }
 
-        return  ResponseBuilder::success()
+        return  ResponseBuilder::fail()
             ->message('Pastikan telah memasukkan password benar')
             ->build();
     }
