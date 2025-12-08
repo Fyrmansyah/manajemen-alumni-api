@@ -30,7 +30,7 @@ class AlumniController extends Controller
             ->orderBy('tahun_lulus', 'desc')
             ->pluck('tahun_lulus');
 
-        return ResponseBuilder::success()->data($years);
+        return ResponseBuilder::success()->data($years)->build();
     }
 
     public function getAll(Request $request): JsonResponse
