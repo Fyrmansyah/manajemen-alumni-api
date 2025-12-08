@@ -23,6 +23,16 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class AlumniController extends Controller
 {
+    public function getTahunLulusGroup(): JsonResponse
+    {
+        $years = Alumni::select('tahun_lulus')
+            ->distinct()
+            ->orderBy('tahun_lulus', 'desc')
+            ->pluck('tahun_lulus');
+
+        return ResponseBuilder::success()->data($years);
+    }
+
     public function getAll(Request $request): JsonResponse
     {
         $includedRelations = ['jurusan', 'kuliahs', 'kerjas', 'usahas', 'nisn'];

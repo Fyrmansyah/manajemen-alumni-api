@@ -39,6 +39,7 @@ Route::controller(ExcelController::class)->group(function () {
 });
 
 Route::controller(ApiAlumniController::class)->group(function () {
+    Route::get('/alumnis/grouped-years', 'getTahunLulusGroup');
     Route::post('/alumni/change-password/{alumni}', 'changePassword');
     Route::post('/alumni/check-password/{alumni}', 'checkPassword');
     Route::get('/alumnis', 'getAll');
